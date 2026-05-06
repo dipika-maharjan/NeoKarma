@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '../components/LanguageContext';
 import { StatCard } from '../components/StatCard';
 import { ActivityItem } from '../components/ActivityItem';
-import { CloudRain, TreePine, Zap, Recycle, Users, Calendar, TrendingDown } from 'lucide-react';
+import { CloudRain, TreePine, Zap, Recycle, Users, Calendar, TrendingDown, FileText, Sparkles, ListTodo, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router';
 import { getCurrentSchoolProfile } from '../utils/schoolSession';
 import { ensureMvpAnalysis, type MvpAnalysisBundle } from '../utils/mvpPlanner';
@@ -112,13 +112,64 @@ export function Dashboard() {
           />
         </div>
 
-        <Link
-          to="/data-entry"
-          className="block w-full bg-primary text-primary-foreground rounded-xl p-6 hover:shadow-lg transition-all text-center"
-        >
-          <TrendingDown className="w-8 h-8 mx-auto mb-2" />
-          <span className="text-lg font-medium">{t('enter_monthly_data')}</span>
-        </Link>
+        <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 xl:grid-cols-4">
+          <Link
+            to="/data-entry"
+            className="group rounded-2xl border border-border bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <FileText className="h-6 w-6" />
+              </div>
+              <TrendingDown className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+            </div>
+            <p className="mt-4 text-sm font-medium text-foreground">{t('enter_monthly_data')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Capture school bills and fuel use.</p>
+          </Link>
+
+          <Link
+            to="/carbon-report"
+            className="group rounded-2xl border border-border bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <TrendingDown className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+            </div>
+            <p className="mt-4 text-sm font-medium text-foreground">{t('carbon_report')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Review the current carbon footprint.</p>
+          </Link>
+
+          <Link
+            to="/recommendations"
+            className="group rounded-2xl border border-border bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-50 text-lime-700">
+                <ListTodo className="h-6 w-6" />
+              </div>
+              <TrendingDown className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+            </div>
+            <p className="mt-4 text-sm font-medium text-foreground">{t('actions_for_school')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Get tailored suggestions and costs.</p>
+          </Link>
+
+          <Link
+            to="/verification"
+            className="group rounded-2xl border border-border bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <TrendingDown className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+            </div>
+            <p className="mt-4 text-sm font-medium text-foreground">{t('verification')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Upload proof for your reduction claims.</p>
+          </Link>
+        </div>
+
       </div>
 
       <div>

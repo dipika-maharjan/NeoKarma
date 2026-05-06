@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ChevronRight, Sparkles, TreePine } from 'lucide-react';
+import { ChevronRight, Sparkles, TreePine, Leaf } from 'lucide-react';
 import { useLanguage } from '../components/LanguageContext';
 import {
   addStudentData,
@@ -165,9 +165,9 @@ export function StudentInput() {
   if (submitted && submissionSummary && successImpact) {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,#ecfdf5_0%,#f8fafc_42%,#fefce8_100%)] p-4 sm:p-6">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-4xl">
           <div className="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-2xl">
-            <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="grid lg:grid-cols-2">
               <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 p-8 text-white lg:p-10">
                 <div className="absolute inset-0 opacity-25">
                   <div className="absolute -left-10 top-8 h-44 w-44 rounded-full bg-white/20 blur-3xl" />
@@ -178,6 +178,7 @@ export function StudentInput() {
                 <div className="relative flex h-full flex-col justify-between gap-8">
                   <div>
                     <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium uppercase tracking-widest text-white/90">
+                      <Sparkles className="h-3 w-3" />
                       Weekly submission complete
                     </div>
                     <h2 className="mt-5 text-3xl font-semibold leading-tight lg:text-4xl">Thank you for this week.</h2>
@@ -188,13 +189,13 @@ export function StudentInput() {
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                      <p className="text-xs uppercase tracking-wide text-white/70">Trees saved</p>
+                      <p className="text-xs uppercase tracking-wide text-white/70">Trees saved this week</p>
                       <p className="mt-1 text-3xl font-semibold">{displayTrees}</p>
                     </div>
                     <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
                       <p className="text-xs uppercase tracking-wide text-white/70">Weekly streak</p>
                       <p className="mt-1 text-3xl font-semibold">{streakCount}</p>
-                      <p className="text-sm text-white/75">Great job - keep building.</p>
+                      <p className="text-sm text-white/75">Keep building!</p>
                     </div>
                   </div>
 
@@ -204,88 +205,75 @@ export function StudentInput() {
                         <TreePine className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Sending you forward</p>
-                        <p className="text-sm text-white/75">Your report is ready whenever you want it.</p>
+                        <p className="text-sm font-medium">Your impact is being tracked</p>
+                        <p className="text-sm text-white/75">Progress saved in browser</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-5 sm:p-6 lg:p-8">
-                <div className="mb-6 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Submission saved for</p>
-                    <h1 className="text-2xl font-semibold text-foreground">{submissionSummary.schoolName}</h1>
-                  </div>
-                  <div className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                    {submissionSummary.emissions.toFixed(2)} kg CO₂e
-                  </div>
+              <div className="p-6 sm:p-8 lg:p-10">
+                <div className="mb-6">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">This week's submission</p>
+                  <h1 className="text-2xl font-semibold text-foreground">{submissionSummary.schoolName}</h1>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-[0.95fr_1.05fr]">
-                    <div className="rounded-2xl border border-border bg-slate-50 p-5">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className="relative flex h-24 w-24 items-center justify-center rounded-full"
-                          style={{ background: `conic-gradient(#3B7A2B ${successImpact.score}%, #e5e7eb 0)` }}
-                        >
-                          <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full bg-white">
-                            <span className="text-xl font-semibold text-foreground">{successImpact.score}</span>
-                            <span className="text-[10px] text-muted-foreground">score</span>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="mb-1 flex items-center gap-2">
-                            <Sparkles className="h-4 w-4 text-primary" />
-                            <p className="text-sm font-medium text-foreground">Impact saved</p>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{successImpact.compareText}</p>
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            Baseline: {successImpact.baseline.toFixed(2)} kg CO₂e · Your entry: {submissionSummary.emissions.toFixed(2)} kg CO₂e
-                          </p>
-                        </div>
-                      </div>
+                  <div className="rounded-2xl border border-border bg-slate-50 p-5">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <p className="text-sm font-medium text-foreground">CO₂ Impact</p>
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
+                        {submissionSummary.emissions.toFixed(2)} kg CO₂e
+                      </span>
                     </div>
-
-                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
-                      <div className="mb-2 flex items-center gap-2 text-emerald-800">
-                        <Sparkles className="h-4 w-4" />
-                        <p className="text-sm font-semibold">Weekly snapshot</p>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div>
+                        <p className="text-muted-foreground">Transport</p>
+                        <p className="font-semibold text-foreground capitalize">{submissionSummary.transport}</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="rounded-xl border border-border bg-white p-3">
-                          <p className="text-muted-foreground">Transport</p>
-                          <p className="font-medium text-foreground capitalize">{submissionSummary.transport}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">{submissionSummary.distanceKm} km round trip</p>
-                        </div>
-                        <div className="rounded-xl border border-border bg-white p-3">
-                          <p className="text-muted-foreground">Flags</p>
-                          <p className="font-medium text-foreground">Plastic: {submissionSummary.plastic ? 'Yes' : 'No'}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">Food waste: {submissionSummary.foodWaste ? 'Yes' : 'No'}</p>
-                        </div>
+                      <div>
+                        <p className="text-muted-foreground">Plastic?</p>
+                        <p className="font-semibold text-foreground">{submissionSummary.plastic ? 'Yes' : 'No'}</p>
                       </div>
-                      <div className="mt-4 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground">
-                        {successImpact.saved > 0 ? `${successImpact.saved.toFixed(2)} kg CO₂e under the baseline commute` : 'Low-impact week achieved'}
+                      <div>
+                        <p className="text-muted-foreground">Food waste?</p>
+                        <p className="font-semibold text-foreground">{submissionSummary.foodWaste ? 'Yes' : 'No'}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+                    <p className="text-sm font-medium text-emerald-900 mb-3">Weekly score</p>
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="relative flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full"
+                        style={{ background: `conic-gradient(#3B7A2B ${successImpact.score}%, #e5e7eb 0)` }}
+                      >
+                        <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full bg-white">
+                          <span className="text-lg font-semibold text-foreground">{successImpact.score}</span>
+                          <span className="text-[10px] text-muted-foreground">/100</span>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Impact saved vs car</p>
+                        <p className="text-sm font-semibold text-emerald-900">{successImpact.compareText}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
                     <button
-                      type="button"
-                      onClick={resetForm}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-white px-4 py-3 font-medium text-foreground transition-colors hover:bg-accent"
+                      onClick={() => navigate('/carbon-report')}
+                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 font-medium hover:shadow-lg transition-all"
                     >
-                      Submit another week
+                      View your report
                     </button>
                     <button
-                      type="button"
-                      onClick={() => navigate('/carbon-report')}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 font-medium text-primary-foreground transition-all hover:shadow-lg"
+                      onClick={resetForm}
+                      className="w-full border border-border text-foreground rounded-xl py-3 font-medium hover:bg-accent transition-colors"
                     >
-                      View carbon report now
+                      Submit another week
                     </button>
                   </div>
                 </div>
@@ -297,43 +285,39 @@ export function StudentInput() {
     );
   }
 
-  const submitDisabled = !activeSchoolName || !transport || plastic === null || foodWaste === null;
-
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#ecfdf5_0%,#f8fafc_42%,#fefce8_100%)] p-4 sm:p-6">
-      <div className="mx-auto max-w-3xl">
-        <div className="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-2xl">
-          <div className="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-lime-50 px-5 py-4 sm:px-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-emerald-700">Student weekly input</p>
-                <h1 className="mt-1 text-2xl font-semibold text-foreground">Log your actions for this week</h1>
-              </div>
-              <div className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-600 px-3 py-1 text-sm font-medium text-white">
-                <TreePine className="h-4 w-4" />
-                Saved locally
-              </div>
-            </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#ecfdf5_0%,#f8fafc_45%,#ffffff_100%)] p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm">
+            <Leaf className="h-4 w-4" />
+            Student weekly input
           </div>
+          <h1 className="mt-4 text-3xl font-semibold text-foreground">Log your actions for this week</h1>
+          <p className="mt-2 text-muted-foreground">Quick questions about your carbon footprint</p>
+        </div>
 
-          <div className="p-5 sm:p-6 lg:p-8">
-            <div className="space-y-5">
+        <div className="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-xl">
+          <div className="p-6 sm:p-8 lg:p-10">
+            <div className="space-y-8">
+              {/* School selection */}
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Which school are you from?</label>
+                <label className="block mb-3 text-sm font-medium text-foreground">Which school are you from?</label>
                 <select
                   value={school}
                   onChange={(e) => {
-                    const nextSchool = e.target.value;
-                    setSchool(nextSchool);
-                    prefillDistanceForSchool(nextSchool);
+                    setSchool(e.target.value);
+                    prefillDistanceForSchool(e.target.value);
                   }}
-                  className="w-full rounded-xl border border-border bg-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-xl border border-border bg-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">Select your school</option>
-                  {schools.map((schoolName) => (
-                    <option key={schoolName} value={schoolName}>{schoolName}</option>
+                  {schools.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
                   ))}
-                  <option value="other">Other</option>
+                  <option value="other">Other / Not listed</option>
                 </select>
                 {school === 'other' && (
                   <input
@@ -341,120 +325,119 @@ export function StudentInput() {
                     value={customSchool}
                     onChange={(e) => setCustomSchool(e.target.value)}
                     placeholder="Enter your school name"
-                    className="mt-3 w-full rounded-xl border border-border bg-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-3 w-full rounded-xl border border-border bg-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 )}
               </div>
 
+              {/* Transport mode */}
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">Round-trip distance</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    value={distanceKm}
-                    onChange={(e) => setDistanceKm(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-28 rounded-xl border border-border bg-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <span className="text-sm text-muted-foreground">km</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">How did you come to school?</label>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                <label className="block mb-4 text-sm font-medium text-foreground">How did you travel this week?</label>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                   {[
-                    { value: 'walking', icon: '🚶', label: 'Walk' },
-                    { value: 'bus', icon: '🚌', label: 'Bus' },
-                    { value: 'bike', icon: '🚴', label: 'Bike' },
-                    { value: 'motorbike', icon: '🏍️', label: 'Moto' },
-                    { value: 'car', icon: '🚗', label: 'Car' },
+                    { value: 'walking', label: 'Walking', icon: '🚶' },
+                    { value: 'bike', label: 'Bike', icon: '🚴' },
+                    { value: 'bus', label: 'Bus', icon: '🚌' },
+                    { value: 'motorcycle', label: 'Motorcycle', icon: '🏍️' },
+                    { value: 'car', label: 'Car', icon: '🚗' },
                   ].map((option) => (
                     <button
                       key={option.value}
-                      type="button"
                       onClick={() => setTransport(option.value)}
-                      className={`rounded-xl border-2 p-3 transition-all ${
-                        transport === option.value ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
+                      className={`rounded-2xl border-2 bg-white p-4 transition-all text-center ${
+                        transport === option.value
+                          ? 'border-primary shadow-md'
+                          : 'border-border hover:border-primary/50'
                       }`}
                     >
-                      <div className="text-center">
-                        <div className="text-2xl">{option.icon}</div>
-                        <div className="mt-1 text-xs font-medium text-foreground">{option.label}</div>
-                      </div>
+                      <div className="text-3xl mb-2">{option.icon}</div>
+                      <p className="text-sm font-medium">{option.label}</p>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              {/* Distance if not walking/bike */}
+              {transport && !['walking', 'bike'].includes(transport) && (
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">Did you bring single-use plastic?</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setPlastic(true)}
-                      className={`rounded-xl border-2 p-4 text-center transition-all ${
-                        plastic === true ? 'border-red-500 bg-red-50' : 'border-border hover:border-red-300'
-                      }`}
-                    >
-                      <p className="text-2xl mb-2">❌</p>
-                      <p className="font-semibold text-foreground">Yes</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPlastic(false)}
-                      className={`rounded-xl border-2 p-4 text-center transition-all ${
-                        plastic === false ? 'border-primary bg-emerald-50' : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <p className="text-2xl mb-2">✅</p>
-                      <p className="font-semibold text-foreground">No</p>
-                    </button>
+                  <label className="block mb-3 text-sm font-medium text-foreground">
+                    Round-trip distance (km)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      value={distanceKm}
+                      onChange={(e) => setDistanceKm(e.target.valueAsNumber || '')}
+                      className="flex-1 rounded-xl border border-border bg-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="0"
+                      min="0"
+                    />
+                    <span className="text-sm font-medium text-muted-foreground">km</span>
                   </div>
                 </div>
+              )}
 
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">Did you waste food today?</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setFoodWaste(true)}
-                      className={`rounded-xl border-2 p-4 text-center transition-all ${
-                        foodWaste === true ? 'border-red-500 bg-red-50' : 'border-border hover:border-red-300'
-                      }`}
-                    >
-                      <p className="text-2xl mb-2">🍽️</p>
-                      <p className="font-semibold text-foreground">Yes</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFoodWaste(false)}
-                      className={`rounded-xl border-2 p-4 text-center transition-all ${
-                        foodWaste === false ? 'border-primary bg-emerald-50' : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <p className="text-2xl mb-2">✅</p>
-                      <p className="font-semibold text-foreground">No</p>
-                    </button>
-                  </div>
+              {/* Plastic usage */}
+              <div>
+                <label className="block mb-4 text-sm font-medium text-foreground">Did you use single-use plastic this week?</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => setPlastic(true)}
+                    className={`rounded-2xl border-2 bg-white p-6 transition-all text-center font-medium ${
+                      plastic === true ? 'border-red-500 bg-red-50 shadow-md' : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="text-3xl mb-2">♻️</div>
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setPlastic(false)}
+                    className={`rounded-2xl border-2 bg-white p-6 transition-all text-center font-medium ${
+                      plastic === false ? 'border-green-500 bg-green-50 shadow-md' : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="text-3xl mb-2">🌱</div>
+                    No
+                  </button>
                 </div>
               </div>
 
+              {/* Food waste */}
+              <div>
+                <label className="block mb-4 text-sm font-medium text-foreground">Did you create food waste this week?</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => setFoodWaste(true)}
+                    className={`rounded-2xl border-2 bg-white p-6 transition-all text-center font-medium ${
+                      foodWaste === true ? 'border-red-500 bg-red-50 shadow-md' : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="text-3xl mb-2">🥗</div>
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setFoodWaste(false)}
+                    className={`rounded-2xl border-2 bg-white p-6 transition-all text-center font-medium ${
+                      foodWaste === false ? 'border-green-500 bg-green-50 shadow-md' : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="text-3xl mb-2">🍴</div>
+                    No
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit button */}
               <button
-                type="button"
                 onClick={handleSubmit}
-                disabled={submitDisabled}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-4 font-medium text-white transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!activeSchoolName || !transport || plastic === null || foodWaste === null}
+                className="w-full bg-primary text-primary-foreground rounded-xl py-4 font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Submit This Week
-                <ChevronRight className="h-4 w-4" />
+                <div className="flex items-center justify-center gap-2">
+                  Submit This Week
+                  <ChevronRight className="w-5 h-5" />
+                </div>
               </button>
-
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-center">
-                <p className="text-sm font-semibold text-emerald-900">{streakCount} weeks submitted</p>
-                <p className="text-xs text-emerald-700">Keep the momentum going!</p>
-              </div>
             </div>
           </div>
         </div>

@@ -72,6 +72,7 @@ export function CarbonReport() {
   const hasStudentContext = availableSchools.length > 0 || Boolean(schoolProfile?.schoolName);
   
   const totalEmissions = includeStudentData ? emissions.totalCO2 : schoolOnlyTotal;
+  const totalSchoolEmissions = schoolOnlyTotal;
   const transportFromStudents = Math.round(emissions.studentCO2 * 0.7);
   const wasteFromStudents = Math.round(emissions.studentCO2 * 0.3);
   

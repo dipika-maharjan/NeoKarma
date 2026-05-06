@@ -31,7 +31,6 @@ export const router = createBrowserRouter([
     element: <ImpactLedger />,
   },
   {
-    path: '/',
     element: <Layout />,
     children: [
       {
