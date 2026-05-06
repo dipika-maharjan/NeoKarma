@@ -61,8 +61,8 @@ export function Landing() {
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: "url('/Gemini_Generated_Image_esgyq2esgyq2esgy.png')" }}
           />
-          <div className="absolute inset-0 bg-black/18" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/22 to-black/58" />
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/18 via-black/34 to-black/72" />
 
           <div className="relative z-10 flex h-full min-h-0 flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
             <div className="flex items-center justify-between gap-4">
@@ -70,7 +70,7 @@ export function Landing() {
                 <img
                   src="/logo.png"
                   alt="Harit Pathshala logo"
-                  className="h-16 w-16 object-contain brightness-125 contrast-110 saturate-150 drop-shadow-[0_3px_12px_rgba(255,255,255,0.9)] sm:h-20 sm:w-20"
+                  className="h-16 w-16 object-contain brightness-150 contrast-110 saturate-150 drop-shadow-[0_4px_14px_rgba(255,255,255,1)] sm:h-20 sm:w-20"
                 />
                 <div className="leading-tight">
                   <div className="text-[19px] font-semibold leading-none text-emerald-950 sm:text-[23px]">{t('title')}</div>
