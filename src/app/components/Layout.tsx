@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router';
 import { useLanguage } from './LanguageContext';
 import {
   Leaf,
@@ -13,13 +13,38 @@ import {
   Globe,
   CheckCircle,
   Menu,
-  X
+  X,
+  ChevronDown,
+  UserCircle2,
+  LogOut,
 } from 'lucide-react';
+import { clearSchoolProfile, getCurrentSchoolProfile } from '../utils/schoolSession';
 
 export function Layout() {
   const { language, toggleLanguage, t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const schoolProfile = getCurrentSchoolProfile();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    clearSchoolProfile();
+    setProfileMenuOpen(false);
+    navigate('/');
+  };
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
@@ -87,24 +112,60 @@ export function Layout() {
               </div>
             </div>
 
-            <div className="hidden lg:block">
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                  {t('urban')}
-                </span>
-                <span className="text-sm text-muted-foreground">Kathmandu Model School</span>
-              </div>
+            <div className="hidden lg:block relative" ref={profileMenuRef}>
+              <button
+                onClick={() => setProfileMenuOpen((open) => !open)}
+                className="flex items-center gap-3 rounded-full border border-border bg-white px-3 py-2 hover:bg-accent transition-colors"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <UserCircle2 className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs text-muted-foreground leading-none">{t('signed_in_as')}</p>
+                  <p className="max-w-48 truncate text-sm font-medium text-foreground">
+                    {schoolProfile?.schoolName || 'Kathmandu Model School'}
+                  </p>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </button>
+
+              {profileMenuOpen && (
+                <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-border bg-white p-4 shadow-lg z-20">
+                  <div className="mb-3">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('current_school')}</p>
+                    <p className="font-semibold text-foreground break-words">
+                      {schoolProfile?.schoolName || 'Kathmandu Model School'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {schoolProfile?.district || 'Kathmandu'}
+                      {schoolProfile?.province ? `, ${schoolProfile.province}` : ''}
+                    </p>
+                    {schoolProfile?.archetype && (
+                      <p className="text-xs text-primary mt-2 font-medium">{schoolProfile.archetype}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium text-foreground hover:bg-red-50 hover:text-red-700 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    {t('logout')}
+                  </button>
+                </div>
+              )}
             </div>
 
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-accent transition-colors"
-            >
-              <Languages className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                {language === 'en' ? 'नेपाली' : 'English'}
-              </span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-accent transition-colors"
+              >
+                <Languages className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {language === 'en' ? 'नेपाली' : 'English'}
+                </span>
+              </button>
+            </div>
           </div>
         </header>
 

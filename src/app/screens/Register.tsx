@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLanguage } from '../components/LanguageContext';
 import { useNavigate } from 'react-router';
 import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { saveSchoolProfile } from '../utils/schoolSession';
 
 const NEPAL_DISTRICTS = [
   'Achham', 'Arghakhanchi', 'Baglung', 'Baitadi', 'Bajhang', 'Bajura', 'Banke', 'Bara', 'Bardiya', 'Bhaktapur',
@@ -40,6 +41,17 @@ export function Register() {
   };
 
   const handleSubmit = () => {
+    saveSchoolProfile({
+      schoolName: formData.schoolName,
+      district: formData.district,
+      province: formData.province,
+      students: formData.students,
+      teachers: formData.teachers,
+      electricitySource: formData.electricitySource,
+      cookingFuel: formData.cookingFuel,
+      transport: formData.transport,
+      archetype: getArchetype(),
+    });
     navigate('/dashboard');
   };
 

@@ -1,9 +1,24 @@
+import { useEffect } from 'react';
 import { useLanguage } from '../components/LanguageContext';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Leaf, Languages, UserCircle, GraduationCap } from 'lucide-react';
+import { getCurrentSchoolProfile } from '../utils/schoolSession';
 
 export function Landing() {
   const { language, toggleLanguage, t } = useLanguage();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (getCurrentSchoolProfile()) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
+  const schoolProfile = getCurrentSchoolProfile();
+
+  if (schoolProfile) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-white flex flex-col">

@@ -1,17 +1,48 @@
 import { useState } from 'react';
 import { useLanguage } from '../components/LanguageContext';
 import { Footprints, Bus, Bike, Car, TreePine, Award } from 'lucide-react';
+import { addStudentData, getSchoolAverageDistance } from '../utils/studentDataStorage';
+import SCHOOLS from '../data/schools';
+import { getCurrentSchoolProfile } from '../utils/schoolSession';
 
 export function StudentInput() {
   const { t } = useLanguage();
+  const currentSchool = getCurrentSchoolProfile();
+  const schools = Array.from(new Set([
+    ...(currentSchool?.schoolName ? [currentSchool.schoolName] : []),
+    ...SCHOOLS,
+  ]));
+  const [school, setSchool] = useState(currentSchool?.schoolName ?? '');
+  const [customSchool, setCustomSchool] = useState('');
+  const [distanceKm, setDistanceKm] = useState<number | ''>(5);
   const [transport, setTransport] = useState('');
   const [plastic, setPlastic] = useState<boolean | null>(null);
   const [foodWaste, setFoodWaste] = useState<boolean | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = () => {
+    // Save student data to localStorage
+    const finalSchool = school === 'other' ? customSchool.trim() : school;
+    const finalDistance = typeof distanceKm === 'number' && distanceKm > 0 ? distanceKm : undefined;
+    if (finalSchool && transport && plastic !== null && foodWaste !== null) {
+      addStudentData(finalSchool, transport, plastic, foodWaste, finalDistance);
+    }
     setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    setTimeout(() => {
+      setSubmitted(false);
+      setSchool('');
+      setTransport('');
+      setPlastic(null);
+      setFoodWaste(null);
+    }, 3000);
+  };
+
+  // Prefill distance when user selects a school
+  const prefillDistanceForSchool = (schoolName: string) => {
+    if (!schoolName || schoolName === 'other') return;
+    const avg = getSchoolAverageDistance(schoolName);
+    if (typeof avg === 'number') setDistanceKm(avg);
+    else setDistanceKm(5);
   };
 
   return (
@@ -27,6 +58,49 @@ export function StudentInput() {
 
         {!submitted ? (
           <div className="space-y-8">
+            <div>
+              <h3 className="font-medium text-foreground mb-4 text-center">Which school are you from?</h3>
+              <div className="flex gap-2">
+                <select
+                  value={school}
+                  onChange={(e) => {
+                    setSchool(e.target.value);
+                    prefillDistanceForSchool(e.target.value);
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg border border-border bg-input-background focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Select school</option>
+                  {schools.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                  <option value="other">Other (enter manually)</option>
+                </select>
+              </div>
+              {school === 'other' && (
+                <div className="mt-3">
+                  <input
+                    type="text"
+                    value={customSchool}
+                    onChange={(e) => setCustomSchool(e.target.value)}
+                    placeholder="Enter your school name"
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-input-background focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="font-medium text-foreground mb-4 text-center">Approx. round-trip distance (km)</h3>
+              <div className="flex gap-2 items-center justify-center">
+                <input
+                  type="number"
+                  min={0}
+                  value={distanceKm}
+                  onChange={(e) => setDistanceKm(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-32 px-4 py-3 rounded-lg border border-border bg-input-background focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm text-muted-foreground">km (default 5)</span>
+              </div>
+            </div>
             <div>
               <h3 className="font-medium text-foreground mb-4 text-center">{t('how_came_school')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">

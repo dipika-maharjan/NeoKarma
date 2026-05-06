@@ -3,13 +3,30 @@ import { StatCard } from '../components/StatCard';
 import { ActivityItem } from '../components/ActivityItem';
 import { CloudRain, TreePine, Zap, Recycle, Users, Calendar, TrendingDown } from 'lucide-react';
 import { Link } from 'react-router';
+import { getCurrentSchoolProfile } from '../utils/schoolSession';
 
 export function Dashboard() {
   const { t } = useLanguage();
+  const schoolProfile = getCurrentSchoolProfile();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
+        <div className="bg-white border border-border rounded-2xl p-4 mb-6 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('current_school')}</p>
+            <h2 className="text-xl font-semibold text-foreground">{schoolProfile?.schoolName || 'Kathmandu Model School'}</h2>
+            <p className="text-sm text-muted-foreground">
+              {schoolProfile?.district || 'Kathmandu'}{schoolProfile?.province ? `, ${schoolProfile.province}` : ''}
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+              {schoolProfile?.archetype || t('urban')}
+            </span>
+          </div>
+        </div>
+
         <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-8 text-primary-foreground mb-6">
           <div className="flex items-start justify-between mb-6">
             <div>
