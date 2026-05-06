@@ -102,20 +102,33 @@ export function CarbonReport() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-foreground mb-2">{t('carbon_report')}</h1>
-        <p className="text-muted-foreground">Your school's carbon footprint analysis</p>
-        {schoolProfile?.schoolName && (
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-            {t('current_school')}: {schoolProfile.schoolName}
+      <div className="mb-8 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+        <div className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-emerald-600">{t('carbon_report')}</p>
+            <h1 className="mt-2 text-3xl font-semibold text-foreground">Your school's carbon footprint</h1>
+            {schoolProfile?.schoolName && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                {schoolProfile.schoolName}
+              </p>
+            )}
           </div>
-        )}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-wide text-emerald-700">Student submissions</p>
+              <p className="mt-1 text-base font-semibold text-emerald-900">{studentCount} this month</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-slate-50 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Student emissions</p>
+              <p className="mt-1 text-base font-semibold text-foreground">{Math.round(studentEmissions)} kg CO₂</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Student Data Toggle */}
       {hasStudentContext && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-          <div className="flex items-center justify-between gap-4">
+        <div className="mb-6 rounded-[1.75rem] border border-blue-100 bg-blue-50/80 p-5 shadow-sm">
+          <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="flex items-center gap-3">
               <Users className="w-6 h-6 text-blue-600" />
               <div>
@@ -123,13 +136,13 @@ export function CarbonReport() {
                 <p className="text-sm text-blue-700">{Math.round(studentEmissions)} kg CO₂ from student activities</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-blue-900">School:</span>
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
+              <div className="flex items-center gap-3 rounded-full bg-white/90 px-4 py-2 shadow-sm">
+                <span className="text-sm font-medium text-blue-900">School</span>
                 <select
                   value={selectedSchool}
                   onChange={(e) => setSelectedSchool(e.target.value)}
-                  className="px-3 py-2 rounded border border-border bg-input-background"
+                  className="rounded-md border border-border bg-input-background px-3 py-2"
                 >
                   <option value="">All schools</option>
                   {availableSchools.map((s) => (
@@ -137,15 +150,15 @@ export function CarbonReport() {
                   ))}
                 </select>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-blue-900">Include Student Data:</span>
+              <label className="flex items-center gap-3 rounded-full bg-white/90 px-4 py-2 shadow-sm">
+                <span className="text-sm font-medium text-blue-900">Include student data</span>
                 <input
                   type="checkbox"
                   checked={includeStudentData}
                   onChange={(e) => setIncludeStudentData(e.target.checked)}
                   className="w-5 h-5 rounded cursor-pointer"
                 />
-              </div>
+              </label>
             </div>
           </div>
         </div>

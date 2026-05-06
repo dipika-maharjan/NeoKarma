@@ -41,11 +41,28 @@ npm run build
 
 ## Data flow
 
-1. Students choose their school and enter weekly activity data.
-2. The form records transport, plastic use, food waste, and optional distance.
-3. Data is stored in browser localStorage as `studentEmissions`.
-4. The carbon report can include or exclude student submissions.
-5. If a school has past submissions, the distance input is prefilled from that school's average distance.
+### School session & authentication
+
+1. A school (e.g., an admin or teacher) registers their school using the Register screen
+2. The school profile (name, district, province, archetype) is saved to browser localStorage
+3. The school is marked as "logged in" and redirected to the Dashboard
+4. On all subsequent visits, if a school profile is active, the user is auto-redirected from landing to Dashboard
+5. The school can log out from the profile dropdown in the Layout header, which clears the browser session and returns to landing
+
+### Student submission flow
+
+1. Students arrive and see the StudentInput screen
+2. If a school is already logged in via the browser session, that school name is auto-prefilled in the form
+3. If the school has prior submissions, the average trip distance is auto-prefilled from past data
+4. Students enter transport mode, plastic use, food waste, and optionally adjust the distance
+5. On submit, the weekly snapshot is stored to localStorage under that school's data
+6. After a brief celebration screen (with tree counter, score ring, and impact summary), the student is auto-navigated to the Carbon Report
+
+### School dashboard & reports
+
+1. The Dashboard shows the currently logged-in school's profile and monthly aggregate emissions
+2. The Carbon Report can filter by school, toggle student submissions on/off, and show a breakdown of emissions by category
+3. Both pages use the same active school profile from the browser session
 
 ## Emission methodology
 

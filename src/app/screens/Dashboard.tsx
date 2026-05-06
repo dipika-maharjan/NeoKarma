@@ -38,18 +38,19 @@ export function Dashboard() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <div className="bg-white border border-border rounded-2xl p-4 mb-6 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('current_school')}</p>
-            <h2 className="text-xl font-semibold text-foreground">{schoolProfile?.schoolName || 'Kathmandu Model School'}</h2>
-            <p className="text-sm text-muted-foreground">
-              {schoolProfile?.district || 'Kathmandu'}{schoolProfile?.province ? `, ${schoolProfile.province}` : ''}
-            </p>
-          </div>
-          <div className="text-right">
-            <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-              {schoolProfile?.archetype || t('urban')}
-            </span>
+        <div className="mb-6 overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-sm">
+          <div className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-emerald-600">{t('current_school')}</p>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">{schoolProfile?.schoolName || 'Kathmandu Model School'}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {schoolProfile?.district || 'Kathmandu'}{schoolProfile?.province ? `, ${schoolProfile.province}` : ''}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-wide text-emerald-700">Type</p>
+              <p className="mt-1 text-base font-semibold text-emerald-900">{schoolProfile?.archetype || t('urban')}</p>
+            </div>
           </div>
         </div>
 
