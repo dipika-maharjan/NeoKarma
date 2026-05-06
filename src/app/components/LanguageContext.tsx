@@ -1,5 +1,4 @@
-import { createContext, useContext, useState } from 'react';
-import type { ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type Language = 'en' | 'ne';
 
@@ -17,6 +16,9 @@ const translations = {
     school_admin: 'School Admin',
     student: 'Student',
     login: 'Login',
+    logout: 'Logout',
+    signed_in_as: 'Signed in as',
+    current_school: 'Current School',
     dashboard: 'Dashboard',
     data_entry: 'Data Entry',
     carbon_report: 'Carbon Report',
@@ -134,6 +136,9 @@ const translations = {
     school_admin: 'विद्यालय प्रशासक',
     student: 'विद्यार्थी',
     login: 'लगइन',
+    logout: 'लगआउट',
+    signed_in_as: 'लगइन गरिएको',
+    current_school: 'हालको विद्यालय',
     dashboard: 'ड्यासबोर्ड',
     data_entry: 'डाटा प्रविष्टि',
     carbon_report: 'कार्बन रिपोर्ट',

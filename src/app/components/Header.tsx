@@ -1,4 +1,4 @@
-import { useLanguage } from './LanguageContext.tsx';
+import { useLanguage } from './LanguageContext';
 import { Leaf, Languages } from 'lucide-react';
 
 export function Header() {
