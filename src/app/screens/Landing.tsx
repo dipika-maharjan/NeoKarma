@@ -54,9 +54,9 @@ export function Landing() {
         };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#edf2e8] p-3 sm:p-4">
-      <div className="mx-auto flex h-full max-w-[1450px] items-center justify-center">
-        <div className="relative w-full overflow-hidden rounded-[28px] border border-[#d9e2d6] bg-[#f7faf4] shadow-[0_24px_80px_rgba(15,23,42,0.16)]">
+    <div className="h-screen w-screen overflow-hidden bg-black">
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="relative h-full w-full overflow-hidden bg-[#f7faf4]">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: "url('/Gemini_Generated_Image_esgyq2esgyq2esgy.png')" }}
