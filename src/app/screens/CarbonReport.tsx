@@ -12,10 +12,12 @@ import {
 import SCHOOLS from '../data/schools';
 import { StudentSubmissionsView } from '../components/StudentSubmissionsView';
 import { getCurrentSchoolProfile } from '../utils/schoolSession';
+import { ensureMvpAnalysis, type MvpAnalysisBundle } from '../utils/mvpPlanner';
 
 export function CarbonReport() {
   const { t } = useLanguage();
   const schoolProfile = getCurrentSchoolProfile();
+  const [analysis, setAnalysis] = useState<MvpAnalysisBundle | null>(null);
   const [includeStudentData, setIncludeStudentData] = useState(false);
   const [studentEmissions, setStudentEmissions] = useState(0);
   const [studentCount, setStudentCount] = useState(0);
@@ -23,6 +25,7 @@ export function CarbonReport() {
   const [availableSchools, setAvailableSchools] = useState<string[]>([]);
 
   useEffect(() => {
+    setAnalysis(ensureMvpAnalysis(schoolProfile));
     const schools = Array.from(
       new Set([
         ...(schoolProfile?.schoolName ? [schoolProfile.schoolName] : []),
@@ -52,37 +55,48 @@ export function CarbonReport() {
     }
   }, [selectedSchool]);
 
-  // School data (base emissions)
-  const schoolEmissions = {
-    electricity: 215,
-    transport: 87,
-    waste: 30,
-    cooking: 10,
-  };
+  if (!analysis) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center p-6 text-center">
+        <div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary" />
+          <p className="text-foreground font-medium">Generating your school carbon report...</p>
+          <p className="text-sm text-muted-foreground mt-1">Reading saved school and monthly data</p>
+        </div>
+      </div>
+    );
+  }
 
-  const totalSchoolEmissions = schoolEmissions.electricity + schoolEmissions.transport + schoolEmissions.waste + schoolEmissions.cooking;
+  const emissions = analysis.emissions;
+  const schoolOnlyTotal = Math.max(0, emissions.totalCO2 - emissions.studentCO2);
   const hasStudentContext = availableSchools.length > 0 || Boolean(schoolProfile?.schoolName);
   
-  // Calculate combined emissions
-  const totalEmissions = includeStudentData ? totalSchoolEmissions + Math.round(studentEmissions) : totalSchoolEmissions;
+  const totalEmissions = includeStudentData ? emissions.totalCO2 : schoolOnlyTotal;
+  const transportFromStudents = Math.round(emissions.studentCO2 * 0.7);
+  const wasteFromStudents = Math.round(emissions.studentCO2 * 0.3);
   
-  // Build data with or without student data
-  let data;
-  if (includeStudentData && studentEmissions > 0) {
-    data = [
-      { name: 'Electricity', value: schoolEmissions.electricity, percent: Math.round((schoolEmissions.electricity / totalEmissions) * 100) },
-      { name: 'Transport', value: schoolEmissions.transport + Math.round(studentEmissions * 0.6), percent: Math.round(((schoolEmissions.transport + Math.round(studentEmissions * 0.6)) / totalEmissions) * 100) },
-      { name: 'Waste', value: schoolEmissions.waste + Math.round(studentEmissions * 0.3), percent: Math.round(((schoolEmissions.waste + Math.round(studentEmissions * 0.3)) / totalEmissions) * 100) },
-      { name: 'Cooking', value: schoolEmissions.cooking + Math.round(studentEmissions * 0.1), percent: Math.round(((schoolEmissions.cooking + Math.round(studentEmissions * 0.1)) / totalEmissions) * 100) },
-    ];
-  } else {
-    data = [
-      { name: 'Electricity', value: schoolEmissions.electricity, percent: 63 },
-      { name: 'Transport', value: schoolEmissions.transport, percent: 25 },
-      { name: 'Waste', value: schoolEmissions.waste, percent: 9 },
-      { name: 'Cooking', value: schoolEmissions.cooking, percent: 3 },
-    ];
-  }
+  const data = [
+    {
+      name: 'Energy',
+      value: analysis.emissions.electricityCO2 + analysis.emissions.dieselCO2,
+      percent: Math.round(((analysis.emissions.electricityCO2 + analysis.emissions.dieselCO2) / Math.max(totalEmissions, 1)) * 100),
+    },
+    {
+      name: 'Transport',
+      value: includeStudentData ? transportFromStudents : 0,
+      percent: includeStudentData ? Math.round((transportFromStudents / Math.max(totalEmissions, 1)) * 100) : 0,
+    },
+    {
+      name: 'Cooking',
+      value: analysis.emissions.cookingCO2,
+      percent: Math.round((analysis.emissions.cookingCO2 / Math.max(totalEmissions, 1)) * 100),
+    },
+    {
+      name: 'Waste',
+      value: includeStudentData ? analysis.emissions.wasteCO2 : Math.max(0, analysis.emissions.wasteCO2 - wasteFromStudents),
+      percent: Math.round((Math.max(0, includeStudentData ? analysis.emissions.wasteCO2 : analysis.emissions.wasteCO2 - wasteFromStudents) / Math.max(totalEmissions, 1)) * 100),
+    },
+  ];
 
   const colors = ['#dc2626', '#f97316', '#fbbf24', '#3B7A2B'];
 
@@ -186,10 +200,15 @@ export function CarbonReport() {
             <AlertTriangle className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-amber-900 mb-1">{t('biggest_issue')}: Electricity ({data[0].percent}%)</h3>
+            <h3 className="font-semibold text-amber-900 mb-1">{t('biggest_issue')}: {emissions.biggestSourceLabel} ({data.find((item) => item.name.toLowerCase() === emissions.biggestSourceLabel.toLowerCase())?.percent ?? 0}%)</h3>
             <p className="text-sm text-amber-800">
-              Your electricity consumption is the main contributor to carbon emissions.
-              Consider switching to solar or reducing usage during peak hours.
+              {emissions.biggestSourceLabel === 'Energy'
+                ? 'Your electricity and generator use are the main contributors to carbon emissions. Consider switching to solar or reducing usage during peak hours.'
+                : emissions.biggestSourceLabel === 'Transport'
+                  ? 'Student travel is the main contributor to carbon emissions. Walking groups and route optimization can reduce it quickly.'
+                  : emissions.biggestSourceLabel === 'Cooking'
+                    ? 'Cooking fuel is the main contributor to carbon emissions. Efficient stoves and fuel tracking can cut it fast.'
+                    : 'Waste is the main contributor to carbon emissions. Sorting, composting, and safer disposal can reduce it.'}
             </p>
           </div>
         </div>
@@ -200,17 +219,17 @@ export function CarbonReport() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4">
             <TreePine className="w-12 h-12 text-primary mx-auto mb-3" />
-            <p className="text-3xl font-semibold text-foreground mb-1">{Math.round((totalEmissions / 3.8) * 1.2)}</p>
+            <p className="text-3xl font-semibold text-foreground mb-1">{Math.round(totalEmissions / 21.7)}</p>
             <p className="text-sm text-muted-foreground">Trees needed to absorb this CO₂</p>
           </div>
           <div className="text-center p-4">
             <Droplets className="w-12 h-12 text-blue-600 mx-auto mb-3" />
-            <p className="text-3xl font-semibold text-foreground mb-1">{Math.round(totalEmissions * 36.5)}</p>
+            <p className="text-3xl font-semibold text-foreground mb-1">{Math.round(totalEmissions * 2)}</p>
             <p className="text-sm text-muted-foreground">Liters of water equivalent impact</p>
           </div>
           <div className="text-center p-4">
             <Car className="w-12 h-12 text-orange-600 mx-auto mb-3" />
-            <p className="text-3xl font-semibold text-foreground mb-1">{Math.round(totalEmissions * 3.7)}</p>
+            <p className="text-3xl font-semibold text-foreground mb-1">{Math.round(totalEmissions / 0.21)}</p>
             <p className="text-sm text-muted-foreground">km driven by car equivalent</p>
           </div>
         </div>

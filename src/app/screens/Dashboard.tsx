@@ -1,13 +1,39 @@
+import { useEffect, useState } from 'react';
 import { useLanguage } from '../components/LanguageContext';
 import { StatCard } from '../components/StatCard';
 import { ActivityItem } from '../components/ActivityItem';
 import { CloudRain, TreePine, Zap, Recycle, Users, Calendar, TrendingDown } from 'lucide-react';
 import { Link } from 'react-router';
 import { getCurrentSchoolProfile } from '../utils/schoolSession';
+import { ensureMvpAnalysis, type MvpAnalysisBundle } from '../utils/mvpPlanner';
 
 export function Dashboard() {
   const { t } = useLanguage();
   const schoolProfile = getCurrentSchoolProfile();
+  const [analysis, setAnalysis] = useState<MvpAnalysisBundle | null>(null);
+
+  useEffect(() => {
+    setAnalysis(ensureMvpAnalysis(schoolProfile));
+  }, [schoolProfile]);
+
+  const emissions = analysis?.emissions;
+  const totalCO2 = emissions?.totalCO2 ?? 0;
+  const energyCO2 = emissions ? emissions.electricityCO2 + emissions.dieselCO2 : 0;
+  const transportCO2 = emissions ? Math.round(emissions.studentCO2 * 0.7) : 0;
+  const wasteCO2 = emissions ? emissions.wasteCO2 : 0;
+  const progressPercent = totalCO2 > 0 ? Math.min(100, Math.max(10, 100 - Math.round(totalCO2 / 5))) : 0;
+
+  if (!analysis) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center p-8 text-center">
+        <div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary" />
+          <p className="text-foreground font-medium">Loading your dashboard...</p>
+          <p className="text-sm text-muted-foreground mt-1">Reading saved school data and carbon analysis</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -32,14 +58,14 @@ export function Dashboard() {
             <div>
               <h2 className="text-lg opacity-90 mb-2">{t('monthly_footprint')}</h2>
               <div className="flex items-baseline gap-3">
-                <span className="text-5xl font-semibold">342</span>
+                <span className="text-5xl font-semibold">{totalCO2}</span>
                 <span className="text-xl opacity-90">{t('kg_co2')}</span>
               </div>
             </div>
             <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
               <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                  <span className="text-2xl font-semibold">68%</span>
+                  <span className="text-2xl font-semibold">{progressPercent}%</span>
                 </div>
               </div>
             </div>
@@ -47,16 +73,16 @@ export function Dashboard() {
 
           <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-3">
             <TreePine className="w-5 h-5" />
-            <span className="text-sm">= 89 {t('trees_needed')}</span>
+            <span className="text-sm">= {Math.round(totalCO2 / 21.7)} {t('trees_needed')}</span>
           </div>
 
           <div className="mt-6">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="opacity-90">{t('progress_to_goal')}</span>
-              <span>68%</span>
+              <span>{progressPercent}%</span>
             </div>
             <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-white rounded-full" style={{ width: '68%' }} />
+              <div className="h-full bg-white rounded-full" style={{ width: `${progressPercent}%` }} />
             </div>
           </div>
         </div>
@@ -65,21 +91,21 @@ export function Dashboard() {
           <StatCard
             icon={<Zap className="w-6 h-6 text-primary" />}
             title={t('energy_co2')}
-            value="215"
+            value={String(energyCO2)}
             unit={t('kg_co2')}
             iconBg="bg-orange-50"
           />
           <StatCard
             icon={<CloudRain className="w-6 h-6 text-primary" />}
             title={t('transport_co2')}
-            value="87"
+            value={String(transportCO2)}
             unit={t('kg_co2')}
             iconBg="bg-blue-50"
           />
           <StatCard
             icon={<Recycle className="w-6 h-6 text-primary" />}
             title={t('waste_co2')}
-            value="40"
+            value={String(wasteCO2)}
             unit={t('kg_co2')}
             iconBg="bg-green-50"
           />

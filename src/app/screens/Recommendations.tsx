@@ -1,75 +1,49 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '../components/LanguageContext';
-import { ChevronRight, TrendingDown, DollarSign, Zap } from 'lucide-react';
-
-const recommendations = [
-  {
-    id: 1,
-    title: 'Install Improved Cookstove',
-    co2Saved: 85,
-    cost: 25000,
-    difficulty: 'medium',
-    description: 'Replace traditional stoves with fuel-efficient cookstoves'
-  },
-  {
-    id: 2,
-    title: 'Start Composting Pit',
-    co2Saved: 40,
-    cost: 8000,
-    difficulty: 'easy',
-    description: 'Convert organic waste into compost for school garden'
-  },
-  {
-    id: 3,
-    title: 'Organize Walking Groups',
-    co2Saved: 120,
-    cost: 0,
-    difficulty: 'easy',
-    description: 'Encourage students to walk together to school'
-  },
-  {
-    id: 4,
-    title: 'Install Solar Panels',
-    co2Saved: 200,
-    cost: 150000,
-    difficulty: 'hard',
-    description: 'Generate clean electricity from solar energy'
-  },
-  {
-    id: 5,
-    title: 'LED Light Replacement',
-    co2Saved: 65,
-    cost: 35000,
-    difficulty: 'medium',
-    description: 'Replace all traditional bulbs with LED lights'
-  },
-  {
-    id: 6,
-    title: 'Rainwater Harvesting',
-    co2Saved: 30,
-    cost: 45000,
-    difficulty: 'medium',
-    description: 'Collect and store rainwater for non-drinking purposes'
-  },
-];
+import { ChevronRight, TrendingDown, DollarSign, Zap, Sparkles, Target, Leaf } from 'lucide-react';
+import { getCurrentSchoolProfile } from '../utils/schoolSession';
+import { ensureMvpAnalysis, type RecommendationItem } from '../utils/mvpPlanner';
 
 export function Recommendations() {
   const { t } = useLanguage();
   const [filter, setFilter] = useState('all');
+  const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
+  const [schoolLabel, setSchoolLabel] = useState('');
+  const [biggestSource, setBiggestSource] = useState('');
+
+  useEffect(() => {
+    const profile = getCurrentSchoolProfile();
+    const analysis = ensureMvpAnalysis(profile);
+    setRecommendations(analysis.recommendations);
+    setBiggestSource(analysis.emissions.biggestSourceLabel);
+    setSchoolLabel(profile?.schoolName ? `${profile.schoolName} (${profile.archetype} • ${profile.district})` : 'your school');
+  }, []);
 
   const filteredRecommendations = recommendations.filter((rec) => {
     if (filter === 'all') return true;
-    return rec.difficulty === filter;
+    return rec.difficulty.toLowerCase() === filter;
   });
 
   const difficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-700';
-      case 'medium': return 'bg-yellow-100 text-yellow-700';
-      case 'hard': return 'bg-red-100 text-red-700';
+      case 'Easy': return 'bg-green-100 text-green-700';
+      case 'Medium': return 'bg-yellow-100 text-yellow-700';
+      case 'Hard': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
+
+  if (recommendations.length === 0) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center p-8 text-center">
+        <div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary" />
+          <p className="text-foreground font-medium">Generating tailored recommendations...</p>
+          <p className="text-sm text-muted-foreground mt-1">Reading saved school and carbon data</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
@@ -78,8 +52,35 @@ export function Recommendations() {
           <div>
             <h1 className="text-3xl font-semibold text-foreground mb-2">{t('actions_for_school')}</h1>
             <p className="text-muted-foreground">
-              Tailored recommendations for <span className="text-primary font-medium">{t('urban')}</span> schools
+              Tailored recommendations for <span className="text-primary font-medium">{schoolLabel}</span>
             </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+          <div className="rounded-xl border border-border bg-white p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <Target className="w-5 h-5 text-primary" />
+              <p className="text-sm font-medium text-foreground">Biggest source</p>
+            </div>
+            <p className="text-lg font-semibold text-foreground">{biggestSource || 'Energy'}</p>
+            <p className="text-xs text-muted-foreground">The list is ranked around this source first.</p>
+          </div>
+          <div className="rounded-xl border border-border bg-white p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <p className="text-sm font-medium text-foreground">Recommendations</p>
+            </div>
+            <p className="text-lg font-semibold text-foreground">{recommendations.length}</p>
+            <p className="text-xs text-muted-foreground">Generated from your saved profile and emissions.</p>
+          </div>
+          <div className="rounded-xl border border-border bg-white p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <Leaf className="w-5 h-5 text-primary" />
+              <p className="text-sm font-medium text-foreground">Quick win</p>
+            </div>
+            <p className="text-lg font-semibold text-foreground">{recommendations[0]?.title_en || 'Loading...'}</p>
+            <p className="text-xs text-muted-foreground">Lowest-friction action with strong CO₂ impact.</p>
           </div>
         </div>
 
@@ -110,14 +111,15 @@ export function Recommendations() {
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
-                    {rec.title}
+                    {rec.title_en}
                   </h3>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${difficultyColor(rec.difficulty)}`}>
                     {rec.difficulty}
                   </span>
                 </div>
 
-                <p className="text-sm text-muted-foreground mb-4">{rec.description}</p>
+                <p className="text-sm text-muted-foreground mb-1">{rec.reason_en}</p>
+                <p className="text-sm text-primary/80 mb-4">{rec.title_np}</p>
 
                 <div className="flex flex-wrap gap-4 mb-4">
                   <div className="flex items-center gap-2">
@@ -126,7 +128,7 @@ export function Recommendations() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">{t('expected_saved')}</p>
-                      <p className="text-sm font-semibold text-foreground">{rec.co2Saved} kg/month</p>
+                      <p className="text-sm font-semibold text-foreground">{rec.co2_saved_kg} kg/month</p>
                     </div>
                   </div>
 
@@ -137,7 +139,7 @@ export function Recommendations() {
                     <div>
                       <p className="text-xs text-muted-foreground">{t('cost')}</p>
                       <p className="text-sm font-semibold text-foreground">
-                        NPR {rec.cost === 0 ? 'Free' : rec.cost.toLocaleString()}
+                        NPR {rec.cost_npr}
                       </p>
                     </div>
                   </div>

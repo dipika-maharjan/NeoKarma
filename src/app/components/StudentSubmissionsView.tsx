@@ -1,4 +1,3 @@
-import type { StudentData } from '../utils/studentDataStorage';
 import { getAllStudentData } from '../utils/studentDataStorage';
 
 const transportIcons = {

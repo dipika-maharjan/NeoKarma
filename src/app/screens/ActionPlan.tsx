@@ -1,62 +1,75 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '../components/LanguageContext';
-import { CheckCircle, Circle, Upload, Clock } from 'lucide-react';
-
-const planData = [
-  {
-    month: 1,
-    weeks: [
-      { id: 1, task: 'Survey current energy usage', status: 'completed' },
-      { id: 2, task: 'Purchase LED bulbs', status: 'completed' },
-      { id: 3, task: 'Install LED lights in classrooms', status: 'completed' },
-      { id: 4, task: 'Install LED lights in office areas', status: 'in_progress' },
-    ]
-  },
-  {
-    month: 2,
-    weeks: [
-      { id: 5, task: 'Start composting pit construction', status: 'in_progress' },
-      { id: 6, task: 'Complete composting pit', status: 'upcoming' },
-      { id: 7, task: 'Train students on composting', status: 'upcoming' },
-      { id: 8, task: 'Begin organic waste separation', status: 'upcoming' },
-    ]
-  },
-  {
-    month: 3,
-    weeks: [
-      { id: 9, task: 'Launch walking group program', status: 'upcoming' },
-      { id: 10, task: 'Organize tree planting event', status: 'upcoming' },
-      { id: 11, task: 'Install rainwater collection system', status: 'upcoming' },
-      { id: 12, task: 'Final month evaluation', status: 'upcoming' },
-    ]
-  },
-];
+import { Circle, Upload, CalendarDays, CheckCircle2, Gauge } from 'lucide-react';
+import { getCurrentSchoolProfile } from '../utils/schoolSession';
+import { ensureMvpAnalysis, type ActionPlanBundle } from '../utils/mvpPlanner';
 
 export function ActionPlan() {
   const { t } = useLanguage();
   const [selectedTask, setSelectedTask] = useState<number | null>(null);
+  const [plan, setPlan] = useState<ActionPlanBundle | null>(null);
+
+  useEffect(() => {
+    const profile = getCurrentSchoolProfile();
+    const analysis = ensureMvpAnalysis(profile);
+    setPlan(analysis.actionPlan);
+  }, []);
+
+  if (!plan) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center p-8 text-center">
+        <div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary" />
+          <p className="text-foreground font-medium">Generating your 3-month action plan...</p>
+          <p className="text-sm text-muted-foreground mt-1">Using the saved carbon profile and recommendations</p>
+        </div>
+      </div>
+    );
+  }
+
+  const planData = [
+    { month: 1, title_en: plan.month1.title_en, title_np: plan.month1.title_np, weeks: plan.month1.weeks },
+    { month: 2, title_en: plan.month2.title_en, title_np: plan.month2.title_np, weeks: plan.month2.weeks },
+    { month: 3, title_en: plan.month3.title_en, title_np: plan.month3.title_np, weeks: plan.month3.weeks },
+  ];
 
   const totalTasks = planData.reduce((sum, month) => sum + month.weeks.length, 0);
-  const completedTasks = planData.reduce(
-    (sum, month) => sum + month.weeks.filter(w => w.status === 'completed').length,
-    0
-  );
-  const progressPercent = Math.round((completedTasks / totalTasks) * 100);
-
-  const statusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-primary bg-primary/10';
-      case 'in_progress': return 'text-amber-600 bg-amber-50';
-      case 'upcoming': return 'text-gray-400 bg-gray-50';
-      default: return 'text-gray-400 bg-gray-50';
-    }
-  };
+  const completedTasks = 0;
+  const progressPercent = 0;
+  const schoolProfile = getCurrentSchoolProfile();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-foreground mb-2">3-{t('month')} {t('action_plan')}</h1>
-        <p className="text-muted-foreground">Track your school's carbon reduction initiatives</p>
+        <p className="text-muted-foreground">Generated from your current emission profile and recommended actions</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="rounded-xl border border-border bg-white p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <CalendarDays className="w-5 h-5 text-primary" />
+            <p className="text-sm font-medium text-foreground">Plan length</p>
+          </div>
+          <p className="text-lg font-semibold text-foreground">3 months</p>
+          <p className="text-xs text-muted-foreground">Weekly tasks designed for your MVP flow.</p>
+        </div>
+        <div className="rounded-xl border border-border bg-white p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <Gauge className="w-5 h-5 text-primary" />
+            <p className="text-sm font-medium text-foreground">Current completion</p>
+          </div>
+          <p className="text-lg font-semibold text-foreground">{progressPercent}%</p>
+          <p className="text-xs text-muted-foreground">Updates are saved locally when you add proof later.</p>
+        </div>
+        <div className="rounded-xl border border-border bg-white p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <CheckCircle2 className="w-5 h-5 text-primary" />
+            <p className="text-sm font-medium text-foreground">Generated for</p>
+          </div>
+          <p className="text-lg font-semibold text-foreground">{schoolProfile?.schoolName || 'your school'}</p>
+          <p className="text-xs text-muted-foreground">Based on the saved school profile and emissions.</p>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-border p-6 mb-8">
@@ -78,65 +91,48 @@ export function ActionPlan() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {planData.map((monthData) => (
-          <div key={monthData.month} className="bg-white rounded-xl border border-border p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold">
-                {monthData.month}
+          <div key={monthData.month} className="bg-white rounded-xl border border-border p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-3 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold">
+                  {monthData.month}
+                </div>
+                <div>
+                  <h3 className="font-medium text-foreground">{t('month')} {monthData.month}</h3>
+                  <span className="text-xs text-muted-foreground">{monthData.title_en}</span>
+                </div>
               </div>
-              <h3 className="font-medium text-foreground">
-                {t('month')} {monthData.month}
-              </h3>
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{monthData.title_np}</span>
             </div>
 
             <div className="space-y-3">
               {monthData.weeks.map((week, index) => (
                 <div
-                  key={week.id}
-                  className={`p-4 rounded-lg border transition-all ${
-                    week.status === 'completed'
-                      ? 'border-primary/20 bg-primary/5'
-                      : week.status === 'in_progress'
-                      ? 'border-amber-200 bg-amber-50'
-                      : 'border-border bg-white'
-                  }`}
+                  key={`${monthData.month}-${week.week}`}
+                  className="p-4 rounded-lg border border-border bg-gradient-to-br from-white to-accent/40 transition-all"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-1">
-                      {week.status === 'completed' ? (
-                        <CheckCircle className="w-5 h-5 text-primary" />
-                      ) : week.status === 'in_progress' ? (
-                        <Clock className="w-5 h-5 text-amber-600" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-gray-300" />
-                      )}
+                      <Circle className="w-5 h-5 text-gray-300" />
                     </div>
                     <div className="flex-1">
                       <p className="text-xs text-muted-foreground mb-1">
                         {t('week')} {index + 1}
                       </p>
-                      <p className={`text-sm font-medium ${
-                        week.status === 'upcoming' ? 'text-muted-foreground' : 'text-foreground'
-                      }`}>
-                        {week.task}
-                      </p>
-                      {week.status === 'completed' && (
+                      <p className="text-sm font-medium text-foreground">{week.task_en}</p>
+                      <p className="text-xs text-primary/80 mt-1">{week.task_np}</p>
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <span className="inline-flex rounded-full bg-accent px-2 py-1 text-[11px] font-medium text-foreground">
+                          {week.category}
+                        </span>
                         <button
-                          onClick={() => setSelectedTask(week.id)}
-                          className="mt-2 flex items-center gap-1 text-xs text-primary hover:underline"
-                        >
-                          <Upload className="w-3 h-3" />
-                          View proof
-                        </button>
-                      )}
-                      {week.status === 'in_progress' && (
-                        <button
-                          onClick={() => setSelectedTask(week.id)}
-                          className="mt-2 flex items-center gap-1 text-xs text-amber-600 hover:underline"
+                          onClick={() => setSelectedTask(week.week)}
+                          className="flex items-center gap-1 text-xs text-primary hover:underline"
                         >
                           <Upload className="w-3 h-3" />
                           {t('upload_proof')}
                         </button>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
