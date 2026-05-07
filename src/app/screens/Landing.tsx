@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useLanguage } from '../components/LanguageContext';
 import { Link, useNavigate } from 'react-router';
-import { Leaf, Languages, UserCircle, GraduationCap, TreePine, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
+import { ArrowRight, GraduationCap, Sparkles, UserCircle } from 'lucide-react';
+import { useLanguage } from '../components/LanguageContext';
 import { getCurrentSchoolProfile } from '../utils/schoolSession';
 
 export function Landing() {
@@ -20,172 +20,162 @@ export function Landing() {
     return null;
   }
 
+  const copy =
+    language === 'en'
+      ? {
+          nav: ['About', 'Impact', 'Contact'],
+          heroTitle: 'Leading Nepal Towards a Carbon-Free Future',
+          heroLead: 'Measure. Reduce. Grow.',
+          heroBody: 'Nepal’s premier clean school climate platform for connecting schools and students.',
+          adminLabel: 'Join as a School Admin',
+          adminDetail: 'Register your school and begin your climate journey.',
+          adminAction: 'Get Started',
+          studentLabel: 'Join as a Student',
+          studentDetail: 'Submit weekly actions and see your global impact.',
+          studentAction: 'Log Action',
+          footer: 'TOGETHER FOR A CARBON-FREE NEPAL',
+          toggleLabel: 'NP',
+          steps: ['Measure', 'Reduce', 'Grow'],
+        }
+      : {
+          nav: ['हाम्रो बारेमा', 'प्रभाव', 'सम्पर्क'],
+          heroTitle: 'नेपाललाई कार्बन-मुक्त भविष्यतर्फ अघि बढाउँदै',
+          heroLead: 'मापन गर्नुहोस्। घटाउनुहोस्। बढाउनुहोस्।',
+          heroBody: 'विद्यालय र विद्यार्थीहरूलाई जोड्ने नेपालको सफा जलवायु प्लेटफर्म।',
+          adminLabel: 'विद्यालय प्रशासकका रूपमा प्रवेश गर्नुहोस्',
+          adminDetail: 'आफ्नो विद्यालय दर्ता गरेर जलवायु यात्रा सुरु गर्नुहोस्।',
+          adminAction: 'सुरु गर्नुहोस्',
+          studentLabel: 'विद्यार्थीका रूपमा प्रवेश गर्नुहोस्',
+          studentDetail: 'साप्ताहिक विवरण पठाउनुहोस् र आफ्नो प्रभाव हेर्नुहोस्।',
+          studentAction: 'विवरण पठाउनुहोस्',
+          footer: 'कार्बन-मुक्त नेपालको लागि सँगै',
+          toggleLabel: 'EN',
+          steps: ['मापन', 'विद्यालय', 'घटाउने', 'बढाउने'],
+        };
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#ecfdf5_0%,#f8fafc_45%,#ffffff_100%)] px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col">
-        <header className="mb-6 flex items-center justify-end">
-          <button
-            onClick={toggleLanguage}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
-          >
-            <Languages className="w-4 h-4" />
-            <span>{language === 'en' ? 'नेपाली' : 'English'}</span>
-          </button>
-        </header>
+    <div className="h-screen w-screen overflow-hidden bg-black">
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="relative h-full w-full overflow-hidden bg-[#f7faf4]">
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('/Gemini_Generated_Image_esgyq2esgyq2esgy.png')" }}
+          />
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/18 via-black/34 to-black/72" />
 
-        <main className="grid flex-1 items-stretch gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-800 p-8 text-white shadow-2xl lg:p-10">
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute -left-16 top-10 h-52 w-52 rounded-full bg-white/20 blur-3xl" />
-              <div className="absolute right-0 top-32 h-44 w-44 rounded-full bg-lime-300/20 blur-3xl" />
-              <div className="absolute bottom-0 left-1/4 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
-            </div>
-
-            <div className="relative flex h-full flex-col justify-between gap-8">
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15">
-                    <Leaf className="w-10 h-10 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-4xl font-semibold tracking-tight lg:text-5xl">{t('title')}</h1>
-                    <p className="mt-1 text-lg font-medium text-emerald-50/90">{t('tagline')}</p>
-                  </div>
-                </div>
-
-                <p className="max-w-2xl text-base leading-7 text-emerald-50/85 lg:text-lg">
-                  {t('subtitle')}
-                </p>
-
-                <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                    <div className="flex items-center gap-2 text-sm font-medium text-white/80">
-                      <ShieldCheck className="h-4 w-4" />
-                      School flow
-                    </div>
-                    <p className="mt-2 text-sm text-white/80">Register, track, review, and improve in one browser session.</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                    <div className="flex items-center gap-2 text-sm font-medium text-white/80">
-                      <Sparkles className="h-4 w-4" />
-                      Student rhythm
-                    </div>
-                    <p className="mt-2 text-sm text-white/80">Weekly inputs feel lightweight and actionable, not static.</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                    <div className="flex items-center gap-2 text-sm font-medium text-white/80">
-                      <TreePine className="h-4 w-4" />
-                      Climate context
-                    </div>
-                    <p className="mt-2 text-sm text-white/80">Designed for Nepal schools and the Harit Pathshala flow.</p>
+          <div className="relative z-10 flex h-full min-h-0 flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 px-1 py-1">
+                <img
+                  src="/logo.png"
+                  alt="Harit Pathshala logo"
+                  className="h-16 w-16 object-contain brightness-150 contrast-110 saturate-150 drop-shadow-[0_4px_14px_rgba(255,255,255,1)] sm:h-20 sm:w-20"
+                />
+                <div className="leading-tight">
+                  <div className="text-[19px] font-semibold leading-none text-emerald-950 sm:text-[23px]">{t('title')}</div>
+                  <div className="mt-1 text-[11px] font-medium tracking-[0.08em] text-emerald-100/95 drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]">
+                    {language === 'en' ? 'Nepal School Climate Platform' : 'नेपाल विद्यालय जलवायु प्लेटफर्म'}
                   </div>
                 </div>
               </div>
 
-              <div className="relative rounded-[1.75rem] border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-white/60">Ready to start</p>
-                    <p className="mt-1 text-2xl font-semibold">Choose your entry point</p>
-                  </div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium">
-                    <Leaf className="h-4 w-4" />
-                    No backend needed yet
-                  </div>
-                </div>
+              <div className="flex items-center gap-3">
+                <nav className="hidden items-center gap-6 text-[14px] font-medium text-slate-900 md:flex">
+                  {copy.nav.map((item) => (
+                    <a key={item} href="#" className="transition-colors hover:text-emerald-800">
+                      {item}
+                    </a>
+                  ))}
+                </nav>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <Link
-                    to="/register"
-                    className="group rounded-2xl bg-white p-5 text-foreground transition-transform hover:-translate-y-0.5 hover:shadow-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-primary">
-                        <UserCircle className="h-8 w-8" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h2 className="text-xl font-semibold">{t('school_admin')}</h2>
-                        <p className="text-sm text-muted-foreground">Register your school and continue as that school.</p>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </Link>
-
-                  <Link
-                    to="/student-input"
-                    className="group rounded-2xl border border-white/20 bg-white/10 p-5 text-white transition-transform hover:-translate-y-0.5 hover:shadow-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-white">
-                        <GraduationCap className="h-8 w-8" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h2 className="text-xl font-semibold">{t('student')}</h2>
-                        <p className="text-sm text-white/75">Submit weekly actions from a clean, guided screen.</p>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-white transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </Link>
-                </div>
+                <button
+                  onClick={toggleLanguage}
+                  className="inline-flex items-center rounded-full border border-white/75 bg-white/92 px-3.5 py-1.5 text-[11px] font-semibold text-emerald-800 shadow-[0_6px_16px_rgba(15,23,42,0.10)] backdrop-blur-md transition-colors hover:bg-white"
+                >
+                  {copy.toggleLabel}
+                </button>
               </div>
             </div>
-          </section>
 
-          <section className="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-2xl">
-            <div className="border-b border-border bg-slate-50 px-6 py-5 sm:px-8">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Visual preview</p>
-              <h2 className="mt-1 text-2xl font-semibold text-foreground">A calmer first screen</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                The goal is to make the first interaction feel professional, school-focused, and easy to trust.
-              </p>
+            <div className="flex flex-1 items-center justify-center py-3 sm:py-5">
+              <div className="grid w-full max-w-[1240px] items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
+                <section className="max-w-[620px] text-left text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.16)]">
+
+                  <h2 className="max-w-[580px] text-[46px] font-semibold leading-[0.98] tracking-tight text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.18)] sm:text-[58px] lg:text-[64px]">
+                    {copy.heroTitle}
+                  </h2>
+
+                  <p className="mt-7 text-[24px] font-semibold text-emerald-50 sm:text-[28px]">
+                    {copy.heroLead}
+                  </p>
+
+                  <p className="mt-4 max-w-[520px] text-[17px] leading-8 text-white/88 sm:text-[19px]">
+                    {copy.heroBody}
+                  </p>
+
+                  <div className="mt-9 flex flex-wrap items-center gap-3.5 text-[12px] font-semibold uppercase tracking-[0.26em] text-white/90 sm:text-[13px]">
+                    {copy.steps.map((step, index) => (
+                      <div key={step} className="flex items-center gap-3">
+                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/35 bg-white/10 text-[11px] tracking-normal text-white/90 backdrop-blur-sm">
+                          {index + 1}
+                        </span>
+                        <span>{step}</span>
+                        {index < copy.steps.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-white/70" />}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="flex justify-center lg:justify-end">
+                  <div className="grid w-full max-w-[500px] gap-6 sm:grid-cols-2 lg:max-w-none">
+                    <Link
+                      to="/register"
+                      className="group overflow-hidden rounded-[24px] border border-white/35 bg-white/96 text-foreground shadow-[0_18px_42px_rgba(15,23,42,0.16)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_50px_rgba(15,23,42,0.2)]"
+                    >
+                      <div className="h-12 bg-gradient-to-r from-emerald-800 to-emerald-600" />
+                      <div className="px-6 pb-6 pt-0 text-center sm:px-7 sm:pb-7">
+                        <div className="mx-auto -mt-7 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-lg shadow-emerald-700/20 ring-4 ring-white">
+                          <UserCircle className="h-8 w-8" />
+                        </div>
+                        <h3 className="mt-6 text-[17px] font-semibold text-slate-950">{copy.adminLabel}</h3>
+                        <p className="mt-3 text-[13px] leading-6 text-slate-600">{copy.adminDetail}</p>
+                        <div className="mt-6 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-[12px] font-semibold text-emerald-800 transition-colors group-hover:bg-emerald-100">
+                          {copy.adminAction}
+                        </div>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/student-input"
+                      className="group overflow-hidden rounded-[24px] border border-white/35 bg-white/96 text-foreground shadow-[0_18px_42px_rgba(15,23,42,0.16)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_50px_rgba(15,23,42,0.2)]"
+                    >
+                      <div className="h-12 bg-gradient-to-r from-lime-400 to-emerald-300" />
+                      <div className="px-6 pb-6 pt-0 text-center sm:px-7 sm:pb-7">
+                        <div className="mx-auto -mt-7 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 shadow-lg shadow-emerald-700/15 ring-4 ring-white">
+                          <GraduationCap className="h-8 w-8" />
+                        </div>
+                        <h3 className="mt-6 text-[17px] font-semibold text-slate-950">{copy.studentLabel}</h3>
+                        <p className="mt-3 text-[13px] leading-6 text-slate-600">{copy.studentDetail}</p>
+                        <div className="mt-6 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-[12px] font-semibold text-emerald-800 transition-colors group-hover:bg-emerald-100">
+                          {copy.studentAction}
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                </section>
+              </div>
             </div>
 
-            <div className="space-y-4 p-6 sm:p-8">
-              <div className="rounded-3xl bg-gradient-to-br from-emerald-50 to-lime-50 p-5 shadow-sm">
-                <div className="mx-auto max-w-md rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-2xl bg-emerald-600/10 flex items-center justify-center text-primary">
-                      <TreePine className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Harit Pathshala</p>
-                      <p className="text-lg font-semibold text-foreground">Measure. Reduce. Grow.</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-border p-3">
-                      <p className="text-xs text-muted-foreground">School admin</p>
-                      <p className="text-sm font-medium text-foreground">Start school profile</p>
-                    </div>
-                    <div className="rounded-2xl border border-border p-3">
-                      <p className="text-xs text-muted-foreground">Student input</p>
-                      <p className="text-sm font-medium text-foreground">Weekly actions</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-border bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">1</p>
-                  <p className="mt-1 font-semibold text-foreground">Register</p>
-                  <p className="text-sm text-muted-foreground">Capture school details.</p>
-                </div>
-                <div className="rounded-2xl border border-border bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">2</p>
-                  <p className="mt-1 font-semibold text-foreground">Track</p>
-                  <p className="text-sm text-muted-foreground">Collect school and student data.</p>
-                </div>
-                <div className="rounded-2xl border border-border bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">3</p>
-                  <p className="mt-1 font-semibold text-foreground">Improve</p>
-                  <p className="text-sm text-muted-foreground">See carbon impact clearly.</p>
-                </div>
-              </div>
+            <div className="pb-2 pt-6 text-center text-[11px] font-semibold uppercase tracking-[0.34em] text-white/85 sm:pt-7 sm:text-xs">
+              <span className="inline-flex items-center gap-2 rounded-full bg-black/14 px-4 py-2 backdrop-blur-sm">
+                <Sparkles className="h-3.5 w-3.5 text-lime-200" />
+                {copy.footer}
+                <Sparkles className="h-3.5 w-3.5 text-lime-200" />
+              </span>
             </div>
-          </section>
-        </main>
+          </div>
+        </div>
       </div>
     </div>
   );
