@@ -5,7 +5,7 @@ import { ActivityItem } from '../components/ActivityItem';
 import { CloudRain, TreePine, Zap, Recycle, Users, Calendar, TrendingDown, FileText, Sparkles, ListTodo, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router';
 import { getCurrentSchoolProfile } from '../utils/schoolSession';
-import { ensureMvpAnalysis, type MvpAnalysisBundle } from '../utils/mvpPlanner';
+import { ensureMvpAnalysis, type MvpAnalysisBundle } from '../utils/mvpPlanner.ts';
 
 export function Dashboard() {
   const { t } = useLanguage();

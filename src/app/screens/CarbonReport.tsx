@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../components/LanguageContext';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
-import { AlertTriangle, TreePine, Droplets, Car, TrendingDown, Users } from 'lucide-react';
+import { AlertTriangle, TreePine, Droplets, Car, TrendingDown, Users, Check } from 'lucide-react';
 import {
   getCurrentMonthStudentEmissions,
   getStudentSubmissionCount,
@@ -12,12 +13,15 @@ import {
 import SCHOOLS from '../data/schools';
 import { StudentSubmissionsView } from '../components/StudentSubmissionsView';
 import { getCurrentSchoolProfile } from '../utils/schoolSession';
-import { ensureMvpAnalysis, type MvpAnalysisBundle } from '../utils/mvpPlanner';
+import { ensureMvpAnalysis, fetchRecommendationsWithAI, type MvpAnalysisBundle, type RecommendationItem } from '../utils/mvpPlanner.ts';
 
 export function CarbonReport() {
   const { t } = useLanguage();
   const schoolProfile = getCurrentSchoolProfile();
   const [analysis, setAnalysis] = useState<MvpAnalysisBundle | null>(null);
+  const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [selectedRecommendationId, setSelectedRecommendationId] = useState<number | null>(null);
   const [includeStudentData, setIncludeStudentData] = useState(false);
   const [studentEmissions, setStudentEmissions] = useState(0);
   const [studentCount, setStudentCount] = useState(0);
@@ -25,7 +29,32 @@ export function CarbonReport() {
   const [availableSchools, setAvailableSchools] = useState<string[]>([]);
 
   useEffect(() => {
-    setAnalysis(ensureMvpAnalysis(schoolProfile));
+    const mvpAnalysis = ensureMvpAnalysis(schoolProfile);
+    setAnalysis(mvpAnalysis);
+
+    // Fetch AI recommendations after analysis is ready
+    if (mvpAnalysis) {
+      setLoadingRecommendations(true);
+      fetchRecommendationsWithAI(mvpAnalysis.profile, mvpAnalysis.emissions)
+        .then((recs: RecommendationItem[]) => {
+          setRecommendations(recs);
+          // Auto-select the first recommendation
+          if (recs.length > 0) {
+            setSelectedRecommendationId(recs[0].id);
+            // Save selection to localStorage
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem('haritPathshala:selectedRecommendation', JSON.stringify(recs[0]));
+            }
+          }
+        })
+        .catch((error: unknown) => {
+          console.error('Error fetching recommendations:', error);
+        })
+        .finally(() => {
+          setLoadingRecommendations(false);
+        });
+    }
+
     const schools = Array.from(
       new Set([
         ...(schoolProfile?.schoolName ? [schoolProfile.schoolName] : []),
@@ -189,7 +218,7 @@ export function CarbonReport() {
               <XAxis type="number" />
               <YAxis dataKey="name" type="category" width={100} />
               <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                {data.map((entry, index) => (
+                {data.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={colors[index]} />
                 ))}
               </Bar>
@@ -226,6 +255,85 @@ export function CarbonReport() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Recommendations Section */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-semibold text-foreground mb-4">Recommended Actions</h2>
+        
+        {loadingRecommendations ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-64 bg-slate-100 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : recommendations.length === 0 ? (
+          <div className="text-center p-6 bg-slate-50 rounded-xl">
+            <p className="text-muted-foreground">No recommendations available. Please check your data and try again.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {recommendations.map((rec) => (
+              <button
+                key={rec.id}
+                onClick={() => {
+                  setSelectedRecommendationId(rec.id);
+                  if (typeof window !== 'undefined') {
+                    window.localStorage.setItem('haritPathshala:selectedRecommendation', JSON.stringify(rec));
+                  }
+                }}
+                className={`text-left rounded-xl border-2 p-5 transition-all ${
+                  selectedRecommendationId === rec.id
+                    ? 'border-primary bg-primary/5 shadow-lg'
+                    : 'border-border bg-white hover:border-primary/50 hover:shadow'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="font-semibold text-foreground flex-1 text-sm">{rec.title_en}</h3>
+                  {selectedRecommendationId === rec.id && (
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ml-2">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{rec.reason_en}</p>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {/* CO2 Saved */}
+                  <div className="bg-green-50 rounded-lg p-2">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">CO₂ Saved</p>
+                    <p className="text-sm font-semibold text-foreground">{rec.co2_saved_kg} kg</p>
+                  </div>
+                  {/* Cost */}
+                  <div className="bg-blue-50 rounded-lg p-2">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Cost</p>
+                    <p className="text-sm font-semibold text-foreground">{rec.cost_npr}</p>
+                  </div>
+                </div>
+
+                {/* Difficulty & Impact */}
+                <div className="flex items-center gap-2 text-xs">
+                  <span className={`px-2 py-1 rounded-full font-medium ${
+                    rec.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+                    rec.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {rec.difficulty}
+                  </span>
+                  <span className={`px-2 py-1 rounded-full font-medium ${
+                    rec.impact === 'Low' ? 'bg-slate-100 text-slate-700' :
+                    rec.impact === 'Medium' ? 'bg-orange-100 text-orange-700' :
+                    rec.impact === 'High' ? 'bg-purple-100 text-purple-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {rec.impact}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-border p-6 mb-6">
