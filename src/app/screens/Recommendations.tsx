@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLanguage } from '../components/LanguageContext';
-import { Sprout, Leaf, Users, Zap, Trash2, X } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import cookstoveImg from '../../assets/recommendations/cookstove.png';
 import compostImg from '../../assets/recommendations/compost.png';
 import walkingImg from '../../assets/recommendations/walking.png';
@@ -9,139 +8,330 @@ import ledReplacementImg from '../../assets/recommendations/led-replacement.png'
 import rooftopSolarImg from '../../assets/recommendations/rooftop-solar.png';
 import busRouteImg from '../../assets/recommendations/bus-route.png';
 import energyAuditImg from '../../assets/recommendations/energy-audit.png';
-import { getCurrentSchoolProfile } from '../utils/schoolSession';
-import { ensureMvpAnalysis, type RecommendationItem, type EmissionSummary } from '../utils/mvpPlanner';
 
-const getRecommendationImage = (rec: RecommendationItem) => {
-  const title = (rec.title_en || '').toLowerCase();
-  const cat = String(rec.category || '').toLowerCase();
-  if (title.includes('solar lantern') || title.includes('lantern')) {
-    return { src: solarLanternImg, alt: 'solar lantern' };
-  }
-  if (title.includes('led') || title.includes('light replacement') || title.includes('bulb')) {
-    return { src: ledReplacementImg, alt: 'LED replacement' };
-  }
-  if (title.includes('rooftop solar') || title.includes('solar readiness') || title.includes('roof')) {
-    return { src: rooftopSolarImg, alt: 'rooftop solar' };
-  }
-  if (title.includes('bus route') || title.includes('route optimization') || title.includes('bus')) {
-    return { src: busRouteImg, alt: 'bus route' };
-  }
-  if (title.includes('energy audit') || title.includes('audit')) {
-    return { src: energyAuditImg, alt: 'energy audit' };
-  }
-  if (title.includes('cook') || title.includes('stove') || cat === 'cooking') {
-    return { src: cookstoveImg, alt: 'cookstove' };
-  }
-  if (title.includes('compost') || title.includes('composting') || cat === 'waste') {
-    return { src: compostImg, alt: 'compost' };
-  }
-  if (title.includes('walk') || title.includes('walking') || title.includes('bicycle') || cat === 'transport') {
-    return { src: walkingImg, alt: 'walking' };
-  }
+import { ensureMvpAnalysis, fallbackRecommendationsByArchetype } from '../utils/mvpPlanner';
+import { getCurrentSchoolProfile, upsertCurrentSchoolData } from '../utils/schoolSession';
 
-  switch (rec.category) {
-    case 'energy':
-      return { fallback: <Zap className="h-12 w-12 text-emerald-700" /> };
-    case 'cooking':
-      return { fallback: <Sprout className="h-12 w-12 text-emerald-700" /> };
-    case 'transport':
-      return { fallback: <Users className="h-12 w-12 text-emerald-700" /> };
-    case 'waste':
-      return { fallback: <Trash2 className="h-12 w-12 text-emerald-700" /> };
-    default:
-      return { fallback: <Leaf className="h-12 w-12 text-emerald-700" /> };
-  }
+type Difficulty = 'Easy' | 'Medium' | 'Hard';
+
+type RecommendationCard = {
+  title: string;
+  image: string;
+  alt: string;
+  co2: string;
+  cost: string;
+  difficulty: Difficulty;
+  accent: string;
+  reason: string;
+  action: string;
 };
 
+const recommendations: RecommendationCard[] = [
+  {
+    title: 'Install Improved Cookstove',
+    image: cookstoveImg,
+    alt: 'Improved cookstove',
+    co2: '175 kg CO₂ / month',
+    cost: 'NPR 15,000',
+    difficulty: 'Easy',
+    accent: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    reason: 'Best for remote schools where cooking fuel is a major emissions source.',
+    action: 'Replace smoky wood stoves with a cleaner, more efficient option.',
+  },
+  {
+    title: 'Start Composting Pit',
+    image: compostImg,
+    alt: 'Composting pit',
+    co2: '90 kg CO₂ / month',
+    cost: 'NPR 3,000',
+    difficulty: 'Easy',
+    accent: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    reason: 'Turns food waste into compost and fits remote schools with waste buildup.',
+    action: 'Set up a simple compost pit near the kitchen or garden.',
+  },
+  {
+    title: 'Organize Walking Groups',
+    image: walkingImg,
+    alt: 'Walking groups',
+    co2: '120 kg CO₂ / month',
+    cost: 'Free',
+    difficulty: 'Easy',
+    accent: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    reason: 'Cuts travel emissions and works well in schools where students live nearby.',
+    action: 'Group students by route and encourage safe shared walking.',
+  },
+  {
+    title: 'Solar Lantern Pilot',
+    image: solarLanternImg,
+    alt: 'Solar lantern',
+    co2: '210 kg CO₂ / month',
+    cost: 'NPR 8,000',
+    difficulty: 'Medium',
+    accent: 'bg-amber-50 text-amber-700 border-amber-200',
+    reason: 'Useful where lanterns or backup lighting increase energy use after dark.',
+    action: 'Pilot solar lighting for evening study and hostel support.',
+  },
+  {
+    title: 'LED Replacement Drive',
+    image: ledReplacementImg,
+    alt: 'LED replacement',
+    co2: '140 kg CO₂ / month',
+    cost: 'NPR 6,500',
+    difficulty: 'Medium',
+    accent: 'bg-amber-50 text-amber-700 border-amber-200',
+    reason: 'Helps reduce electricity use without changing daily routines much.',
+    action: 'Swap older bulbs with efficient LEDs room by room.',
+  },
+  {
+    title: 'Rooftop Solar Readiness',
+    image: rooftopSolarImg,
+    alt: 'Rooftop solar',
+    co2: '480 kg CO₂ / month',
+    cost: 'NPR 75,000',
+    difficulty: 'Hard',
+    accent: 'bg-red-50 text-red-700 border-red-200',
+    reason: 'Best long-term option for urban schools with higher electricity demand.',
+    action: 'Assess roof space, daytime usage, and funding options first.',
+  },
+  {
+    title: 'Bus Route Optimization',
+    image: busRouteImg,
+    alt: 'Bus route optimization',
+    co2: '260 kg CO₂ / month',
+    cost: 'NPR 10,000',
+    difficulty: 'Medium',
+    accent: 'bg-amber-50 text-amber-700 border-amber-200',
+    reason: 'Strong fit for urban schools where transport emissions are high.',
+    action: 'Cluster pickup points so buses run fewer, fuller routes.',
+  },
+  {
+    title: 'Energy Audit Walkthrough',
+    image: energyAuditImg,
+    alt: 'Energy audit',
+    co2: '330 kg CO₂ / month',
+    cost: 'NPR 12,000',
+    difficulty: 'Hard',
+    accent: 'bg-red-50 text-red-700 border-red-200',
+    reason: 'Works as a diagnostic step before making larger efficiency investments.',
+    action: 'Audit energy losses room-by-room and schedule fixes.',
+  },
+];
+
+const filteredCards: Record<'all' | 'easy' | 'medium' | 'hard', RecommendationCard[]> = {
+  all: recommendations,
+  easy: recommendations.filter((item) => item.difficulty === 'Easy'),
+  medium: recommendations.filter((item) => item.difficulty === 'Medium'),
+  hard: recommendations.filter((item) => item.difficulty === 'Hard'),
+};
+
+function byDifficulty(cards: RecommendationCard[], filter: 'all' | 'easy' | 'medium' | 'hard') {
+  if (filter === 'all') return cards;
+  const difficulty = filter === 'easy' ? 'Easy' : filter === 'medium' ? 'Medium' : 'Hard';
+  return cards.filter((card) => card.difficulty === difficulty);
+}
+
+function cardAccent(difficulty: Difficulty) {
+  if (difficulty === 'Easy') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  if (difficulty === 'Medium') return 'bg-amber-50 text-amber-700 border-amber-200';
+  return 'bg-red-50 text-red-700 border-red-200';
+}
+
+function imageForRecommendation(title: string) {
+  const normalized = title.toLowerCase();
+  if (normalized.includes('cookstove') || normalized.includes('cooking')) return cookstoveImg;
+  if (normalized.includes('compost')) return compostImg;
+  if (normalized.includes('walk')) return walkingImg;
+  if (normalized.includes('solar lantern') || normalized.includes('lantern')) return solarLanternImg;
+  if (normalized.includes('led')) return ledReplacementImg;
+  if (normalized.includes('rooftop solar') || normalized.includes('solar readiness') || normalized.includes('solar')) return rooftopSolarImg;
+  if (normalized.includes('bus route') || normalized.includes('route optimization') || normalized.includes('bus')) return busRouteImg;
+  if (normalized.includes('audit')) return energyAuditImg;
+  return cookstoveImg;
+}
+
+// selection toggle
+function toggleArray(arr: string[], value: string) {
+  return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+}
+
 export function Recommendations() {
-  const { t } = useLanguage();
   const [filter, setFilter] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
-  const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
-  const [emissions, setEmissions] = useState<EmissionSummary | null>(null);
-  const [schoolArchetype, setSchoolArchetype] = useState('');
-  const [selectedRec, setSelectedRec] = useState<RecommendationItem | null>(null);
+  const [cards, setCards] = useState<RecommendationCard[]>(filteredCards.all);
+  const [basePicked, setBasePicked] = useState<RecommendationCard[]>(filteredCards.all);
+  const [moreActions, setMoreActions] = useState<RecommendationCard[]>([]);
+  const [profileArchetype, setProfileArchetype] = useState<string | null>(null);
+  const [biggestLabel, setBiggestLabel] = useState<string | null>(null);
+  const [totalCO2, setTotalCO2] = useState<number | null>(null);
   const [showMore, setShowMore] = useState(false);
+  const [expanded, setExpanded] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('selectedRecommendations');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as Array<{ title: string }>;
+      return parsed.map((p) => p.title);
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
-    const profile = getCurrentSchoolProfile();
-    const analysis = ensureMvpAnalysis(profile);
-    setRecommendations(analysis.recommendations);
-    setEmissions(analysis.emissions);
-    setSchoolArchetype(profile?.archetype || 'Your School');
-  }, []);
-
-  const filteredRecommendations = recommendations.filter(
-    (item) => filter === 'all' || item.difficulty.toLowerCase() === filter
-  );
-
-  const handleSeeDetails = (rec: RecommendationItem) => {
-    setSelectedRec(rec);
-  };
-
-  const handleViewMoreActions = () => {
-    setShowMore(true);
-  };
-
-  const difficultyStyle = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'Medium':
-        return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'Hard':
-        return 'bg-red-100 text-red-700 border-red-200';
-      default:
-        return 'bg-slate-100 text-slate-700';
+    // Load archetype and biggestSource from localStorage if available, else compute
+    let archetype = undefined;
+    try {
+      const rawSchool = localStorage.getItem('schoolData');
+      if (rawSchool) {
+        const parsed = JSON.parse(rawSchool);
+        archetype = parsed?.archetype;
+      }
+    } catch {
+      // ignore
     }
-  };
 
-  const formatCost = (cost: string) => {
-    if (!cost) return 'NPR -';
-    const trimmed = cost.toString().trim();
-    if (trimmed.toLowerCase() === 'free') return 'Free';
-    // If cost already contains non-numeric range, just prefix NPR
-    return `NPR ${trimmed}`;
-  };
+    if (!archetype) {
+      const profile = getCurrentSchoolProfile();
+      archetype = profile?.archetype;
+    }
 
-  if (!recommendations.length) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center p-8 text-center">
-        <div>
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary" />
-          <p className="font-medium text-foreground">Generating tailored recommendations...</p>
-          <p className="mt-1 text-sm text-muted-foreground">Reading the saved school profile and carbon analysis</p>
-        </div>
-      </div>
-    );
-  }
+    let biggestSource: string | undefined;
+    try {
+      const rawEm = localStorage.getItem('emissionData');
+      if (rawEm) {
+        const parsed = JSON.parse(rawEm);
+        biggestSource = parsed?.biggestSource;
+      }
+    } catch {
+      // ignore
+    }
+
+    if (!biggestSource) {
+      const profile = getCurrentSchoolProfile();
+      const analysis = ensureMvpAnalysis(profile);
+      biggestSource = analysis.emissions.biggestSource;
+    }
+
+    const a = String(archetype || '').toLowerCase();
+    const b = String(biggestSource || '').toLowerCase();
+
+    function pickByMapping(arche: string, source: string): RecommendationCard[] {
+      // mapping rules per product spec
+      if (arche.includes('remote') && source === 'cooking') {
+        return recommendations.filter((r) =>
+          ['Install Improved Cookstove', 'Solar Lantern Pilot', 'Organize Walking Groups'].includes(r.title)
+        );
+      }
+      if (arche.includes('remote') && source === 'waste') {
+        return recommendations.filter((r) =>
+          ['Start Composting Pit', 'Organize Walking Groups', 'Solar Lantern Pilot'].includes(r.title)
+        );
+      }
+      if (arche.includes('urban') && source === 'energy') {
+        return recommendations.filter((r) =>
+          ['Rooftop Solar Readiness', 'LED Replacement Drive', 'Bus Route Optimization'].includes(r.title)
+        );
+      }
+      if (arche.includes('urban') && source === 'transport') {
+        return recommendations.filter((r) =>
+          ['Bus Route Optimization', 'Organize Walking Groups', 'Rooftop Solar Readiness'].includes(r.title)
+        );
+      }
+      if (arche.includes('semi') || arche.includes('semi-urban') || arche.includes('semiurban')) {
+        return recommendations.filter((r) =>
+          ['LED Replacement Drive', 'Start Composting Pit', 'Organize Walking Groups'].includes(r.title)
+        );
+      }
+
+      // fallback: pick top 3 by presumed impact
+      return recommendations.slice(0, 3);
+    }
+
+    const picked = pickByMapping(a, b);
+    const primary = picked.length ? picked : filteredCards.all.slice(0, 3);
+    setBasePicked(primary);
+
+    const archeKey: 'remote' | 'semiUrban' | 'urban' = a.includes('remote') ? 'remote' : a.includes('semi') ? 'semiUrban' : 'urban';
+    const fallbackSet = fallbackRecommendationsByArchetype[archeKey] || [];
+    const fallbackCards: RecommendationCard[] = fallbackSet.map((f) => ({
+      title: f.title_en,
+      image: imageForRecommendation(f.title_en),
+      alt: f.title_en,
+      co2: `${f.co2_saved_kg} kg CO₂ / month`,
+      cost: f.cost_npr,
+      difficulty: f.difficulty,
+      accent: cardAccent(f.difficulty),
+      reason: f.reason_en,
+      action: f.reason_en,
+    }));
+
+    setMoreActions(fallbackCards.filter((card) => !primary.some((pickedCard) => pickedCard.title === card.title)));
+
+    // set header values
+    try {
+      const profile = getCurrentSchoolProfile();
+      const analysis = ensureMvpAnalysis(profile);
+      setProfileArchetype(profile?.archetype || archetype || null);
+      setBiggestLabel(analysis.emissions.biggestSourceLabel || biggestSource || null);
+      setTotalCO2(analysis.emissions.totalCO2 || null);
+    } catch {
+      setProfileArchetype(archetype || null);
+      setBiggestLabel(biggestSource || null);
+      setTotalCO2(null);
+    }
+  }, [filter]);
+
+  // derive displayed cards from basePicked + filter
+  useEffect(() => {
+    if (!showMore) {
+      setCards(byDifficulty(basePicked, filter));
+      return;
+    }
+
+    // View More adds a second section; keep primary cards unchanged in the main list.
+    setCards(byDifficulty(basePicked, filter));
+  }, [basePicked, filter, showMore]);
+
+  useEffect(() => {
+    // persist selected recommendations as array of objects
+    try {
+      const payload = selected.map((title) => {
+        const item = recommendations.find((r) => r.title === title);
+        return item
+          ? { title: item.title, co2: item.co2, cost: item.cost, difficulty: item.difficulty }
+          : { title };
+      });
+      localStorage.setItem('selectedRecommendations', JSON.stringify(payload));
+      try {
+        upsertCurrentSchoolData({ selectedRecommendations: payload });
+      } catch {}
+    } catch {
+      // ignore
+    }
+  }, [selected]);
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 sm:p-8">
       <div className="mx-auto max-w-6xl">
-        {/* Header with Circle Badge */}
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-700 font-bold text-white text-lg">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-700 text-lg font-bold text-white">
             7
           </div>
           <h1 className="text-2xl font-bold text-foreground">Recommendation Screen</h1>
         </div>
 
-        {/* Main Title and Archetype */}
-        <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
-          <div className="flex items-start justify-between">
-            <h2 className="text-xl font-bold text-foreground">Recommended Actions for Your School</h2>
-            <div className="text-sm font-semibold text-gray-700 text-right">
-              <div>Archetype: <span className="capitalize">{schoolArchetype}</span></div>
-              {emissions && (
-                <div className="mt-1 text-sm text-gray-600">Ranked by: <span className="font-semibold text-gray-800">{emissions.biggestSourceLabel}</span> — <span className="font-semibold text-gray-800">{emissions.totalCO2} kg CO₂</span> / month</div>
-              )}
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-lg font-semibold text-foreground">Recommended Actions for Your School</p>
+              <p className="mt-1 text-sm text-muted-foreground">Archetype: <span className="font-semibold text-foreground">{profileArchetype ?? 'Unknown'}</span></p>
+            </div>
+            <div className="text-sm text-right text-muted-foreground">
+              <p>Ranked by <span className="font-semibold text-foreground">{biggestLabel ?? 'Energy'}</span></p>
+              <p><span className="font-semibold text-foreground">{totalCO2 ? `${totalCO2} kg CO₂` : '—'}</span> / month</p>
             </div>
           </div>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="mb-8 flex flex-wrap gap-2">
+        <div className="mb-6 flex flex-wrap gap-2">
           {[
             ['all', 'All'],
             ['easy', 'Easy'],
@@ -151,10 +341,10 @@ export function Recommendations() {
             <button
               key={value}
               onClick={() => setFilter(value as typeof filter)}
-              className={`rounded px-4 py-2 font-semibold transition-all ${
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                 filter === value
-                  ? 'bg-green-700 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300'
               }`}
             >
               {label}
@@ -162,173 +352,157 @@ export function Recommendations() {
           ))}
         </div>
 
-        {/* Recommendations Grid */}
-        {filteredRecommendations.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mb-10">
-              {filteredRecommendations.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md"
-                >
-                  {/* Icon Section */}
-                  <div className="flex h-40 items-center justify-center border-b border-slate-100 bg-white p-8">
-                    {(() => {
-                      const asset = getRecommendationImage(rec);
-                      return asset.src ? (
-                        <img
-                          src={asset.src}
-                          alt={asset.alt}
-                          className="h-28 w-28 object-contain"
-                        />
-                      ) : (
-                        asset.fallback
-                      );
-                    })()}
-                  </div>
-
-                  {/* Content Section */}
-                  <div className="p-5 text-center">
-                    {/* Title */}
-                    <h3 className="text-base font-bold text-foreground mb-4">{rec.title_en}</h3>
-
-                    {/* Stats */}
-                    <div className="space-y-2 mb-4 text-sm">
-                      <p className="text-gray-600">
-                        Saves <span className="font-semibold text-gray-800">{rec.co2_saved_kg} kg CO₂</span> / month
-                      </p>
-                      <p className="text-gray-600">
-                        Cost: <span className="font-semibold text-gray-800">{formatCost(rec.cost_npr)}</span>
-                      </p>
-                      <div className="inline-block">
-                        <span className={`rounded px-3 py-1 text-xs font-semibold border ${difficultyStyle(rec.difficulty)}`}>
-                          {rec.difficulty}
-                        </span>
-                      </div>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {cards.map((card) => {
+            const isSelected = selected.includes(card.title);
+            const isExpanded = expanded.includes(card.title);
+            return (
+              <div
+                key={card.title}
+                className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ${isSelected ? 'ring-2 ring-emerald-200' : ''}`}
+              >
+                <div className="flex h-44 items-center justify-center border-b border-slate-100 bg-white p-8">
+                  <img src={card.image} alt={card.alt} className="h-28 w-28 object-contain" />
+                </div>
+                <div className="p-5 text-center">
+                  <h3 className="text-base font-semibold text-foreground">{card.title}</h3>
+                  <div className="mt-4 space-y-2 text-sm text-slate-600">
+                    <p>
+                      Saves <span className="font-semibold text-slate-800">{card.co2}</span>
+                    </p>
+                    <p>
+                      Cost: <span className="font-semibold text-slate-800">{card.cost}</span>
+                    </p>
+                    <div className="inline-flex">
+                      <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${card.accent}`}>
+                        {card.difficulty}
+                      </span>
                     </div>
-
-                    {/* See Details Button */}
+                  </div>
+                  <div className="mt-5 flex gap-2">
                     <button
-                      onClick={() => handleSeeDetails(rec)}
-                      className="w-full rounded bg-green-700 py-2 font-semibold text-white transition-all hover:bg-green-800"
+                      onClick={() => setSelected((s) => toggleArray(s, card.title))}
+                      className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors ${isSelected ? 'bg-emerald-900 hover:bg-emerald-800' : 'bg-emerald-700 hover:bg-emerald-800'}`}
                     >
-                      See Details
+                      {isSelected ? 'Added to plan' : 'Add to plan'}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpanded((prev) => (prev.includes(card.title) ? prev.filter((t) => t !== card.title) : [...prev, card.title]));
+                      }}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white"
+                    >
+                      {isExpanded ? 'Hide Details' : 'See Details'}
+                      <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
+                  {isExpanded && (
+                    <div className="mt-4 text-left text-sm text-slate-700">
+                      <p className="font-semibold">Why this fits your school</p>
+                      <p className="mt-1">{card.reason}</p>
+                      <p className="mt-3 font-semibold">What it does</p>
+                      <p className="mt-1">{card.action}</p>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            );
+          })}
+        </div>
 
-            {/* View More Actions Link */}
-            <div className="text-center">
-              <button
-                onClick={handleViewMoreActions}
-                className="text-green-700 font-semibold hover:text-green-800 transition-colors"
-              >
-                View More Actions
-              </button>
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => {
+              // load full archetype fallback recommendations
+              try {
+                setShowMore((prev) => !prev);
+              } catch {
+                setShowMore((prev) => !prev);
+              }
+            }}
+            className="text-sm font-semibold text-emerald-700 transition-colors hover:text-emerald-800"
+          >
+            {showMore ? 'Hide More Actions' : 'View More Actions'}
+          </button>
+        </div>
+
+        {showMore && (
+          <div className="mt-8">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">More actions to explore</h2>
+              <p className="text-sm text-slate-500">These are additional options; your main recommendations stay above.</p>
             </div>
-          </>
-        ) : (
-          <div className="flex min-h-[40vh] items-center justify-center p-8 text-center">
-            <div>
-              <Leaf className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-              <p className="font-semibold text-foreground text-lg">No recommendations found</p>
-              <p className="mt-1 text-sm text-gray-500">
-                Try selecting a different difficulty level to see available actions.
-              </p>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {byDifficulty(moreActions, filter).map((card) => {
+                const isSelected = selected.includes(card.title);
+                const isExpanded = expanded.includes(card.title);
+                return (
+                  <div key={card.title} className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ${isSelected ? 'ring-2 ring-emerald-200' : ''}`}>
+                    <div className="flex h-44 items-center justify-center border-b border-slate-100 bg-white p-8">
+                      <img src={card.image} alt={card.alt} className="h-28 w-28 object-contain" />
+                    </div>
+                    <div className="p-5 text-center">
+                      <h3 className="text-base font-semibold text-foreground">{card.title}</h3>
+                      <div className="mt-4 space-y-2 text-sm text-slate-600">
+                        <p>Saves <span className="font-semibold text-slate-800">{card.co2}</span></p>
+                        <p>Cost: <span className="font-semibold text-slate-800">{card.cost}</span></p>
+                        <div className="inline-flex">
+                          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${card.accent}`}>{card.difficulty}</span>
+                        </div>
+                      </div>
+                      <div className="mt-5 flex gap-2">
+                        <button
+                          onClick={() => setSelected((s) => toggleArray(s, card.title))}
+                          className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors ${isSelected ? 'bg-emerald-900 hover:bg-emerald-800' : 'bg-emerald-700 hover:bg-emerald-800'}`}
+                        >
+                          {isSelected ? 'Added to plan' : 'Add to plan'}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpanded((prev) => (prev.includes(card.title) ? prev.filter((t) => t !== card.title) : [...prev, card.title]));
+                          }}
+                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white"
+                        >
+                          {isExpanded ? 'Hide Details' : 'See Details'}
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                      {isExpanded && (
+                        <div className="mt-4 text-left text-sm text-slate-700">
+                          <p className="font-semibold">Why this fits your school</p>
+                          <p className="mt-1">{card.reason}</p>
+                          <p className="mt-3 font-semibold">What it does</p>
+                          <p className="mt-1">{card.action}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
-      </div>
 
-      {/* Details Modal */}
-      {selectedRec && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">{selectedRec.title_en}</h2>
-              <button
-                onClick={() => setSelectedRec(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="mb-6 space-y-3">
-              <p className="text-sm text-gray-600">{selectedRec.reason_en}</p>
-              <div className="rounded-lg bg-gray-50 p-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">CO₂ Saved:</span>
-                  <span className="font-semibold text-green-700">{selectedRec.co2_saved_kg} kg/month</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Cost:</span>
-                  <span className="font-semibold text-gray-800">{formatCost(selectedRec.cost_npr)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Difficulty:</span>
-                  <span className={`font-semibold rounded px-2 py-1 text-xs border ${difficultyStyle(selectedRec.difficulty)}`}>
-                    {selectedRec.difficulty}
-                  </span>
+        <div className="mt-10 rounded-2xl border border-slate-200 bg-emerald-50/40 p-4 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="font-medium text-slate-700">Selected plan is tailored for your school profile and ranked by the biggest emission source.</p>
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-semibold text-emerald-700 shadow-sm">
+                <CheckCircle2 className="h-4 w-4" />
+                Ready to review
+              </span>
+              <div className="text-sm text-slate-700">
+                <div>Selected: <span className="font-semibold">{selected.length}</span></div>
+                <div className="mt-1">
+                  <button onClick={() => { setSelected([]); }} className="text-xs text-emerald-700 underline">Clear selection</button>
                 </div>
               </div>
             </div>
-
-            <button
-              onClick={() => setSelectedRec(null)}
-              className="w-full rounded bg-green-700 py-2 font-semibold text-white hover:bg-green-800 transition-all"
-            >
-              Close
-            </button>
           </div>
         </div>
-      )}
-
-      {/* View More Actions Modal */}
-      {showMore && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-start justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">All Recommendations</h2>
-              <button
-                onClick={() => setShowMore(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {recommendations.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => {
-                    setSelectedRec(rec);
-                    setShowMore(false);
-                  }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-foreground">{rec.title_en}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{rec.reason_en}</p>
-                    </div>
-                    <span className={`rounded px-2 py-1 text-xs font-semibold border whitespace-nowrap ml-2 ${difficultyStyle(rec.difficulty)}`}>
-                      {rec.difficulty}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex gap-4 text-sm text-gray-600">
-                    <span className="font-semibold text-green-700">{rec.co2_saved_kg} kg CO₂/mo</span>
-                    <span className="font-semibold text-gray-800">NPR {rec.cost_npr}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
