@@ -87,8 +87,9 @@ export function CarbonReport() {
   const colors = ['#dc2626', '#f97316', '#fbbf24', '#3B7A2B'];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-      <div className="mb-8 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f0fdf4_0%,#f8fafc_44%,#fff7ed_100%)] p-2 sm:p-3">
+      <div className="mx-auto max-w-6xl rounded-[2rem] border border-emerald-100 bg-white/96 p-4 sm:p-5 lg:p-6 shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
+      <div className="mb-6 overflow-hidden rounded-[1.75rem] border border-emerald-100 bg-white shadow-sm">
         <div className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-emerald-600">{t('carbon_report')}</p>
@@ -104,31 +105,31 @@ export function CarbonReport() {
               <p className="text-[11px] uppercase tracking-wide text-emerald-700">Student submissions</p>
               <p className="mt-1 text-base font-semibold text-emerald-900">{studentCount} this month</p>
             </div>
-            <div className="rounded-2xl border border-border bg-slate-50 px-4 py-3">
-              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Student emissions</p>
-              <p className="mt-1 text-base font-semibold text-foreground">{Math.round(studentEmissions)} kg CO₂</p>
+            <div className="rounded-2xl border border-emerald-100 bg-slate-50 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-wide text-emerald-700/80">Student emissions</p>
+              <p className="mt-1 text-base font-semibold text-emerald-900">{Math.round(studentEmissions)} kg CO₂</p>
             </div>
           </div>
         </div>
       </div>
 
       {hasStudentContext && (
-        <div className="mb-6 rounded-[1.75rem] border border-blue-100 bg-blue-50/80 p-5 shadow-sm">
+        <div className="mb-6 rounded-[1.75rem] border border-emerald-100 bg-emerald-50/70 p-5 shadow-sm">
           <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="flex items-center gap-3">
-              <Users className="w-6 h-6 text-blue-600" />
+              <Users className="w-6 h-6 text-emerald-700" />
               <div>
-                <h3 className="font-semibold text-blue-900">{studentCount} Student Submissions</h3>
-                <p className="text-sm text-blue-700">{Math.round(studentEmissions)} kg CO₂ from student activities</p>
+                <h3 className="font-semibold text-emerald-900">{studentCount} Student Submissions</h3>
+                <p className="text-sm text-emerald-700">{Math.round(studentEmissions)} kg CO₂ from student activities</p>
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
-              <div className="flex items-center gap-3 rounded-full bg-white/90 px-4 py-2 shadow-sm">
-                <span className="text-sm font-medium text-blue-900">School</span>
+              <div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-white/95 px-4 py-2 shadow-sm">
+                <span className="text-sm font-medium text-emerald-900">School</span>
                 <select
                   value={selectedSchool}
                   onChange={(e) => setSelectedSchool(e.target.value)}
-                  className="rounded-md border border-border bg-input-background px-3 py-2"
+                  className="rounded-md border border-emerald-200 bg-white px-3 py-2"
                 >
                   <option value="">All schools</option>
                   {availableSchools.map((s) => (
@@ -136,13 +137,13 @@ export function CarbonReport() {
                   ))}
                 </select>
               </div>
-              <label className="flex items-center gap-3 rounded-full bg-white/90 px-4 py-2 shadow-sm">
-                <span className="text-sm font-medium text-blue-900">Include student data</span>
+              <label className="flex items-center gap-3 rounded-full border border-emerald-100 bg-white/95 px-4 py-2 shadow-sm">
+                <span className="text-sm font-medium text-emerald-900">Include student data</span>
                 <input
                   type="checkbox"
                   checked={includeStudentData}
                   onChange={(e) => setIncludeStudentData(e.target.checked)}
-                  className="w-5 h-5 rounded cursor-pointer"
+                  className="w-5 h-5 cursor-pointer rounded border-emerald-300 accent-emerald-700"
                 />
               </label>
             </div>
@@ -152,7 +153,7 @@ export function CarbonReport() {
         <StudentSubmissionsView schoolId={selectedSchool || undefined} />
 
 
-      <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-8 text-primary-foreground mb-8 text-center">
+      <div className="mb-6 rounded-[1.75rem] bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 p-8 text-white text-center shadow-[0_20px_45px_rgba(22,101,52,0.25)]">
         <h2 className="text-lg opacity-90 mb-2">{t('total_co2')}</h2>
         <div className="flex items-baseline justify-center gap-3 mb-4">
           <span className="text-6xl font-semibold">{totalEmissions}</span>
@@ -166,7 +167,7 @@ export function CarbonReport() {
         )}
       </div>
 
-      <div className="bg-white rounded-xl border border-border p-6 mb-6">
+      <div className="mb-6 rounded-[1.5rem] border border-emerald-100 bg-white p-6">
         <h3 className="font-medium text-foreground mb-4">Breakdown by Category</h3>
         <div className="h-64 mb-6">
           <ResponsiveContainer width="100%" height="100%">
@@ -193,7 +194,7 @@ export function CarbonReport() {
         </div>
       </div>
 
-      <div className="bg-amber-50 border-2 border-amber-500 rounded-xl p-6 mb-6">
+      <div className="mb-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-6">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
             <AlertTriangle className="w-6 h-6 text-white" />
@@ -208,11 +209,11 @@ export function CarbonReport() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-border p-6 mb-6">
+      <div className="mb-6 rounded-[1.5rem] border border-emerald-100 bg-white p-6">
         <h3 className="font-medium text-foreground mb-4">{t('emotional_impact')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4">
-            <TreePine className="w-12 h-12 text-primary mx-auto mb-3" />
+            <TreePine className="w-12 h-12 text-emerald-700 mx-auto mb-3" />
             <p className="text-3xl font-semibold text-foreground mb-1">{Math.round((totalEmissions / 3.8) * 1.2)}</p>
             <p className="text-sm text-muted-foreground">Trees needed to absorb this CO₂</p>
           </div>
@@ -229,25 +230,26 @@ export function CarbonReport() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-border p-6">
+      <div className="rounded-[1.5rem] border border-emerald-100 bg-white p-6">
         <h3 className="font-medium text-foreground mb-4">{t('before_after')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="text-center p-6 bg-red-50 rounded-xl">
+          <div className="text-center p-6 bg-slate-50 rounded-xl border border-slate-200">
             <p className="text-sm text-muted-foreground mb-2">Before (April 2026)</p>
             <p className="text-4xl font-semibold text-foreground mb-1">425</p>
             <p className="text-sm text-muted-foreground">{t('kg_co2')}</p>
           </div>
-          <div className="text-center p-6 bg-green-50 rounded-xl">
+          <div className="text-center p-6 bg-emerald-50 rounded-xl border border-emerald-100">
             <p className="text-sm text-muted-foreground mb-2">After (May 2026)</p>
-            <p className="text-4xl font-semibold text-primary mb-1">{totalEmissions}</p>
+            <p className="text-4xl font-semibold text-emerald-700 mb-1">{totalEmissions}</p>
             <p className="text-sm text-muted-foreground">{t('kg_co2')}</p>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-2 mt-6 text-primary">
+        <div className="mt-6 flex items-center justify-center gap-2 text-emerald-700">
           <TrendingDown className="w-6 h-6" />
           <span className="text-2xl font-semibold">-{Math.round(((425 - totalEmissions) / 425) * 100)}%</span>
           <span className="text-muted-foreground">reduction</span>
         </div>
+      </div>
       </div>
     </div>
   );

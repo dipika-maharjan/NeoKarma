@@ -1,5 +1,4 @@
 import { StudentData, getAllStudentData } from '../utils/studentDataStorage';
-import { Bus, Bike, Car, AlertCircle } from 'lucide-react';
 
 const transportIcons = {
   walking: '🚶',
@@ -32,11 +31,11 @@ export function StudentSubmissionsView({ schoolId }: { schoolId?: string }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-border p-6">
+    <div className="mb-6 rounded-[1.5rem] border border-emerald-100 bg-white p-6">
       <h3 className="font-medium text-foreground mb-4">Student Submissions ({currentMonthSubmissions.length})</h3>
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {currentMonthSubmissions.map((submission) => (
-          <div key={submission.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div key={submission.id} className="flex items-center justify-between rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
               <div className="flex items-center gap-3 flex-1">
               <span className="text-2xl">
                 {transportIcons[submission.transport as keyof typeof transportIcons] || '🚗'}
@@ -49,10 +48,10 @@ export function StudentSubmissionsView({ schoolId }: { schoolId?: string }) {
               </div>
               <div className="flex items-center gap-1">
                 {submission.plastic && (
-                  <div className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Plastic</div>
+                  <div className="rounded bg-amber-100 px-2 py-1 text-xs text-amber-800">Plastic</div>
                 )}
                 {submission.foodWaste && (
-                  <div className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">Food</div>
+                  <div className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-700">Food</div>
                 )}
               </div>
             </div>

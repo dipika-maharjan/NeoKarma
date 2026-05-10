@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { ChevronRight, Flame, Sparkles, TreePine } from 'lucide-react';
 import { useLanguage } from '../components/LanguageContext';
 import {
@@ -58,19 +57,20 @@ const COPY = {
     illustrationBody: 'Small weekly actions become visible progress.',
     successBadge: 'Weekly submission complete',
     successTitle: 'Thank you for this week.',
-    successBody: 'Your carbon choices are now saved. The report opens automatically.',
+    successBody: 'Your carbon choices are now saved.',
     successTrees: 'Trees saved',
     successStreak: 'Weekly streak',
-    successReport: 'Your report is ready whenever you want it.',
     successReset: 'Submit another week',
-    successView: 'View carbon report now',
     impactSaved: 'Impact saved',
     impactSnapshot: 'Weekly snapshot',
     transportLabel: 'Transport',
     flagsLabel: 'Flags',
+    plasticLabel: 'Plastic',
+    foodWasteLabel: 'Food waste',
     roundTripLabel: 'round trip',
     baselineLabel: 'Baseline',
     currentLabel: 'Your entry',
+    savedVsCarSuffix: 'kg CO₂e saved vs a car commute',
     lowImpact: 'Low-impact week achieved',
   },
   ne: {
@@ -93,19 +93,20 @@ const COPY = {
     illustrationBody: 'सानो साप्ताहिक प्रयासहरू देखिने प्रगतिमा बदलिन्छन्।',
     successBadge: 'साप्ताहिक प्रविष्टि पूरा भयो',
     successTitle: 'यस हप्ताका लागि धन्यवाद।',
-    successBody: 'तपाईंको कार्बन विवरण सुरक्षित भयो। रिपोर्ट स्वतः खुल्छ।',
+    successBody: 'तपाईंको कार्बन विवरण सुरक्षित भयो।',
     successTrees: 'बचाइएका रुखहरू',
     successStreak: 'साप्ताहिक क्रम',
-    successReport: 'तपाईं चाहनुहुन्छ भने रिपोर्ट सधैं तयार छ।',
     successReset: 'अर्को हप्ता बुझाउनुहोस्',
-    successView: 'अहिले कार्बन रिपोर्ट हेर्नुहोस्',
     impactSaved: 'सुरक्षित प्रभाव',
     impactSnapshot: 'साप्ताहिक सारांश',
     transportLabel: 'यातायात',
     flagsLabel: 'संकेतहरू',
+    plasticLabel: 'प्लास्टिक',
+    foodWasteLabel: 'खाना बर्बादी',
     roundTripLabel: 'दुवैतर्फको दूरी',
     baselineLabel: 'आधाररेखा',
     currentLabel: 'तपाईंको प्रविष्टि',
+    savedVsCarSuffix: 'kg CO₂e कार यात्राभन्दा बचत',
     lowImpact: 'कम-प्रभाव सप्ताह पूरा भयो',
   },
 } as const;
@@ -176,11 +177,9 @@ function TransportIcon({ icon }: { icon: TransportOption['icon'] }) {
 
 export function StudentInput() {
   const { language, toggleLanguage } = useLanguage();
-  const navigate = useNavigate();
   const currentSchool = getCurrentSchoolProfile();
   const schools = Array.from(new Set([...(currentSchool?.schoolName ? [currentSchool.schoolName] : []), ...SCHOOLS]));
 
-  const activeSchoolName = currentSchool?.schoolName?.trim() || schools[0] || '';
   const copy = language === 'ne' ? COPY.ne : COPY.en;
   const [school, setSchool] = useState(currentSchool?.schoolName ?? schools[0] ?? '');
   const selectedSchool = school.trim();
@@ -216,9 +215,9 @@ export function StudentInput() {
       baseline,
       saved,
       score,
-      compareText: saved > 0 ? `${saved.toFixed(2)} kg CO₂e saved vs a car commute` : copy.lowImpact,
+      compareText: saved > 0 ? `${saved.toFixed(2)} ${copy.savedVsCarSuffix}` : copy.lowImpact,
     };
-  }, [copy.lowImpact, submissionSummary]);
+  }, [copy.lowImpact, copy.savedVsCarSuffix, submissionSummary]);
 
   useEffect(() => {
     if (!submitted) {
@@ -305,42 +304,41 @@ export function StudentInput() {
         <div className="mx-auto h-full max-w-5xl">
           <div className="flex h-full flex-col overflow-hidden rounded-[2rem] border border-emerald-100 bg-white/96 shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
             <div className="grid h-full min-h-0 lg:grid-cols-[1.02fr_0.98fr]">
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 p-6 text-white lg:p-7">
-                <div className="absolute inset-0 opacity-30">
-                  <div className="absolute -left-10 top-10 h-44 w-44 rounded-full bg-white/15 blur-3xl" />
-                  <div className="absolute right-0 top-32 h-40 w-40 rounded-full bg-lime-300/15 blur-3xl" />
-                  <div className="absolute bottom-0 left-24 h-36 w-36 rounded-full bg-white/10 blur-3xl" />
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-100 via-white to-emerald-50 p-6 text-emerald-950 lg:p-7">
+                <div className="absolute inset-0 opacity-70">
+                  <div className="absolute -left-10 top-10 h-44 w-44 rounded-full bg-emerald-200/45 blur-3xl" />
+                  <div className="absolute right-0 top-32 h-40 w-40 rounded-full bg-lime-200/35 blur-3xl" />
+                  <div className="absolute bottom-0 left-24 h-36 w-36 rounded-full bg-white/40 blur-3xl" />
                 </div>
 
                 <div className="relative flex h-full flex-col justify-between gap-6">
                   <div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-white/90">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/90 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-emerald-700">
                       {copy.successBadge}
                     </div>
                     <h2 className="mt-4 text-2xl font-semibold leading-tight lg:text-3xl">{copy.successTitle}</h2>
-                    <p className="mt-3 max-w-md text-sm leading-6 text-emerald-50/90 lg:text-base">{copy.successBody}</p>
+                    <p className="mt-3 max-w-md text-sm leading-6 text-emerald-800/90 lg:text-base">{copy.successBody}</p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm">
-                      <p className="text-xs uppercase tracking-wide text-white/70">{copy.successTrees}</p>
+                    <div className="rounded-2xl border border-emerald-100 bg-white/80 p-3 backdrop-blur-sm">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700/75">{copy.successTrees}</p>
                       <p className="mt-1 text-3xl font-semibold">{displayTrees}</p>
                     </div>
-                    <div className="rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm">
-                      <p className="text-xs uppercase tracking-wide text-white/70">{copy.successStreak}</p>
+                    <div className="rounded-2xl border border-emerald-100 bg-white/80 p-3 backdrop-blur-sm">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700/75">{copy.successStreak}</p>
                       <p className="mt-1 text-3xl font-semibold">{streakCount}</p>
-                      <p className="text-sm text-white/75">{copy.successReport}</p>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm">
+                  <div className="rounded-2xl border border-emerald-100 bg-white/80 p-3 backdrop-blur-sm">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                         <TreePine className="h-6 w-6" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">{copy.successBadge}</p>
-                        <p className="text-sm text-white/75">{copy.successBody}</p>
+                        <p className="text-sm text-emerald-800/80">{copy.successBody}</p>
                       </div>
                     </div>
                   </div>
@@ -399,14 +397,14 @@ export function StudentInput() {
                         </div>
                         <div className="rounded-xl border border-border bg-white p-3">
                           <p className="text-muted-foreground">{copy.flagsLabel}</p>
-                          <p className="font-medium text-foreground">Plastic: {submissionSummary.plastic ? copy.yes : copy.no}</p>
+                          <p className="font-medium text-foreground">{copy.plasticLabel}: {submissionSummary.plastic ? copy.yes : copy.no}</p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Food waste: {submissionSummary.foodWaste ? copy.yes : copy.no}
+                            {copy.foodWasteLabel}: {submissionSummary.foodWaste ? copy.yes : copy.no}
                           </p>
                         </div>
                       </div>
                       <div className="mt-3 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white">
-                        {successImpact.saved > 0 ? `${successImpact.saved.toFixed(2)} kg CO₂e saved vs a car commute` : copy.lowImpact}
+                        {successImpact.saved > 0 ? `${successImpact.saved.toFixed(2)} ${copy.savedVsCarSuffix}` : copy.lowImpact}
                       </div>
                     </div>
                   </div>
@@ -418,13 +416,6 @@ export function StudentInput() {
                       className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-white px-4 py-2.5 font-medium text-foreground transition-colors hover:bg-accent"
                     >
                       {copy.successReset}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate('/carbon-report')}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-4 py-2.5 font-medium text-white transition-all hover:shadow-lg"
-                    >
-                      {copy.successView}
                     </button>
                   </div>
                 </div>
