@@ -87,8 +87,8 @@ export function CarbonReport() {
   const colors = ['#dc2626', '#f97316', '#fbbf24', '#3B7A2B'];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f0fdf4_0%,#f8fafc_44%,#fff7ed_100%)] p-2 sm:p-3">
-      <div className="mx-auto max-w-6xl rounded-[2rem] border border-emerald-100 bg-white/96 p-4 sm:p-5 lg:p-6 shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f0fdf4_0%,#f8fafc_44%,#fff7ed_100%)] p-2 sm:p-3 w-full">
+      <div className="w-full rounded-[2rem] border border-emerald-100 bg-white/96 p-4 sm:p-5 lg:p-6 shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
       <div className="mb-6 overflow-hidden rounded-[1.75rem] border border-emerald-100 bg-white shadow-sm">
         <div className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
