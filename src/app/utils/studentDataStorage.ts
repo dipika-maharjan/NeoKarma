@@ -1,3 +1,5 @@
+import EMISSION_FACTORS from '../data/emissionFactors';
+
 export interface StudentData {
   id: string;
   date: string;
@@ -10,7 +12,6 @@ export interface StudentData {
 }
 
 // Calculate emissions for a single student
-import EMISSION_FACTORS from '../data/emissionFactors';
 
 export function calculateStudentEmissions(
   transport: string,
