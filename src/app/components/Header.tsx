@@ -1,5 +1,4 @@
 import { useLanguage } from './LanguageContext';
-import { Leaf, Languages } from 'lucide-react';
 
 export function Header() {
   const { language, toggleLanguage, t } = useLanguage();
@@ -9,9 +8,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Leaf className="w-6 h-6 text-primary-foreground" />
-            </div>
+            <img src="/logo.png" alt="Harit Pathshala" className="w-10 h-10 object-contain" />
             <div>
               <h1 className="text-xl font-semibold text-foreground">
                 {t('title')}

@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router';
 import { useLanguage } from './LanguageContext';
 import {
-  Leaf,
-  Languages,
   LayoutDashboard,
   FileText,
   BarChart3,
@@ -12,8 +10,6 @@ import {
   Trophy,
   Globe,
   CheckCircle,
-  Menu,
-  X,
   ChevronDown,
   UserCircle2,
   LogOut,
@@ -24,7 +20,6 @@ export function Layout() {
   const { language, toggleLanguage, t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const schoolProfile = getCurrentSchoolProfile();
@@ -58,59 +53,13 @@ export function Layout() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="w-64 bg-white border-r border-border flex-shrink-0 hidden lg:block">
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Leaf className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-semibold text-foreground">{t('title')}</h1>
-              <p className="text-xs text-muted-foreground">{t('tagline')}</p>
-            </div>
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="border-b border-border bg-white sticky top-0 z-50 w-full">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img src="/logo.png" alt="Harit Pathshala" className="w-12 h-12 object-contain" />
+            <h2 className="font-semibold text-foreground">{t('title')}</h2>
           </div>
-        </div>
-
-        <nav className="p-4">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
-
-      <div className="flex-1 flex flex-col">
-        <header className="border-b border-border bg-white sticky top-0 z-10">
-          <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 hover:bg-accent rounded-lg transition-colors"
-              >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-              <div className="flex items-center gap-3 lg:hidden">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                  <Leaf className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <h1 className="font-semibold text-foreground">{t('title')}</h1>
-              </div>
-            </div>
 
             <div className="hidden lg:block relative" ref={profileMenuRef}>
               <button
@@ -155,22 +104,32 @@ export function Layout() {
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white p-1 shadow-sm">
               <button
-                onClick={toggleLanguage}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-accent transition-colors"
+                type="button"
+                onClick={() => language !== 'ne' && toggleLanguage()}
+                className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+                  language === 'ne' ? 'bg-emerald-700 text-white shadow-sm' : 'text-emerald-900 hover:bg-emerald-50'
+                }`}
               >
-                <Languages className="w-4 h-4" />
-                <span className="text-sm font-medium">
-                  {language === 'en' ? 'नेपाली' : 'English'}
-                </span>
+                NP
+              </button>
+              <button
+                type="button"
+                onClick={() => language !== 'en' && toggleLanguage()}
+                className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+                  language === 'en' ? 'bg-emerald-700 text-white shadow-sm' : 'text-emerald-900 hover:bg-emerald-50'
+                }`}
+              >
+                EN
               </button>
             </div>
           </div>
         </header>
 
-        {mobileMenuOpen && (
-          <nav className="lg:hidden bg-white border-b border-border p-4">
+      <div className="flex flex-1 pt-8">
+        <aside className="fixed left-0 w-64 bg-white border-r border-border flex-shrink-0 overflow-hidden h-[calc(100vh-80px)] top-20">
+          <nav className="p-4 h-full overflow-hidden">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -178,7 +137,6 @@ export function Layout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
                     isActive
                       ? 'bg-primary text-primary-foreground'
@@ -191,9 +149,9 @@ export function Layout() {
               );
             })}
           </nav>
-        )}
+        </aside>
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 ml-64">
           <Outlet />
         </main>
       </div>
