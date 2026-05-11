@@ -1,4 +1,4 @@
-import { StudentData, getAllStudentData } from '../utils/studentDataStorage';
+import { getAllStudentData } from '../utils/studentDataStorage';
 
 const transportIcons = {
   walking: '🚶',
