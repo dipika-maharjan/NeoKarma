@@ -72,6 +72,89 @@ export function getCurrentSchoolDataEntry(): any {
   return all[key] || null;
 }
 
+export type RegisteredSchoolSummary = {
+  key: string;
+  profile: SchoolProfile;
+  schoolName: string;
+  district: string;
+  province: string;
+  archetype: string;
+  beforeCO2: number;
+  afterCO2: number;
+  totalCO2: number;
+  co2Reduced: number;
+  actionsTaken: number;
+  resourcesReceived: string;
+  supportedBy: string;
+  entry: Record<string, any>;
+};
+
+function toNumber(value: unknown): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function countTruthyValues(value: unknown): number {
+  if (!value || typeof value !== 'object') return 0;
+  return Object.values(value as Record<string, unknown>).filter(Boolean).length;
+}
+
+export function getRegisteredSchoolSummaries(): RegisteredSchoolSummary[] {
+  const all = getAllSchoolData();
+
+  return Object.entries(all)
+    .map(([key, entry]) => {
+      const profile = (entry?.profile || null) as SchoolProfile | null;
+      if (!profile?.schoolName) return null;
+
+      const emissionData = (entry?.emissionData || {}) as Record<string, any>;
+      const selectedRecommendations = Array.isArray(entry?.selectedRecommendations) ? entry.selectedRecommendations : [];
+      const schoolName = profile.schoolName;
+      const beforeCO2 = toNumber(emissionData.beforeCO2 ?? entry?.beforeCO2 ?? emissionData.totalCO2 ?? entry?.totalCO2 ?? 0);
+      const afterCO2 = toNumber(emissionData.afterCO2 ?? entry?.afterCO2 ?? 0);
+      const totalCO2 = toNumber(emissionData.totalCO2 ?? entry?.totalCO2 ?? afterCO2 ?? beforeCO2);
+      const co2Reduced = Math.max(0, beforeCO2 - (afterCO2 || totalCO2));
+      const actionsTaken =
+        selectedRecommendations.length +
+        countTruthyValues(entry?.weekCompletion) +
+        countTruthyValues(entry?.actionPhotos) +
+        (entry?.mentorCommitted ? 1 : 0);
+
+      const resourcesReceived = selectedRecommendations.length
+        ? selectedRecommendations
+            .map((item: any) => item?.title || item?.title_en || String(item))
+            .filter(Boolean)
+            .slice(0, 2)
+            .join(' + ')
+        : entry?.resourcesReceived || 'Registered profile';
+
+      const supportedBy = entry?.supportedBy || (entry?.mentorCommitted ? 'Mentor Network' : 'Harit Pathshala');
+
+      return {
+        key,
+        profile,
+        schoolName,
+        district: profile.district || entry?.district || 'Unknown',
+        province: profile.province || entry?.province || 'Unknown',
+        archetype: profile.archetype || entry?.archetype || 'remote',
+        beforeCO2,
+        afterCO2,
+        totalCO2,
+        co2Reduced,
+        actionsTaken,
+        resourcesReceived,
+        supportedBy,
+        entry: entry as Record<string, any>,
+      };
+    })
+    .filter((item): item is RegisteredSchoolSummary => Boolean(item))
+    .sort((a, b) => b.co2Reduced - a.co2Reduced);
+}
+
+export function getRegisteredSchoolNames(): string[] {
+  return getRegisteredSchoolSummaries().map((school) => school.schoolName);
+}
+
 // Migrate legacy localStorage keys for the current school into the aggregated `schoolData`.
 export function migrateLegacyKeysToSchoolData(): void {
   try {

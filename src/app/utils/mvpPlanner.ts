@@ -1,3 +1,4 @@
+import { getCurrentSchoolDataEntry, upsertCurrentSchoolData } from './schoolSession';
 import type { SchoolProfile } from './schoolSession';
 import { callAIForRecommendations, getFallbackRecommendations, type AIRecommendationRequest } from './aiRecommendations';
 import EMISSION_FACTORS from '../data/emissionFactors';
@@ -168,6 +169,15 @@ export const fallbackRecommendationsByArchetype: Record<'remote' | 'semiUrban' |
 function getStoredMonthlyData(): MonthlyDataForm | null {
   if (typeof window === 'undefined') return null;
   try {
+    const currentEntry = getCurrentSchoolDataEntry();
+    if (currentEntry?.monthlyData) {
+      return currentEntry.monthlyData as MonthlyDataForm;
+    }
+  } catch {
+    // ignore and fall back to legacy storage
+  }
+
+  try {
     const raw = window.localStorage.getItem(MONTHLY_DATA_KEY);
     return raw ? (JSON.parse(raw) as MonthlyDataForm) : null;
   } catch {
@@ -197,8 +207,10 @@ function getTransportFactor(transport: string): number {
   return 0.05;
 }
 
-function buildEmissions(profile: SchoolProfile | null): EmissionSummary {
-  const monthly = getStoredMonthlyData();
+function buildEmissions(profile: SchoolProfile | null, schoolDataEntry?: Record<string, any> | null): EmissionSummary {
+  const monthly =
+    (schoolDataEntry?.monthlyData as MonthlyDataForm | undefined) ||
+    getStoredMonthlyData();
   const electricityBill = parseNumber(monthly?.electricityBill);
   const dieselLiters = parseNumber(monthly?.dieselLiters);
   const cookingFuelAmount = parseNumber(monthly?.cookingFuelAmount);
@@ -239,12 +251,17 @@ function buildEmissions(profile: SchoolProfile | null): EmissionSummary {
 export function saveMonthlyData(formData: MonthlyDataForm): void {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(MONTHLY_DATA_KEY, JSON.stringify(formData));
+  try {
+    upsertCurrentSchoolData({ monthlyData: formData });
+  } catch {
+    // ignore storage consolidation failures
+  }
 }
 
 void EMISSION_FACTORS;
 
-export function ensureMvpAnalysis(profile: SchoolProfile | null): MvpAnalysisBundle {
-  const emissions = buildEmissions(profile);
+export function ensureMvpAnalysis(profile: SchoolProfile | null, schoolDataEntry?: Record<string, any> | null): MvpAnalysisBundle {
+  const emissions = buildEmissions(profile, schoolDataEntry ?? null);
   const archetype = normalizeArchetype(profile?.archetype);
   return {
     profile,
