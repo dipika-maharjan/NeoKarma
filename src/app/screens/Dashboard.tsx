@@ -71,8 +71,7 @@ export function Dashboard() {
         <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4 sm:p-5">
           <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
-              <p className="text-sm text-muted-foreground">Schools are pulled from `schoolData`, not a manual list.</p>
-              <p className="mt-2 text-3xl font-semibold text-foreground">{activeSchoolCount} registered schools</p>
+              <p className="text-3xl font-semibold text-foreground">{activeSchoolCount} registered schools</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {registeredSchools.slice(0, 4).map((school) => (
