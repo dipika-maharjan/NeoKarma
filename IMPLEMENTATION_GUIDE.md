@@ -1,8 +1,8 @@
-# Harit Pathshala AI-Powered System Implementation
+# ![App Name](/public/name.png) AI-Powered System Implementation
 
 ## 🎯 Architecture Overview
 
-Your Harit Pathshala application has been successfully rebuilt with a full AI-powered recommendation and action planning system. Here's how the complete flow works:
+Your ![App Name](/public/name.png) application has been successfully rebuilt with a full AI-powered recommendation and action planning system. Here's how the complete flow works:
 
 ### System Flow
 

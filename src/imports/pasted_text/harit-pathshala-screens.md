@@ -1,5 +1,5 @@
 SCREEN 1: Landing / Login Page
-- App name "Harit Pathshala" with leaf icon
+- App name ![App Name](/name.png) with leaf icon
 - Tagline: "Measure. Reduce. Grow." in Nepali and English
 - Two login options: School Admin | Student
 - Language toggle top right: NP / EN
@@ -62,7 +62,7 @@ SCREEN 8: 3-Month Action Plan
 
 SCREEN 9: Impact Ledger Dashboard (Public)
 - Full width public screen, no login required
-- Header: "Harit Pathshala — Nepal School Impact Tracker"
+- Header: ![App Name](/name.png) — Nepal School Impact Tracker
 - Large counter: "Total CO2 Reduced by All Schools: X,XXX kg"
 - Map of Nepal showing active schools as green dots by district
 - Scrollable table: School Name | District | CO2 Reduced | Actions Taken | Resources Received | Supported By

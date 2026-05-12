@@ -86,7 +86,7 @@ export function ImpactLedger() {
         <div className="rounded-[1.75rem] border border-emerald-100 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold text-emerald-700">Harit Pathshala — Nepal School Impact Tracker</p>
+              <img src="/name.png" alt="App Name" className="w-48 h-auto" />
               <h1 className="mt-2 text-3xl font-semibold text-emerald-800">Impact Ledger Dashboard</h1>
             </div>
             <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">

@@ -59,8 +59,8 @@ export function Layout() {
       <header className="border-b border-border bg-white sticky top-0 z-50 w-full">
         <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="Harit Pathshala" className="w-12 h-12 object-contain" />
-            <h2 className="font-semibold text-foreground">{t('title')}</h2>
+            <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+            <img src="/name.png" alt="App Name" className="w-32 h-auto object-contain" />
           </div>
 
             <div className="hidden lg:block relative" ref={profileMenuRef}>

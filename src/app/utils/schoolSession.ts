@@ -128,7 +128,7 @@ export function getRegisteredSchoolSummaries(): RegisteredSchoolSummary[] {
             .join(' + ')
         : entry?.resourcesReceived || 'Registered profile';
 
-      const supportedBy = entry?.supportedBy || (entry?.mentorCommitted ? 'Mentor Network' : 'Harit Pathshala');
+      const supportedBy = entry?.supportedBy || (entry?.mentorCommitted ? 'Mentor Network' : ''); // Name replaced by image in UI
 
       return {
         key,

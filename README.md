@@ -1,6 +1,6 @@
-# Harit Pathshala Prototype Design
+# ![App Name](/public/name.png) Prototype Design
 
-A school carbon-tracking prototype built from the Harit Pathshala design. The app lets students submit weekly activity data, lets schools review carbon emissions, and combines student inputs with school-level emissions when needed.
+A school carbon-tracking prototype built from the ![App Name](/public/name.png) design. The app lets students submit weekly activity data, lets schools review carbon emissions, and combines student inputs with school-level emissions when needed.
 
 ## What the app does
 
