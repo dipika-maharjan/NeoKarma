@@ -69,12 +69,16 @@ export function Landing() {
               <div className="flex items-center gap-3 px-1 py-1">
                 <img
                   src="/logo.png"
-                  alt="Harit Pathshala logo"
+                  alt="Logo"
                   className="h-16 w-16 object-contain brightness-150 contrast-110 saturate-150 drop-shadow-[0_4px_14px_rgba(255,255,255,1)] sm:h-20 sm:w-20"
                 />
-                <div className="leading-tight">
-                  <div className="text-[19px] font-semibold leading-none text-emerald-950 sm:text-[23px]">{t('title')}</div>
-                  <div className="mt-1 text-[11px] font-medium tracking-[0.08em] text-emerald-100/95 drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]">
+                <div className="flex flex-col">
+                  <img
+                    src="/name1.png"
+                    alt="App Name"
+                    className="h-10 w-auto object-contain ml-2 sm:h-12"
+                  />
+                  <div className="mt-1 text-[11px] font-medium tracking-[0.08em] text-emerald-100/95 drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] text-center">
                     {language === 'en' ? 'Nepal School Climate Platform' : 'नेपाल विद्यालय जलवायु प्लेटफर्म'}
                   </div>
                 </div>

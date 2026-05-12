@@ -8,15 +8,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Harit Pathshala" className="w-10 h-10 object-contain" />
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">
-                {t('title')}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {t('subtitle')}
-              </p>
-            </div>
+            <img src="/name.png" alt="App Name" className="w-32 h-auto object-contain" />
           </div>
 
           <button

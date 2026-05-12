@@ -11,7 +11,7 @@ interface LanguageContextType {
 
 const translations = {
   en: {
-    title: 'Harit Pathshala',
+    title: '', // Title replaced by image in UI
     subtitle: 'School Carbon Footprint Action System',
     tagline: 'Measure. Reduce. Grow.',
     school_admin: 'School Admin',

@@ -35,7 +35,7 @@ export function Dashboard() {
       </div>
 
       <div className="mb-4 rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-4 text-primary-foreground sm:p-6">
-        <h3 className="text-lg opacity-90">Harit Pathshala - Nepal School Impact Tracker</h3>
+        <img src="/name1.png" alt="App Name" className="w-48 h-auto opacity-90" />
         <div className="mt-4 flex flex-wrap items-end gap-x-3 gap-y-2">
           <span className="text-5xl font-semibold sm:text-6xl">{totalCO2Reduced.toLocaleString()}</span>
           <span className="pb-2 text-xl opacity-90">{t('kg_co2')}</span>
