@@ -11,6 +11,14 @@ export function Dashboard() {
   const registeredSchools = useMemo(() => getRegisteredSchoolSummaries(), []);
   const totalCO2Reduced = registeredSchools.reduce((sum, school) => sum + school.co2Reduced, 0);
   const activeSchoolCount = registeredSchools.length;
+  
+  const avgReductionPercentage = useMemo(() => {
+    if (registeredSchools.length === 0) return 0;
+    const totalPercentage = registeredSchools.reduce((sum, school) => {
+      return sum + (school.beforeCO2 > 0 ? (school.co2Reduced / school.beforeCO2) * 100 : 0);
+    }, 0);
+    return Math.round(totalPercentage / registeredSchools.length);
+  }, [registeredSchools]);
 
   return (
     <div className="mx-auto max-w-8xl p-3 sm:p-4 lg:p-5">
@@ -45,11 +53,11 @@ export function Dashboard() {
         <div className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
           <div className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-3">
             <Users className="h-5 w-5" />
-            <span>4 active schools</span>
+            <span>{activeSchoolCount} active schools</span>
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-3">
             <TrendingDown className="h-5 w-5" />
-            <span>26% average reduction</span>
+            <span>{avgReductionPercentage}% average reduction</span>
           </div>
         </div>
       </div>
