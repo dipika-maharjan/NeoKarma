@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useLanguage } from '../components/LanguageContext';
 import { useNavigate } from 'react-router';
 import { Zap, Fuel, Flame, Trash2, Upload, AlertCircle } from 'lucide-react';
+import { saveMonthlyData } from '../utils/mvpPlanner.ts';
 
 export function DataEntry() {
   const { t } = useLanguage();
@@ -13,8 +14,9 @@ export function DataEntry() {
     wasteBags: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    saveMonthlyData(formData);
     navigate('/carbon-report');
   };
 

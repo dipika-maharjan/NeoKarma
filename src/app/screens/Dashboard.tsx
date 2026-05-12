@@ -1,65 +1,16 @@
-import { useLanguage } from '../components/LanguageContext';
+import { useMemo } from 'react';
 import { Award, MapPin, TreePine, TrendingDown, Users } from 'lucide-react';
-import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet';
-import type { LatLngBoundsExpression } from 'leaflet';
-import { getCurrentSchoolProfile } from '../utils/schoolSession';
-// @ts-ignore
-import 'leaflet/dist/leaflet.css';
-
-const schools = [
-  {
-    schoolName: 'Shree Jana Jyoti School',
-    district: 'Kavrepalanchok',
-    co2Reduced: 3250,
-    actionsTaken: 5,
-    resourcesReceived: 'Compost Bin',
-    supportedBy: 'WWF Nepal',
-    lat: 27.633,
-    lng: 85.523,
-  },
-  {
-    schoolName: 'Shree Himalaya Basic School',
-    district: 'Humla',
-    co2Reduced: 2810,
-    actionsTaken: 4,
-    resourcesReceived: 'Solar Lamp',
-    supportedBy: 'AEPC',
-    lat: 29.969,
-    lng: 81.812,
-  },
-  {
-    schoolName: 'Jyaling Deepshikha School',
-    district: 'Lalitpur',
-    co2Reduced: 2450,
-    actionsTaken: 6,
-    resourcesReceived: 'Supplies',
-    supportedBy: 'NCELL',
-    lat: 27.664,
-    lng: 85.318,
-  },
-  {
-    schoolName: 'Jagdish Secondary School',
-    district: 'Jhapa',
-    co2Reduced: 2210,
-    actionsTaken: 4,
-    resourcesReceived: 'Compost Kit',
-    supportedBy: 'Municipality',
-    lat: 26.638,
-    lng: 87.981,
-  },
-];
-
-const nepalBounds: LatLngBoundsExpression = [
-  [26.35, 80.06],
-  [30.4, 88.16],
-];
+import { useLanguage } from '../components/LanguageContext';
+import { getCurrentSchoolProfile, getRegisteredSchoolSummaries } from '../utils/schoolSession';
 
 const supporters = ['WWF Nepal', 'AEPC', 'NCELL', 'ASIA', 'Chaudhary Group'];
 
 export function Dashboard() {
   const { t } = useLanguage();
   const schoolProfile = getCurrentSchoolProfile();
-  const totalCO2Reduced = schools.reduce((sum, school) => sum + school.co2Reduced, 0);
+  const registeredSchools = useMemo(() => getRegisteredSchoolSummaries(), []);
+  const totalCO2Reduced = registeredSchools.reduce((sum, school) => sum + school.co2Reduced, 0);
+  const activeSchoolCount = registeredSchools.length;
 
   return (
     <div className="mx-auto max-w-8xl p-3 sm:p-4 lg:p-5">
@@ -106,44 +57,28 @@ export function Dashboard() {
       <div className="mb-4 rounded-2xl border border-border bg-white p-4 sm:p-5">
         <div className="mb-3 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
-          <h3 className="font-medium text-foreground">Nepal School Map</h3>
+          <h3 className="font-medium text-foreground">Registered School Footprint</h3>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl border border-emerald-100 bg-accent/60 p-2 z-0">
-          <div className="h-56 overflow-hidden rounded-lg sm:h-64">
-            <MapContainer
-              bounds={nepalBounds}
-              className="h-full w-full"
-              zoom={7}
-              zoomControl
-              scrollWheelZoom={false}
-            >
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png" />
-
-              {schools.map((school) => (
-                <CircleMarker
-                  key={school.schoolName}
-                  center={[school.lat, school.lng]}
-                  pathOptions={{ color: '#2f7a2e', fillColor: '#2f7a2e', fillOpacity: 0.7 }}
-                  radius={6}
-                >
-                  <Popup>
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold">{school.schoolName}</p>
-                      <p className="text-xs text-muted-foreground">{school.district}</p>
-                      <p className="text-xs">CO₂ reduced: {school.co2Reduced.toLocaleString()} kg</p>
-                    </div>
-                  </Popup>
-                </CircleMarker>
-              ))}
-            </MapContainer>
-          </div>
-
-          <div className="absolute bottom-3 right-3 rounded-lg bg-white px-3 py-2 text-xs text-muted-foreground shadow-sm sm:text-sm">
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-              Nepal schools
+        <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4 sm:p-5">
+          <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="text-sm text-muted-foreground">Schools are pulled from `schoolData`, not a manual list.</p>
+              <p className="mt-2 text-3xl font-semibold text-foreground">{activeSchoolCount} registered schools</p>
             </div>
+            <div className="flex flex-wrap gap-2">
+              {registeredSchools.slice(0, 4).map((school) => (
+                <span
+                  key={school.key}
+                  className="rounded-full border border-emerald-100 bg-white px-3 py-2 text-sm font-medium text-emerald-900"
+                >
+                  {school.schoolName}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 rounded-xl border border-dashed border-emerald-200 bg-white/70 p-4 text-sm text-muted-foreground">
+            Add location data later if you want to plot these schools on the map. The table below already uses the real registered records.
           </div>
         </div>
       </div>
@@ -167,8 +102,8 @@ export function Dashboard() {
             </thead>
 
             <tbody className="divide-y divide-border">
-              {schools.map((school) => (
-                <tr key={school.schoolName} className="hover:bg-accent/40">
+              {registeredSchools.length > 0 ? registeredSchools.map((school) => (
+                <tr key={school.key} className="hover:bg-accent/40">
                   <td className="px-4 py-2 sm:px-5">
                     <div className="flex items-center gap-3">
                       <div className="rounded-full bg-emerald-100 p-2 text-emerald-800">
@@ -187,7 +122,13 @@ export function Dashboard() {
                     <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{school.supportedBy}</span>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td className="px-4 py-6 text-center text-muted-foreground sm:px-5" colSpan={6}>
+                    No registered schools found yet. Complete registration to populate this table.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

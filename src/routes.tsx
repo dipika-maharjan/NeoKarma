@@ -1,17 +1,17 @@
 import { createBrowserRouter } from 'react-router';
-import { Layout } from './components/Layout';
-import { Landing } from './screens/Landing';
-import { Register } from './screens/Register';
-import { Dashboard } from './screens/Dashboard';
-import { DataEntry } from './screens/DataEntry';
-import { StudentInput } from './screens/StudentInput';
-import { CarbonReport } from './screens/CarbonReport';
-import { Recommendations } from './screens/Recommendations';
-import { ActionPlan } from './screens/ActionPlan';
-import { ImpactLedger } from './screens/ImpactLedger';
-import { Support } from './screens/Support';
-import { Leaderboard } from './screens/Leaderboard';
-import { Verification } from './screens/Verification';
+import { Layout } from './app/components/Layout.tsx';
+import { Landing } from './screens/Landing.tsx';
+import { Register } from './screens/Register.tsx';
+import { Dashboard } from './screens/Dashboard.tsx';
+import { DataEntry } from './screens/DataEntry.tsx';
+import { StudentInput } from './screens/StudentInput.tsx';
+import { CarbonReport } from './screens/CarbonReport.tsx';
+import { Recommendations } from './screens/Recommendations.tsx';
+import { ActionPlan } from './screens/ActionPlan.tsx';
+import { ImpactLedger } from './screens/ImpactLedger.tsx';
+import { Support } from './screens/Support.tsx';
+import { Leaderboard } from './screens/Leaderboard.tsx';
+import { Verification } from './screens/Verification.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +31,7 @@ export const router = createBrowserRouter([
     element: <ImpactLedger />,
   },
   {
+    path: '/',
     element: <Layout />,
     children: [
       {
