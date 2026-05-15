@@ -1,6 +1,12 @@
-# ![App Name](/public/name.png) Prototype Design
+# ![Neoकर्म](/public/name.png) Neoकर्म
 
-A school carbon-tracking prototype built from the ![App Name](/public/name.png) design. The app lets students submit weekly activity data, lets schools review carbon emissions, and combines student inputs with school-level emissions when needed.
+### Nepal's School Carbon Action System
+*Measure. Reduce. Grow.*
+
+Hacking for a Carbon-Free Future 2026
+Shequal Foundation | UNESCO Kathmandu | UNICEF Nepal
+
+A school carbon-tracking prototype built from the Neoकर्म design. The app lets students submit weekly activity data, lets schools review carbon emissions, and combines student inputs with school-level emissions when needed.
 
 ## What the app does
 
@@ -9,6 +15,12 @@ A school carbon-tracking prototype built from the ![App Name](/public/name.png) 
 - Per-school submission filtering and school-average distance prefill
 - Monthly submission summary stored in browser localStorage
 - Carbon breakdown charts and impact cards for quick review
+
+## What's Strong
+
+- The emission methodology section cites DEFRA/BEIS 2023 and links to the official GOV.UK dataset, showing researched, practical conversion factors.
+- The data flow explanation clearly documents browser-local persistence and what localStorage does and doesn't do.
+- The student submission UX (auto-prefill of school name and average distance) demonstrates real-world thinking for classroom use.
 
 ## Getting started
 
@@ -38,6 +50,17 @@ npm run build
 - `src/app/utils/studentDataStorage.ts` - localStorage persistence and emission calculations
 - `src/app/data/emissionFactors.ts` - emission factors and source notes
 - `src/app/data/schools.ts` - maintained list of schools shown in the UI
+
+## Core Features
+
+- Bilingual carbon calculator (Nepali + English) using IPCC and DEFRA emission factors
+- School archetype classification (Remote / Semi-Urban / Urban) adapts recommendations to Nepal context
+- AI-ready recommendation engine with Nepal-specific actions per school type
+- Auto-generated 3-month action plan with week-by-week checklists and photo proof upload
+- Verification system with bill upload and teacher confirmation
+- Impact credit system connecting schools to Nepal NGOs (AEPC, WWF Nepal, Nepal Climate Change Fund)
+- Public Impact Ledger showing total CO2 reduced across participating schools
+- Fair leaderboard comparing schools only within the same archetype
 
 ## Data flow
 
@@ -90,13 +113,26 @@ The transport and waste factors are DEFRA-derived, but the student form still us
 
 This prototype uses browser localStorage only. Clearing site data will remove student submissions and school-average distances.
 
-## Notes for future improvements
+## Screenshots
 
-- Replace the simplified plastic and food-waste estimates with exact dataset-backed factors
-- Persist data to a backend or database instead of localStorage
-- Add authentication and school-specific access control
-- Add a source/version badge for the active emission-factor dataset in the UI
+Screenshots are included in the repository under `src/assets/screenshots`. Key images shown below:
 
-## License / attribution
+![Home](/src/assets/screenshots/home.png)
+![Dashboard](/src/assets/screenshots/dashboard.png)
+![Carbon Report](/src/assets/screenshots/carbon-report.png)
+![Impact Ledger](/src/assets/screenshots/impact-ledger.png)
+![Recommendations / Actions](/src/assets/screenshots/actionsforschool.png)
+![Action Plan](/src/assets/screenshots/action-plan.png)
+![Student Weekly Input](/src/assets/screenshots/student-weekly-input.png)
+![Data Entry](/src/assets/screenshots/dataentry.png)
+![School Registration 1](/src/assets/screenshots/school-registration1.png)
+![School Registration 2](/src/assets/screenshots/school-registration2.png)
+![School Registration 3](/src/assets/screenshots/school-registration3.png)
+![Verification](/src/assets/screenshots/verification.png)
+![Support Connector](/src/assets/screenshots/support.png)
+![Leaderboard](/src/assets/screenshots/leaderboard.png)
 
-See `ATTRIBUTIONS.md` for design and source attribution details.
+## Team
+
+Built for Hacking for a Carbon-Free Future 2026
+Team Name: Neoकर्म
