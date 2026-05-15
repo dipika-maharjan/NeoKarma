@@ -117,19 +117,46 @@ This prototype uses browser localStorage only. Clearing site data will remove st
 
 Screenshots are included in the repository under `src/assets/screenshots`. Key images shown below:
 
+### Home
 ![Home](/src/assets/screenshots/home.png)
-![Dashboard](/src/assets/screenshots/dashboard.png)
-![Carbon Report](/src/assets/screenshots/carbon-report.png)
-![Impact Ledger](/src/assets/screenshots/impact-ledger.png)
-![Recommendations / Actions](/src/assets/screenshots/actionsforschool.png)
-![Action Plan](/src/assets/screenshots/action-plan.png)
-![Student Weekly Input](/src/assets/screenshots/student-weekly-input.png)
-![Data Entry](/src/assets/screenshots/dataentry.png)
+
+### School Registration (1)
 ![School Registration 1](/src/assets/screenshots/school-registration1.png)
+
+### School Registration (2)
 ![School Registration 2](/src/assets/screenshots/school-registration2.png)
+
+### School Registration (3)
 ![School Registration 3](/src/assets/screenshots/school-registration3.png)
+
+### Student Weekly Input
+![Student Weekly Input](/src/assets/screenshots/student-weekly-input.png)
+
+### Dashboard
+![Dashboard](/src/assets/screenshots/dashboard.png)
+
+### Carbon Report
+![Carbon Report](/src/assets/screenshots/carbon-report.png)
+
+### Impact Ledger
+![Impact Ledger](/src/assets/screenshots/impact-ledger.png)
+
+### Actions for School
+![Recommendations / Actions](/src/assets/screenshots/actionsforschool.png)
+
+### Action Plan
+![Action Plan](/src/assets/screenshots/action-plan.png)
+
+### Data Entry
+![Data Entry](/src/assets/screenshots/dataentry.png)
+
+### Verification
 ![Verification](/src/assets/screenshots/verification.png)
+
+### Support Connector
 ![Support Connector](/src/assets/screenshots/support.png)
+
+### Leaderboard
 ![Leaderboard](/src/assets/screenshots/leaderboard.png)
 
 ## Team
