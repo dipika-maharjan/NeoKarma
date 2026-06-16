@@ -1,0 +1,152 @@
+### Neoकर्म Backend API Tests
+### Use VS Code REST Client extension to run these requests
+
+@baseUrl = http://localhost:5000
+
+### ===== HEALTH CHECK =====
+GET {{baseUrl}}/api/health
+
+### ===== AUTHENTICATION =====
+
+### Register New Student
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Aarav Sharma",
+  "email": "aarav@example.com",
+  "password": "password123",
+  "grade": 10,
+  "locationType": "urban",
+  "schoolName": "ABC International School",
+  "extraProfile": {
+    "questionKey": "internetUsageHours",
+    "value": 5
+  }
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "aarav@example.com",
+  "password": "password123"
+}
+
+### ===== PROFILE (requires token) =====
+
+### Get Profile
+GET {{baseUrl}}/api/profile
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Update Profile
+PATCH {{baseUrl}}/api/profile
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "name": "Aarav Sharma Updated",
+  "schoolName": "New School",
+  "extraProfile": {
+    "questionKey": "internetUsageHours",
+    "value": 7
+  }
+}
+
+### ===== DAILY LOG (requires token) =====
+
+### Submit Daily Log
+POST {{baseUrl}}/api/daily-log
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "transportationMode": "bus",
+  "transportationDistanceKm": 15,
+  "foodMealType": "vegetarian",
+  "wasteAndPlasticCount": 2,
+  "energyUsageHours": 3,
+  "extraAnswer": {
+    "questionKey": "internetUsageHours",
+    "value": 4
+  }
+}
+
+### Check Today's Log
+GET {{baseUrl}}/api/daily-log/today
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Get Log History (Last 30 Days)
+GET {{baseUrl}}/api/daily-log/history
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Get Log History (Date Range)
+GET {{baseUrl}}/api/daily-log/history?from=2024-01-01&to=2024-12-31
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### ===== DASHBOARD (requires token) =====
+
+### Get Dashboard Summary
+GET {{baseUrl}}/api/dashboard/summary
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### ===== CARBON MIRROR (requires token) =====
+
+### Get Carbon Mirror (Today + Month + Comparison)
+GET {{baseUrl}}/api/carbon-mirror
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Calculate What-If Scenario
+POST {{baseUrl}}/api/carbon-mirror/what-if
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "originalTotalKg": 5.5,
+  "hypotheticalInputs": {
+    "transportationMode": "bus",
+    "transportationDistanceKm": 10,
+    "foodMealType": "vegan",
+    "wasteAndPlasticCount": 1,
+    "energyUsageHours": 2
+  }
+}
+
+### ===== MITIGATION PLAN (requires token) =====
+
+### Get Active Mitigation Plan
+GET {{baseUrl}}/api/mitigation-plan
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Manually Generate Plan
+POST {{baseUrl}}/api/mitigation-plan/generate
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Get Plan History
+GET {{baseUrl}}/api/mitigation-plan/history
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### ===== STREAK (requires token) =====
+
+### Get Current Streak
+GET {{baseUrl}}/api/streak
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### ===== EMISSION FACTORS (requires token, read-only) =====
+
+### Get All Active Emission Factors
+GET {{baseUrl}}/api/emission-factors
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### ===== PLACEHOLDER ENDPOINTS =====
+
+### PDF Export (Not Implemented - 501)
+POST {{baseUrl}}/api/pdf/export
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "userId": "ObjectId",
+  "format": "pdf"
+}
