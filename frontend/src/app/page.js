@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import DashboardSummary from '../components/DashboardSummary';
+import RecommendationsView from '../components/RecommendationsView';
+import ScoreHistoryView from '../components/ScoreHistoryView';
 
 export default function Home() {
   // State hook tracking which layout view is currently rendering
@@ -12,7 +14,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-[#FAFAFA]">
       {/* Global Brand Navigation Header */}
-      <Navbar />
+      <Navbar currentView={currentView} onNavigate={setCurrentView} />
 
       {/* Dynamic Main Body Content Gateway */}
       <main className="flex-grow">
@@ -45,6 +47,14 @@ export default function Home() {
               Back to Dashboard
             </button>
           </div>
+        )}
+
+        {currentView === 'plan' && (
+          <RecommendationsView onNavigateToDashboard={() => setCurrentView('dashboard')} />
+        )}
+
+        {currentView === 'score' && (
+          <ScoreHistoryView />
         )}
       </main>
 

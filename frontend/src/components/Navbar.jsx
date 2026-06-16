@@ -3,9 +3,9 @@ import React from 'react';
 import profileImg from '../../public/profile.png';
 import streakIcon from '../../public/streak.png'; 
 
-const Navbar = () => {
-  // Mock tracking for active navigation highlight matching your mockup state
-  const currentPath = "Calculator"; 
+const Navbar = ({ currentView = 'dashboard', onNavigate }) => {
+  // Map currentView to match the capitalized tab names for active state checking
+  const activeTab = currentView.toLowerCase();
 
   return (
     <nav className="w-full bg-[#FAFAFA] border-b border-gray-100 py-3.5 px-4 md:px-8 font-sans sticky top-0 z-50">
@@ -13,7 +13,7 @@ const Navbar = () => {
       <div className="max-w-[94%] mx-auto flex items-center justify-between">
         
         {/* Left: Branding Identity */}
-        <div className="flex items-center">
+        <div className="flex items-center" onClick={() => onNavigate && onNavigate('dashboard')}>
           <span className="text-2xl font-bold text-[#0A3D25] tracking-wide cursor-pointer">
             Neoकर्म
           </span>
@@ -22,12 +22,16 @@ const Navbar = () => {
         {/* Center: Main App Menu Links Navigation */}
         <div className="hidden md:flex items-center gap-8">
           {["Dashboard", "Calculator", "Mirror", "Plan", "Score"].map((tab) => {
-            const isActive = currentPath === tab;
+            const tabLower = tab.toLowerCase();
+            const isActive = activeTab === tabLower;
             return (
-              <a
+              <button
                 key={tab}
-                href={`#${tab.toLowerCase()}`}
-                className={`text-[14px] font-medium transition-all relative py-1 px-0.5 ${
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (onNavigate) onNavigate(tabLower);
+                }}
+                className={`text-[14px] font-medium transition-all relative py-1 px-0.5 cursor-pointer bg-transparent border-none outline-none ${
                   isActive 
                     ? 'text-[#0A3D25] font-semibold' 
                     : 'text-gray-500 hover:text-[#0A3D25]'
@@ -38,7 +42,7 @@ const Navbar = () => {
                 {isActive && (
                   <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#0A3D25] rounded-full" />
                 )}
-              </a>
+              </button>
             );
           })}
         </div>
