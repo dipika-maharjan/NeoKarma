@@ -1,0 +1,59 @@
+/**
+ * Auth Controller
+ * Handles registration and login endpoints
+ * Delegates all business logic to auth.service
+ */
+const authService = require('../services/auth.service');
+const AppError = require('../utils/AppError');
+const asyncHandler = require('../utils/asyncHandler');
+
+class AuthController {
+  /**
+   * POST /api/auth/register
+   */
+  signup = asyncHandler(async (req, res) => {
+    const { name, email, password, grade, locationType, schoolName, extraProfile } = req.body;
+
+    // Validation
+    if (!name || !email || !password || !grade || !locationType) {
+      throw new AppError('Missing required fields: name, email, password, grade, locationType', 400);
+    }
+
+    const user = await authService.registerStudent({
+      name,
+      email,
+      password,
+      grade,
+      locationType,
+      schoolName,
+      extraProfile
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Student registered successfully',
+      data: user
+    });
+  });
+
+  /**
+   * POST /api/auth/login
+   */
+  login = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new AppError('Email and password are required', 400);
+    }
+
+    const result = await authService.loginStudent(email, password);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: result
+    });
+  });
+}
+
+module.exports = new AuthController();
