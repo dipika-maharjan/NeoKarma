@@ -1,55 +1,27 @@
 'use client'; // Required in Next.js app router for tracking interactive state updates
 
-import { useState } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import DashboardSummary from '../components/DashboardSummary';
+import { useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
-  // State hook tracking which layout view is currently rendering
-  const [currentView, setCurrentView] = useState('dashboard');
+  const { isAuthenticated, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading) {
+      if (isAuthenticated) {
+        window.location.href = '/dashboard';
+      } else {
+        window.location.href = '/login';
+      }
+    }
+  }, [isAuthenticated, loading]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FAFAFA]">
-      {/* Global Brand Navigation Header */}
-      <Navbar />
-
-      {/* Dynamic Main Body Content Gateway */}
-      <main className="flex-grow">
-        {currentView === 'dashboard' && (
-          <DashboardSummary 
-            onNavigateToCalculator={() => setCurrentView('calculator')}
-            onNavigateToMirror={() => setCurrentView('mirror')}
-          />
-        )}
-
-        {currentView === 'calculator' && (
-          <div className="p-12 text-center text-gray-500">
-            [Carbon Calculator Form Component goes here]
-            <button 
-              onClick={() => setCurrentView('dashboard')}
-              className="block mx-auto mt-4 text-xs font-bold text-[#0A3D25] underline"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        )}
-
-        {currentView === 'mirror' && (
-          <div className="p-12 text-center text-gray-500">
-            [Carbon Mirror Component goes here]
-            <button 
-              onClick={() => setCurrentView('dashboard')}
-              className="block mx-auto mt-4 text-xs font-bold text-[#0A3D25] underline"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        )}
-      </main>
-
-      {/* Global Common Footer Section */}
-      <Footer />
+    <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-[#1B5E20] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading...</p>
+      </div>
     </div>
   );
 }
