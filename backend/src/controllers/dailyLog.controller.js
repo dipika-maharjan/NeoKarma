@@ -40,6 +40,12 @@ class DailyLogController {
 
     const today = getTodayStr();
 
+    // Check if user has already logged today
+    const existingLog = await dailyLogRepository.findByUserAndDate(userId, today);
+    if (existingLog) {
+      throw new AppError("You have already logged today's emissions", 400);
+    }
+
     // Calculate emissions using service
     const emissionResult = await emissionCalculationService.calculateEmissions({
       transportationMode,
