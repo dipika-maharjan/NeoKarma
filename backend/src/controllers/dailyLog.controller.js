@@ -40,6 +40,13 @@ class DailyLogController {
     }
 
     const today = getTodayStr();
+    const emissionResult = await emissionCalculationService.calculateEmissions({
+      transportationMode,
+      transportationDistanceKm,
+      foodMealType,
+      wasteAndPlasticCount,
+      energyUsageHours
+    });
 
     // Check if already logged today
     const existingLog = await dailyLogRepository.findByUserAndDate(userId, today);
@@ -50,18 +57,11 @@ class DailyLogController {
         food: { mealType: foodMealType },
         wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
         energy: { usageHours: energyUsageHours },
-        extraAnswer: extraAnswer || null
+        extraAnswer: extraAnswer || null,
+        breakdown: emissionResult.breakdown,
+        totalEmissionKg: emissionResult.totalEmissionKg
       });
     } else {
-      // Calculate emissions using service
-      const emissionResult = await emissionCalculationService.calculateEmissions({
-        transportationMode,
-        transportationDistanceKm,
-        foodMealType,
-        wasteAndPlasticCount,
-        energyUsageHours
-      });
-
       // Create log
       await dailyLogRepository.create({
         userId,

@@ -1,30 +1,39 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, MetricCard, Button, Skeleton } from '@/components/ui';
-import { getCarbonMirror, getWhatIfScenario } from '@/lib/actions/mirrorActions';
+import Link from 'next/link';
+import { Card, Button, ProgressBar, Skeleton, StatCard, ImageOverlayCard } from '@/components/ui';
+import { getCarbonMirror } from '@/lib/actions/mirrorActions';
 import { useAuth } from '@/context/AuthContext';
-import { Leaf, Zap, Utensils, Car } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { 
+  Share2, TrendingDown, AlertCircle, Leaf, Droplets, 
+  BarChart3, Target, Trees 
+} from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const CarbonMirrorPage = () => {
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [mirrorData, setMirrorData] = useState(null);
-  const [simulationMode, setSimulationMode] = useState(false);
-  const [simValues, setSimValues] = useState({
-    transportMultiplier: 1,
-    foodMultiplier: 1,
-    energyMultiplier: 1
-  });
-  const [simResult, setSimResult] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!isAuthenticated) {
+        router.push('/login');
+        return;
+      }
+
       try {
         const data = await getCarbonMirror();
-        setMirrorData(data);
+        if (data) {
+          setMirrorData(data);
+        }
       } catch (err) {
         console.error('Error loading mirror data:', err);
+        setError('Failed to load carbon mirror data');
       } finally {
         setLoading(false);
       }
@@ -33,192 +42,186 @@ const CarbonMirrorPage = () => {
     if (isAuthenticated) {
       fetchData();
     }
-  }, [isAuthenticated]);
-
-  const handleSimulation = async () => {
-    try {
-      const result = await getWhatIfScenario(simValues);
-      setSimResult(result);
-    } catch (err) {
-      console.error('Error running simulation:', err);
-    }
-  };
+  }, [isAuthenticated, router]);
 
   if (!isAuthenticated) {
+    return null;
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card>
-          <p className="text-center text-gray-600">Please log in to view the carbon mirror</p>
-        </Card>
+      <div className="min-h-screen bg-[#FAFAFA] py-8 md:py-12 px-4 md:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <Skeleton height="h-16" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Skeleton height="h-64" />
+            <Skeleton height="h-64" />
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Mock data - replace with real backend data
+  const totalEmitted = mirrorData?.totalKgCO2 || 2.4;
+  const lastMonthEmitted = mirrorData?.lastMonthKgCO2 || 2.8;
+  const monthlyTrend = [
+    { month: 'Jan', emissions: 3.2 },
+    { month: 'Feb', emissions: 3.0 },
+    { month: 'Mar', emissions: 2.8 },
+    { month: 'Apr', emissions: 2.6 }
+  ];
+  const impactScore = mirrorData?.impactScore || 75;
+  const scoreGoal = 100;
+
   return (
-    <div className="min-h-screen bg-[#FAFAFA] py-12 px-4 sm:px-8 lg:px-12">
-      <div className="max-w-6xl mx-auto">
-        {/* Hero Section */}
-        <div className="mb-12">
-          <div className="bg-gradient-to-br from-[#1B5E20] to-[#43A047] rounded-3xl p-12 text-white text-center">
-            <h1 className="text-4xl font-bold mb-4">Carbon Mirror</h1>
-            <p className="text-lg text-green-100">See your environmental impact through a new lens</p>
+    <div className="min-h-screen bg-[#FAFAFA] py-8 md:py-12 px-4 md:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              This is your carbon mirror
+            </h1>
+            <p className="text-gray-600">
+              A visual representation of your environmental impact
+            </p>
+          </div>
+          <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-lg border border-gray-200">
+            <AlertCircle size={18} className="text-[#1B5E20]" />
+            <div>
+              <p className="text-sm font-semibold text-gray-900">
+                Total Emitted
+              </p>
+              <p className="text-lg font-bold text-[#1B5E20]">
+                {totalEmitted.toFixed(1)} kg CO₂
+              </p>
+              {lastMonthEmitted > totalEmitted && (
+                <p className="text-xs text-green-600">
+                  <TrendingDown size={12} className="inline mr-1" />
+                  {((lastMonthEmitted - totalEmitted) / lastMonthEmitted * 100).toFixed(0)}% vs last month
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Current Mirror */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <Card><Skeleton height="h-48" /></Card>
-            <Card><Skeleton height="h-48" /></Card>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <Card className="flex flex-col items-center justify-center py-12">
-              <Leaf className="text-[#1B5E20] mb-4" size={48} />
-              <p className="text-sm text-gray-600 mb-2">Today's Emissions</p>
-              <p className="text-5xl font-bold text-gray-900 mb-4">
-                {mirrorData?.kgCO2?.toFixed(2) || 0}
-              </p>
-              <p className="text-sm text-gray-600">kg CO₂e</p>
-            </Card>
-
-            <Card className="flex flex-col items-center justify-center py-12 bg-[#E8F5E9]">
-              <Leaf className="text-[#1B5E20] mb-4" size={48} />
-              <p className="text-sm text-gray-600 mb-2">Tree Equivalent</p>
-              <p className="text-5xl font-bold text-[#1B5E20] mb-4">
-                {mirrorData?.treesEquivalent?.toFixed(1) || 0}
-              </p>
-              <p className="text-sm text-gray-600">trees needed</p>
-            </Card>
-          </div>
-        )}
-
-        {/* Breakdown */}
-        {!loading && mirrorData && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
-            <MetricCard
-              label="Transport"
-              value={mirrorData?.breakdown?.transportKg || 0}
-              unit="kg"
-              icon={Car}
-            />
-            <MetricCard
-              label="Food"
-              value={mirrorData?.breakdown?.foodKg || 0}
-              unit="kg"
-              icon={Utensils}
-            />
-            <MetricCard
-              label="Waste"
-              value={mirrorData?.breakdown?.wasteKg || 0}
-              unit="kg"
-              icon={Leaf}
-            />
-            <MetricCard
-              label="Energy"
-              value={mirrorData?.breakdown?.energyKg || 0}
-              unit="kg"
-              icon={Zap}
-            />
-          </div>
-        )}
-
-        {/* What-If Simulator */}
-        <Card className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">What-If Simulator</h2>
-          <p className="text-gray-600 mb-6">Explore how different choices impact your carbon footprint</p>
-
-          <div className="space-y-8">
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="font-medium text-gray-900">Transportation</label>
-                <span className="text-[#1B5E20] font-bold">{(simValues.transportMultiplier * 100).toFixed(0)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="0.1"
-                value={simValues.transportMultiplier}
-                onChange={(e) => setSimValues(prev => ({ ...prev, transportMultiplier: parseFloat(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <p className="text-xs text-gray-500 mt-2">Adjust how much you reduce transport emissions</p>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="font-medium text-gray-900">Food Choices</label>
-                <span className="text-[#1B5E20] font-bold">{(simValues.foodMultiplier * 100).toFixed(0)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="0.1"
-                value={simValues.foodMultiplier}
-                onChange={(e) => setSimValues(prev => ({ ...prev, foodMultiplier: parseFloat(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <p className="text-xs text-gray-500 mt-2">Adjust food consumption emissions</p>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="font-medium text-gray-900">Energy Usage</label>
-                <span className="text-[#1B5E20] font-bold">{(simValues.energyMultiplier * 100).toFixed(0)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="0.1"
-                value={simValues.energyMultiplier}
-                onChange={(e) => setSimValues(prev => ({ ...prev, energyMultiplier: parseFloat(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <p className="text-xs text-gray-500 mt-2">Adjust energy consumption emissions</p>
-            </div>
-          </div>
-
-          <Button
-            variant="primary"
-            size="lg"
-            className="w-full mt-8"
-            onClick={handleSimulation}
-          >
-            Calculate Scenario
-          </Button>
-
-          {simResult && (
-            <div className="mt-8 p-6 bg-[#E8F5E9] rounded-xl">
-              <h3 className="font-bold text-gray-900 mb-4">Simulation Result</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Original Emissions</p>
-                  <p className="text-2xl font-bold text-gray-900">{simResult?.originalKg?.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">New Emissions</p>
-                  <p className="text-2xl font-bold text-[#1B5E20]">{simResult?.hypotheticalKg?.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Reduction</p>
-                  <p className="text-2xl font-bold text-green-600">{simResult?.reductionPercent?.toFixed(1)}%</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        <div className="text-center">
-          <Button
+        {/* Share Button */}
+        <div className="mb-8 flex justify-end">
+          <Button 
             variant="secondary"
-            size="lg"
-            onClick={() => window.location.href = '/dashboard'}
+            size="sm"
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: 'My Carbon Mirror',
+                  text: `My total carbon emissions: ${totalEmitted.toFixed(1)} kg CO₂`,
+                  url: window.location.href
+                });
+              }
+            }}
           >
-            Back to Dashboard
+            <Share2 size={16} />
+            Share this insight
           </Button>
+        </div>
+
+        {/* Main Comparison Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Environmental Cost - Rose/Red accents */}
+          <ImageOverlayCard
+            backgroundImage="linear-gradient(135deg, #E53935 0%, #C62828 100%)"
+            caption="Cutting down half a tree"
+            stats={[
+              { label: 'Particulate matter generated', value: '12.5g' },
+              { label: 'Indirect water depletion', value: '450L' }
+            ]}
+            variant="light"
+            icon={<AlertCircle size={28} />}
+          />
+
+          {/* Positive Progress - Green accents */}
+          <ImageOverlayCard
+            backgroundImage="linear-gradient(135deg, #1B5E20 0%, #0D3D14 100%)"
+            caption="Trees you've saved with better choices"
+            stats={[
+              { label: 'Emissions avoided this month', value: '0.8 kg' },
+              { label: 'Monthly improvement', value: '+15%' }
+            ]}
+            variant="light"
+            icon={<Leaf size={28} />}
+          />
+        </div>
+
+        {/* Three-Column Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* What if we changed? */}
+          <Card>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">
+              What if we changed?
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              If you used public transport instead of a car:
+            </p>
+            <div className="bg-[#E8F5E9] rounded-lg p-4 border-l-4 border-[#1B5E20]">
+              <p className="text-sm text-gray-700 mb-1">Estimated savings</p>
+              <p className="text-2xl font-bold text-[#1B5E20]">0.6 kg CO₂</p>
+              <p className="text-xs text-gray-600 mt-1">per day</p>
+            </div>
+          </Card>
+
+          {/* Monthly Trend */}
+          <Card>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">
+              Monthly Trend
+            </h3>
+            <ResponsiveContainer width="100%" height={150}>
+              <BarChart data={monthlyTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #E0E0E0' }}
+                  formatter={(value) => `${value.toFixed(1)} kg`}
+                />
+                <Bar dataKey="emissions" fill="#1B5E20" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          {/* Next Milestone */}
+          <Card className="bg-[#1B5E20] text-white">
+            <h3 className="text-lg font-bold mb-4">Next Milestone</h3>
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Impact Score</span>
+                <span className="text-lg font-bold">{impactScore}/{scoreGoal}</span>
+              </div>
+              <div className="w-full h-3 bg-green-900/50 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#7FD8BE] transition-all duration-500"
+                  style={{ width: `${(impactScore / scoreGoal) * 100}%` }}
+                />
+              </div>
+            </div>
+            <p className="text-sm text-green-100">
+              Keep logging daily to reach your 100-point goal!
+            </p>
+          </Card>
+        </div>
+
+        {/* Action Links */}
+        <div className="flex gap-4 flex-wrap">
+          <Link href="/calculator">
+            <Button variant="primary" size="lg">
+              Log Today's Activity
+            </Button>
+          </Link>
+          <Link href="/dashboard">
+            <Button variant="secondary" size="lg">
+              View Dashboard
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
