@@ -7,8 +7,7 @@ import groupIcon from '../../public/group.png';
 const Footer = () => {
   return (
     <footer className="w-full bg-[#F6F8F6] text-[#1E3322] pt-14 pb-8 px-4 md:px-8 font-sans">
-      {/* Changed from max-w-7xl to max-w-[94%] to expand contents closer to the screen edges */}
-      <div className="max-w-[94%] mx-auto">
+      <div className="max-w-screen-2xl mx-auto">
         
         {/* Top Branding & Social Utility Icon Row */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">

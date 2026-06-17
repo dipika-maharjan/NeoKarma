@@ -13,7 +13,7 @@ const DashboardSummary = ({ onNavigateToCalculator, onNavigateToMirror }) => {
 
   return (
     <div className="w-full min-h-screen bg-[#FAFAFA] text-[#1E3322] px-6 md:px-12 py-8 font-sans">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-screen-2xl mx-auto">
         
         {/* Top Header Row with Welcome Text and Action Button */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
