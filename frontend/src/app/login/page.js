@@ -35,24 +35,24 @@ const LoginPage = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f8f9ff]">
-      <section className="relative hidden w-[52%] overflow-hidden bg-[#063f2f] lg:block">
+      <section className="relative hidden w-[52%] overflow-hidden bg-[#07362b] lg:block">
         <Image
           src="/Himalayan Mountains.png"
           alt="Himalayan Mountains"
           fill
-          className="object-cover opacity-55 mix-blend-soft-light"
+          className="object-cover opacity-80"
           priority
         />
-        <div className="absolute inset-0 bg-[#063f2f]/62" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_50%,rgba(50,215,134,0.2),transparent_34%)]" />
+        <div className="absolute inset-0 bg-[#063f2f]/28" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_50%,rgba(50,215,134,0.08),transparent_34%)]" />
 
         <div className="relative z-10 flex h-full flex-col justify-center px-[20%] text-center">
-          <h1 className="mb-6 text-[42px] font-extrabold leading-[1.08] text-white">
+          <h1 className="mb-6 text-[42px] font-extrabold leading-[1.08] !text-white">
             Measure. Reflect.
             <br />
             Improve.
           </h1>
-          <p className="mx-auto max-w-[340px] text-[14px] font-medium leading-6 text-white/82">
+          <p className="mx-auto max-w-[340px] text-[14px] font-medium leading-6 !text-white/85">
             Join our mission to build a carbon-neutral and sustainable future for the
             Himalayas and beyond.
           </p>

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import LandingNavbar from '@/components/LandingNavbar';
-import LandingFooter from '@/components/LandingFooter';
+import Footer from '@/components/Footer';
 import {
   ArrowRight,
   Award,
@@ -349,7 +349,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <LandingFooter />
+      <Footer />
     </>
   );
 }
