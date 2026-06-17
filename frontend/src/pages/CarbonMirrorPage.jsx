@@ -51,7 +51,7 @@ const CarbonMirrorPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAFAFA] py-8 md:py-12 px-4 md:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="mx-auto w-full max-w-[1500px] space-y-6">
           <Skeleton height="h-16" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Skeleton height="h-64" />
@@ -76,7 +76,7 @@ const CarbonMirrorPage = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] py-8 md:py-12 px-4 md:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="mx-auto w-full max-w-[1500px]">
         {/* Header */}
         <div className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -93,7 +93,7 @@ const CarbonMirrorPage = () => {
               <p className="text-sm font-semibold text-gray-900">
                 Total Emitted
               </p>
-              <p className="text-lg font-bold text-[#1B5E20]">
+              <p className="text-base font-extrabold text-[#1B5E20]">
                 {totalEmitted.toFixed(1)} kg CO₂
               </p>
               {lastMonthEmitted > totalEmitted && (
@@ -157,7 +157,7 @@ const CarbonMirrorPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* What if we changed? */}
           <Card>
-            <h3 className="text-lg font-bold text-gray-900 mb-3">
+            <h3 className="mb-3 text-[20px] font-extrabold text-gray-900">
               What if we changed?
             </h3>
             <p className="text-sm text-gray-600 mb-4">
@@ -172,7 +172,7 @@ const CarbonMirrorPage = () => {
 
           {/* Monthly Trend */}
           <Card>
-            <h3 className="text-lg font-bold text-gray-900 mb-3">
+            <h3 className="mb-3 text-[20px] font-extrabold text-gray-900">
               Monthly Trend
             </h3>
             <ResponsiveContainer width="100%" height={150}>
@@ -191,11 +191,11 @@ const CarbonMirrorPage = () => {
 
           {/* Next Milestone */}
           <Card className="bg-[#1B5E20] text-white">
-            <h3 className="text-lg font-bold mb-4">Next Milestone</h3>
+            <h3 className="mb-4 text-[20px] font-extrabold">Next Milestone</h3>
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Impact Score</span>
-                <span className="text-lg font-bold">{impactScore}/{scoreGoal}</span>
+                <span className="text-base font-extrabold">{impactScore}/{scoreGoal}</span>
               </div>
               <div className="w-full h-3 bg-green-900/50 rounded-full overflow-hidden">
                 <div
@@ -214,7 +214,7 @@ const CarbonMirrorPage = () => {
         <div className="flex gap-4 flex-wrap">
           <Link href="/calculator">
             <Button variant="primary" size="lg">
-              Log Today's Activity
+              Log Today&apos;s Activity
             </Button>
           </Link>
           <Link href="/dashboard">

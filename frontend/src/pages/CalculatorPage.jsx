@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
-import { logDailyCarbon, getTodayLog } from '@/lib/actions/calculatorActions';
+import { logDailyCarbon } from '@/lib/actions/calculatorActions';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
@@ -11,6 +11,7 @@ import {
   Bike,
   Bus,
   Car,
+  Footprints,
   ForkKnife,
   Minus,
   Plus,
@@ -22,7 +23,6 @@ const CalculatorPage = () => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [todayLog, setTodayLog] = useState(null);
   const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
@@ -36,7 +36,7 @@ const CalculatorPage = () => {
   });
 
   const transportationOptions = [
-    { value: 'walk', label: 'Walk', icon: <span className="text-2xl leading-none">🚶</span> },
+    { value: 'walk', label: 'Walk', icon: <Footprints size={21} strokeWidth={2.5} /> },
     { value: 'bicycle', label: 'Bicycle', icon: <Bike size={21} strokeWidth={2.5} /> },
     { value: 'bus', label: 'Bus', icon: <Bus size={21} strokeWidth={2.5} /> },
     { value: 'motorbike', label: 'Motorbike', icon: <Bike size={21} strokeWidth={2.5} /> },
@@ -48,22 +48,6 @@ const CalculatorPage = () => {
     { value: 'mixed', label: 'Mixed', estimate: '1.5 kg CO2' },
     { value: 'non-vegetarian', label: 'Non-Veg', estimate: '2.5 kg CO2' }
   ];
-
-  useEffect(() => {
-    const checkTodayLog = async () => {
-      if (isAuthenticated) {
-        try {
-          const log = await getTodayLog();
-          if (log) {
-            setTodayLog(log);
-          }
-        } catch (err) {
-          console.error('Error checking today log:', err);
-        }
-      }
-    };
-    checkTodayLog();
-  }, [isAuthenticated]);
 
   const setField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -200,7 +184,7 @@ const CalculatorPage = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center bg-[#FAFAFA]">
-        <div className="rounded-2xl border border-[#E0E5E2] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-sm">
           <p className="text-center text-gray-600">Please log in to access the calculator</p>
         </div>
       </div>
@@ -219,16 +203,14 @@ const CalculatorPage = () => {
               Fill in the details below to understand your environmental footprint. All fields are optional.
             </p>
           </div>
-          {todayLog && (
-            <Link href="/calculator/result" className="block">
-              <Button
-                variant="primary"
-                className="h-[50px] w-full rounded-full bg-[#004332] text-[19px] font-bold hover:bg-[#003729]"
-              >
-                Today&apos;s Carbon Footprint
-              </Button>
-            </Link>
-          )}
+          <Link href="/calculator/result" className="block">
+            <Button
+              variant="primary"
+              className="h-[50px] w-full rounded-full bg-[#004332] text-[19px] font-bold hover:bg-[#003729]"
+            >
+              Today&apos;s Carbon Footprint
+            </Button>
+          </Link>
         </div>
 
         {errors.submit && (
@@ -240,7 +222,7 @@ const CalculatorPage = () => {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-[1.42fr_1fr] xl:grid-cols-[1.48fr_1fr]">
           <div className="space-y-6">
-            <section className="rounded-[18px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+            <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
                 <Bus size={22} className="text-[#004332]" />
                 <h2 className="text-[24px] font-extrabold leading-none">1. Transport</h2>
@@ -278,7 +260,7 @@ const CalculatorPage = () => {
               )}
             </section>
 
-            <section className="rounded-[18px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+            <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
                 <ForkKnife size={22} className="text-[#004332]" />
                 <h2 className="text-[24px] font-extrabold leading-none">2. Lunch</h2>
@@ -321,7 +303,7 @@ const CalculatorPage = () => {
           </div>
 
           <div className="space-y-6">
-            <section className="rounded-[18px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+            <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
                 <Trash2 size={21} className="text-[#004332]" />
                 <h2 className="text-[24px] font-extrabold leading-none">3. Waste &amp; Plastic</h2>
@@ -342,7 +324,7 @@ const CalculatorPage = () => {
               </div>
             </section>
 
-            <section className="rounded-[18px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+            <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
                 <Zap size={23} className="text-[#004332]" />
                 <h2 className="text-[24px] font-extrabold leading-none">4. Energy</h2>
@@ -363,7 +345,7 @@ const CalculatorPage = () => {
               )}
             </section>
 
-            <section className="relative min-h-[273px] overflow-hidden rounded-[18px] bg-[#E2F7F3] p-6">
+            <section className="relative min-h-[252px] overflow-hidden rounded-xl bg-[#E2F7F3] p-5 md:p-6">
               <div className="absolute bottom-0 right-0 h-28 w-32 opacity-25">
                 <div className="absolute bottom-0 right-0 h-24 w-24 rotate-12 border-[12px] border-[#4E666B]" />
                 <div className="absolute bottom-3 right-16 h-20 w-20 rotate-12 border-[10px] border-[#4E666B]" />

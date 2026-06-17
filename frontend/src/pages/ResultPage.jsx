@@ -1,12 +1,38 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card, Button, StatCard, ProgressBar, Skeleton } from '@/components/ui';
-import { getTodayLog } from '@/lib/actions/calculatorActions';
-import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Trees, Zap, TrendingDown, Share2, ArrowRight, AlertCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  Award,
+  Car,
+  Eye,
+  Leaf,
+  Medal,
+  TreePine
+} from 'lucide-react';
+import { Button, Skeleton } from '@/components/ui';
+import { useAuth } from '@/context/AuthContext';
+import { getTodayLog } from '@/lib/actions/calculatorActions';
+
+const getEmissionValue = (log) => Number(
+  log?.totalEmissionKg
+    ?? log?.log?.totalEmissionKg
+    ?? log?.data?.totalEmissionKg
+    ?? log?.data?.log?.totalEmissionKg
+    ?? log?.totalKgCO2
+    ?? log?.totalEmission
+    ?? 0
+);
+
+const getBreakdown = (log) => (
+  log?.breakdown
+    ?? log?.log?.breakdown
+    ?? log?.data?.breakdown
+    ?? log?.data?.log?.breakdown
+    ?? {}
+);
 
 const ResultPage = () => {
   const { isAuthenticated } = useAuth();
@@ -48,12 +74,12 @@ const ResultPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] py-8 md:py-12 px-4 md:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto space-y-6">
+      <div className="min-h-screen bg-[#FAFAFA] px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-[1500px] space-y-6">
           <Skeleton height="h-16" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Skeleton height="h-64" />
-            <Skeleton height="h-64" />
+          <div className="grid grid-cols-1 gap-7 lg:grid-cols-[2fr_0.95fr]">
+            <Skeleton height="h-80" />
+            <Skeleton height="h-80" />
           </div>
         </div>
       </div>
@@ -62,249 +88,178 @@ const ResultPage = () => {
 
   if (error || !todayLog) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] py-8 md:py-12 px-4 md:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto">
-          <Card>
+      <div className="min-h-screen bg-[#FAFAFA] px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-[1500px]">
+          <div className="rounded-[14px] border border-[#E2E8E2] bg-white p-6 shadow-sm">
             <div className="flex items-center gap-3 text-red-700">
               <AlertCircle size={24} />
               <p>{error || 'No log data found. Please log your activities first.'}</p>
             </div>
             <Link href="/calculator" className="mt-4 inline-block">
-              <Button variant="primary">
-                Go Back to Calculator
-              </Button>
+              <Button variant="primary">Go Back to Calculator</Button>
             </Link>
-          </Card>
+          </div>
         </div>
       </div>
     );
   }
 
-  const emissionKg = Number(todayLog.totalEmissionKg ?? todayLog.totalEmission ?? 0);
-  const breakdown = todayLog.breakdown || {};
-  const averageEmission = 3.2;
-  const percentageBelow = Math.round(((averageEmission - emissionKg) / averageEmission) * 100);
-  const treesEquivalent = (emissionKg / 0.024).toFixed(1);
-  const distanceEquivalent = (emissionKg / 0.12).toFixed(1);
+  const emissionKg = getEmissionValue(todayLog);
+  const breakdown = getBreakdown(todayLog);
+  const averageEmission = 5.2;
+  const percentageBelow = Math.max(0, Math.round(((averageEmission - emissionKg) / averageEmission) * 100));
+  const treesEquivalent = Math.max(0.1, emissionKg / 21.77).toFixed(2);
+  const distanceEquivalent = Math.max(0.1, emissionKg / 0.4).toFixed(0);
+  const emissionProgress = Math.min(100, (emissionKg / averageEmission) * 100);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] py-8 md:py-12 px-4 md:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+    <div className="min-h-screen bg-[#FAFAFA] px-4 py-8 font-sans md:px-8 lg:px-12 xl:px-16">
+      <div className="mx-auto w-full max-w-[1500px]">
+        <div className="mb-8">
+          <h1 className="mb-2 text-[32px] font-extrabold leading-tight text-[#073F30] md:text-[34px]">
             Your Carbon Footprint Today
           </h1>
-          <p className="text-gray-600">
-            Here's a detailed breakdown of your daily emissions
+          <p className="text-[16px] text-[#4A5550]">
+            Small steps today create a sustainable world for tomorrow.
           </p>
         </div>
 
-        {/* Main Results Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Left: Emission Details Card */}
-          <Card className="bg-white">
-            <div className="text-center mb-6">
-              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                Total Emission
-              </p>
-              <div className="text-5xl md:text-6xl font-bold text-[#1B5E20] mb-2">
-                {emissionKg.toFixed(2)}
-              </div>
-              <p className="text-lg text-gray-700">
-                kg CO₂ equivalents
-              </p>
-            </div>
-
-            {/* Comparison Badge */}
-            {percentageBelow > 0 && (
-              <div className="bg-[#E8F5E9] border border-[#C8E6C9] rounded-lg p-3 mb-6 text-center">
-                <p className="text-sm font-semibold text-[#1B5E20]">
-                  <TrendingDown size={16} className="inline mr-1" />
-                  {percentageBelow}% below your average
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_0.95fr]">
+          <section className="rounded-[12px] border border-[#DFE8E1] bg-white p-6 shadow-sm md:p-7">
+            <div className="grid min-h-[220px] grid-cols-1 items-center gap-6 md:grid-cols-[1fr_0.95fr]">
+              <div>
+                <p className="mb-3 text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#476257]">
+                  Daily Total
                 </p>
+                <div className="flex items-end gap-2 text-[#063F30]">
+                  <span className="text-[58px] font-extrabold leading-none md:text-[66px]">
+                    {emissionKg.toFixed(1)}
+                  </span>
+                  <span className="pb-2 text-[19px] font-extrabold text-[#6E837A]">
+                    kg CO2
+                  </span>
+                </div>
+                <div className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full bg-[#BDECCF] px-4 py-2 text-[13px] font-extrabold tracking-[0.03em] text-[#4A6D5E]">
+                  <Leaf size={16} fill="currentColor" />
+                  Great result! {percentageBelow}% lower than your average.
+                </div>
               </div>
-            )}
 
-            {/* Equivalence Stats */}
-            <div className="space-y-3 border-t pt-6">
-              <StatCard
-                label="Transport"
-                value={(breakdown.transportKg || 0).toFixed(2)}
-                unit="kg"
-                compact={true}
-                size="md"
-              />
-              <StatCard
-                label="Food"
-                value={(breakdown.foodKg || 0).toFixed(2)}
-                unit="kg"
-                compact={true}
-                size="md"
-              />
-              <StatCard
-                label="Waste"
-                value={(breakdown.wasteKg || 0).toFixed(2)}
-                unit="kg"
-                compact={true}
-                size="md"
-              />
-              <StatCard
-                label="Energy"
-                value={(breakdown.energyKg || 0).toFixed(2)}
-                unit="kg"
-                compact={true}
-                size="md"
-              />
-              <StatCard
-                label="Trees needed to offset"
-                value={treesEquivalent}
-                unit="trees"
-                icon={<Trees size={20} />}
-                compact={true}
-                size="md"
-              />
-              <StatCard
-                label="Equivalent driving distance"
-                value={distanceEquivalent}
-                unit="km"
-                icon={<Zap size={20} />}
-                compact={true}
-                size="md"
-              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="min-h-[126px] rounded-[8px] border border-[#DCE3F1] bg-[#F0F3FD] p-4">
+                  <TreePine className="mb-2 text-[#073F30]" size={22} fill="currentColor" />
+                  <p className="text-[14px] text-[#4E575F]">Equivalent to</p>
+                  <p className="text-[19px] font-extrabold leading-tight text-[#073F30]">
+                    {treesEquivalent} trees
+                  </p>
+                  <p className="mt-1 max-w-[180px] text-[13px] leading-snug text-[#667077]">
+                    needed to absorb this daily
+                  </p>
+                </div>
+                <div className="min-h-[126px] rounded-[8px] border border-[#DCE3F1] bg-[#F0F3FD] p-4">
+                  <Car className="mb-2 text-[#073F30]" size={22} fill="currentColor" />
+                  <p className="text-[14px] text-[#4E575F]">Equivalent to</p>
+                  <p className="text-[19px] font-extrabold leading-tight text-[#073F30]">
+                    {distanceEquivalent} miles
+                  </p>
+                  <p className="mt-1 max-w-[180px] text-[13px] leading-snug text-[#667077]">
+                    driven in a standard car
+                  </p>
+                </div>
+              </div>
             </div>
-          </Card>
+          </section>
 
-          {/* Right: Comparison Card */}
-          <Card className="bg-[#1B5E20] text-white">
-            <div className="mb-6">
-              <p className="text-sm font-semibold uppercase tracking-wide text-green-100 mb-4">
-                Your Performance
-              </p>
-              
-              {/* Comparison Bars */}
-              <div className="space-y-6">
+          <section className="relative overflow-hidden rounded-[12px] bg-[#004330] p-6 text-white md:p-7">
+            <div className="space-y-7">
+              <div className="space-y-5">
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-green-100">Your Emission</span>
-                    <span className="text-lg font-bold">{emissionKg.toFixed(2)}</span>
+                  <div className="mb-3 flex items-center justify-between gap-4">
+                    <span className="text-[16px] text-[#CBE3D8]">Your Emission</span>
+                    <span className="text-[20px] font-extrabold">{emissionKg.toFixed(1)} kg</span>
                   </div>
-                  <div className="w-full h-3 bg-green-700/50 rounded-full overflow-hidden">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#2B745C]">
                     <div
-                      className="h-full bg-[#7FD8BE] rounded-full transition-all duration-500"
-                      style={{ width: `${(emissionKg / averageEmission) * 100}%` }}
+                      className="h-full rounded-full bg-[#A8E0C7]"
+                      style={{ width: `${emissionProgress}%` }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-green-100">Your Average</span>
-                    <span className="text-lg font-bold">{averageEmission.toFixed(2)}</span>
+                  <div className="mb-3 flex items-center justify-between gap-4">
+                    <span className="text-[16px] text-[#CBE3D8]">Your Average</span>
+                    <span className="text-[20px] font-extrabold">{averageEmission.toFixed(1)} kg</span>
                   </div>
-                  <div className="w-full h-3 bg-green-700/50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-white/50 rounded-full"
-                      style={{ width: '100%' }}
-                    />
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#2B745C]">
+                    <div className="h-full w-[85%] rounded-full bg-[#8DCEB4]" />
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Encouraging Message */}
-            <div className="border-t border-green-700/50 pt-4">
-              <p className="text-sm text-green-100">
-                {emissionKg < averageEmission 
-                  ? '🎉 Great job! You\'re doing better than your average.'
-                  : 'Keep working to reduce your emissions. You can do it!'}
+              <p className="max-w-[360px] pt-12 text-[14px] italic leading-relaxed text-[#F1FFF8] md:pt-14">
+                &quot;You are leading the way! Keep up the sustainable choices.&quot;
               </p>
             </div>
-          </Card>
-        </div>
+            <Medal
+              className="absolute bottom-5 right-7 text-[#286A55]/55"
+              size={96}
+              strokeWidth={1.4}
+            />
+          </section>
 
-        {/* Bottom Section: 2 Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Carbon Mirror Teaser */}
-          <Link href="/carbon-mirror">
-            <Card className="bg-gradient-to-br from-[#FFF5F5] to-white border-2 border-red-200 cursor-pointer hover:shadow-lg transition-shadow h-full">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-sm font-semibold text-gray-600 uppercase mb-2">
-                    See Your Impact
-                  </p>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Carbon Mirror
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Visualize the environmental impact of your emissions
-                  </p>
-                </div>
-              </div>
-              <div className="mt-auto">
-                <Button variant="secondary" size="sm" className="mt-4">
-                  View Carbon Mirror
-                  <ArrowRight size={16} />
-                </Button>
-              </div>
-            </Card>
-          </Link>
-
-          {/* Impact Score Teaser */}
-          <Link href="/dashboard">
-            <Card className="bg-gradient-to-br from-[#E8F5E9] to-white border-2 border-[#C8E6C9] cursor-pointer hover:shadow-lg transition-shadow h-full">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-sm font-semibold text-[#1B5E20] uppercase mb-2">
-                    Your Progress
-                  </p>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Impact Score & Streak
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Track your environmental impact score and daily streaks
-                  </p>
-                </div>
-              </div>
-              <div className="mt-auto">
-                <Button variant="primary" size="sm" className="mt-4">
-                  View Dashboard
-                  <ArrowRight size={16} />
-                </Button>
-              </div>
-            </Card>
-          </Link>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 flex-wrap">
-          <Link href="/calculator">
-            <Button variant="primary" size="lg">
-              Log Another Activity
-            </Button>
-          </Link>
-          <Button 
-            variant="secondary" 
-            size="lg"
-            onClick={() => {
-              // TODO: Implement share functionality
-              if (navigator.share) {
-                navigator.share({
-                  title: 'My Carbon Footprint',
-                  text: `I emitted ${emissionKg.toFixed(2)} kg CO₂ today!`,
-                  url: window.location.href
-                });
-              }
-            }}
+          <Link
+            href="/carbon-mirror"
+            className="block overflow-hidden rounded-[12px] border border-[#DFE8E1] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md lg:row-start-2"
           >
-            <Share2 size={18} />
-            Share Result
-          </Button>
+            <div
+              className="flex h-[180px] items-end bg-cover bg-center p-6"
+              style={{ backgroundImage: 'url(/carbon-result-screen.png)' }}
+            >
+              <h2 className="text-[22px] font-extrabold !text-white">
+                Carbon Mirror
+              </h2>
+            </div>
+            <div className="p-6">
+              <p className="mb-6 max-w-[720px] text-[16px] leading-relaxed text-[#4B5350]">
+                Visualize the collective impact of your actions. See how small daily
+                reductions add up to forests protected.
+              </p>
+              <div className="flex h-12 items-center justify-center gap-3 rounded-full bg-[#C5EFD7] text-[14px] font-extrabold tracking-[0.03em] text-[#557367]">
+                <Eye size={20} />
+                View Carbon Mirror
+              </div>
+            </div>
+          </Link>
+
+          <section className="rounded-[12px] border border-[#DCE3F1] bg-[#F0F3FD] p-6 shadow-sm md:p-7 lg:row-start-2">
+            <div className="flex h-full min-h-[240px] flex-col justify-center">
+              <Award className="mb-5 text-[#073F30]" size={30} />
+              <h2 className="mb-4 text-[20px] font-extrabold text-[#111827]">
+                Your Impact Score
+              </h2>
+              <p className="mb-6 max-w-[360px] text-[16px] leading-relaxed text-[#4B5350]">
+                We score consistency, not perfection. Keep making small changes to see
+                your impact grow over time.
+              </p>
+              <Link href="/score" className="block">
+                <div className="flex h-12 max-w-[300px] items-center justify-center rounded-full bg-[#004330] text-[14px] font-extrabold tracking-[0.03em] text-white">
+                  View Impact Score
+                </div>
+              </Link>
+              <div className="mt-7 grid grid-cols-2 gap-3 text-[13px] text-[#65716D]">
+                <span>Transport: {(breakdown.transportKg || 0).toFixed(2)} kg</span>
+                <span>Food: {(breakdown.foodKg || 0).toFixed(2)} kg</span>
+                <span>Waste: {(breakdown.wasteKg || 0).toFixed(2)} kg</span>
+                <span>Energy: {(breakdown.energyKg || 0).toFixed(2)} kg</span>
+              </div>
+            </div>
+          </section>
         </div>
+
       </div>
     </div>
   );
 };
 
 export default ResultPage;
-

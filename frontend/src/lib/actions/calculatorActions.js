@@ -7,7 +7,7 @@ export const logDailyCarbon = async (payload) => {
 
 export const getTodayLog = async () => {
   const response = await fetchTodayLog();
-  return response.data;
+  return response.data?.data || null;
 };
 
 export const getDailyLogHistory = async (params = {}) => {

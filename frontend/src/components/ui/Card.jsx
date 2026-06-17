@@ -9,7 +9,7 @@ const Card = ({ children, className = '', variant = 'default', ...props }) => {
 
   return (
     <div 
-      className={`rounded-2xl p-6 ${variants[variant]} ${className}`}
+      className={`rounded-xl p-5 ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

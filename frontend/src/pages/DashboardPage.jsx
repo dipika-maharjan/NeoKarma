@@ -2,16 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, Button, ProgressRing, Skeleton, StatCard } from '@/components/ui';
 import { getDashboardSummary } from '@/lib/actions/dashboardActions';
 import { getStreak } from '@/lib/actions/streakActions';
+import { getTodayLog } from '@/lib/actions/calculatorActions';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line
-} from 'recharts';
-import { AlertCircle, Leaf, TrendingDown, Award, Trees } from 'lucide-react';
+import { AlertCircle, ArrowDown, ArrowUpRight, Plus } from 'lucide-react';
 
 const DashboardPage = () => {
   const { user, isAuthenticated } = useAuth();
@@ -19,6 +15,7 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [streakData, setStreakData] = useState(null);
+  const [todayLog, setTodayLog] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -29,12 +26,14 @@ const DashboardPage = () => {
       }
 
       try {
-        const [dashData, streakInfo] = await Promise.all([
+        const [dashData, streakInfo, today] = await Promise.all([
           getDashboardSummary(),
-          getStreak()
+          getStreak(),
+          getTodayLog()
         ]);
         setDashboardData(dashData);
         setStreakData(streakInfo);
+        setTodayLog(today);
       } catch (err) {
         console.error('Error loading dashboard:', err);
         setError('Failed to load dashboard');
@@ -52,206 +51,147 @@ const DashboardPage = () => {
     return null;
   }
 
-  // Mock chart data
-  const weeklyChartData = [
-    { day: 'Mon', emissions: 2.4 },
-    { day: 'Tue', emissions: 2.1 },
-    { day: 'Wed', emissions: 2.8 },
-    { day: 'Thu', emissions: 2.3 },
-    { day: 'Fri', emissions: 1.9 },
-    { day: 'Sat', emissions: 2.6 },
-    { day: 'Sun', emissions: 2.2 }
-  ];
+  const studentName =
+    dashboardData?.student?.name?.split(' ')[0] ||
+    user?.firstName ||
+    user?.name?.split(' ')[0] ||
+    'User';
 
-  const todayEmission = dashboardData?.dailyEmissionsKG || 2.4;
-  const weeklyAverage = dashboardData?.weeklyAverageKG || 2.3;
-  const monthlyReduction = dashboardData?.monthlyReductionPercent || 12;
-  const impactScore = dashboardData?.impactScore || 75;
-  const streakDays = streakData?.current || 6;
+  const todayEmission = Number(todayLog?.totalEmissionKg ?? dashboardData?.weekly?.averagePerDay ?? 2.4);
+  const weeklyTotal = Number(dashboardData?.weekly?.totalEmissionKg ?? 14.2);
+  const weeklyAverage = Number(dashboardData?.weekly?.averagePerDay ?? 2.3);
+  const monthlyAverage = Number(dashboardData?.monthly?.averagePerDay ?? weeklyAverage);
+  const monthlyReduction = monthlyAverage > 0
+    ? Math.max(0, Math.round(((monthlyAverage - weeklyAverage) / monthlyAverage) * 100))
+    : 17;
+  const impactScore = Math.min(100, Math.max(0, Math.round(streakData?.participationScore ?? 82)));
+  const scoreStatus = impactScore >= 80 ? 'Gold Status' : impactScore >= 60 ? 'Silver Status' : 'Bronze Status';
+  const weeklyBars = [0.45, 0.68, 0.58, 0.46, 0.75, 0.92, 0.28];
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] py-8 md:py-12 px-4 md:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              Good morning, {user?.firstName || user?.name?.split(' ')[0] || 'there'}!
-            </h1>
-            <p className="text-gray-600">Track your environmental impact</p>
-          </div>
-          <Link href="/calculator">
-            <Button variant="primary" size="lg">
-              + Log Today's Carbon
-            </Button>
+    <div className="min-h-[calc(100vh-76px)] bg-[#FAFAFA] px-4 py-8 md:px-8 lg:px-12 xl:px-16">
+      <div className="mx-auto w-full max-w-[1500px]">
+        <div className="mb-12 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-[32px] font-extrabold tracking-tight text-[#17202A] md:text-[34px]">
+            Good morning, {studentName}!
+          </h1>
+          <Link
+            href="/calculator"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#004332] px-8 text-[15px] font-bold text-white shadow-[0_3px_8px_rgba(0,67,50,0.25)] transition-colors hover:bg-[#003729]"
+          >
+            <Plus size={20} />
+            Log Today&apos;s Carbon
           </Link>
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3">
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-red-700 text-sm">{error}</p>
+          <div className="mb-6 flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+            <AlertCircle size={20} className="mt-0.5 flex-shrink-0 text-red-600" />
+            <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
 
-        {/* Top Row: Today's Emission + Right Column */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Today's Emission Card */}
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2.05fr_1fr]">
+          <section className="relative min-h-[290px] overflow-hidden rounded-xl bg-[#07563F] p-6 text-white shadow-sm md:p-7">
+            <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-white/8" />
+            <div className="absolute -bottom-24 right-0 h-56 w-56 rotate-45 border-[18px] border-white/8" />
             {loading ? (
-              <Card><Skeleton height="h-64" /></Card>
+              <div className="h-full animate-pulse rounded-xl bg-white/10" />
             ) : (
-              <Card className="bg-gradient-to-br from-[#1B5E20] to-[#0D3D14] text-white">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wider mb-4 text-green-100">
-                    Today's Emission
+              <>
+                <p className="text-[14px] font-bold uppercase tracking-[0.2em] text-[#72B99C]">
+                  Today&apos;s Emission
+                </p>
+                <div className="mt-4 flex items-end gap-2">
+                  <span className="text-[50px] font-extrabold leading-none">
+                    {todayEmission.toFixed(1)}
+                  </span>
+                  <span className="pb-1 text-[22px] font-bold text-[#BCE5D1]">kg CO2</span>
+                </div>
+                <p className="mt-5 text-[17px] text-[#BCE5D1]">
+                  You&apos;re doing better today. Keep up the green choices!
+                </p>
+              </>
+            )}
+          </section>
+
+          <aside className="space-y-7">
+            <section className="rounded-[10px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+              <div className="mb-4 flex items-start justify-between">
+                <p className="text-[15px] font-bold tracking-wide text-[#4A5550]">This Week</p>
+                <span className="inline-flex items-center gap-0.5 text-[14px] font-bold text-[#D11212]">
+                  <ArrowUpRight size={15} />
+                  17%
+                </span>
+              </div>
+              {loading ? (
+                <div className="h-20 animate-pulse rounded-lg bg-gray-100" />
+              ) : (
+                <>
+                  <p className="mb-4 text-[24px] font-extrabold text-[#17202A]">
+                    {weeklyTotal.toFixed(1)} kg CO2
                   </p>
-                  <div className="flex items-baseline gap-3 mb-6">
-                    <span className="text-6xl md:text-7xl font-black">
-                      {todayEmission.toFixed(2)}
-                    </span>
-                    <span className="text-2xl font-medium text-green-100">kg CO₂</span>
+                  <div className="flex h-12 items-end gap-1">
+                    {weeklyBars.map((height, index) => (
+                      <div
+                        key={index}
+                        className={`flex-1 rounded-sm ${index === 5 ? 'bg-[#004332]' : 'bg-[#E1E8E5]'}`}
+                        style={{ height: `${Math.max(22, height * 52)}px` }}
+                      />
+                    ))}
                   </div>
-                  <p className="text-green-100 text-lg">
-                    {todayEmission < weeklyAverage 
-                      ? '👏 Better than your weekly average!'
-                      : 'Keep working to reduce emissions'}
-                  </p>
-                </div>
-              </Card>
-            )}
-          </div>
+                </>
+              )}
+            </section>
 
-          {/* Right Column Stacked */}
-          <div className="space-y-6">
-            {/* This Week Card */}
-            {loading ? (
-              <Card><Skeleton height="h-28" /></Card>
-            ) : (
-              <Card>
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3">
-                  This Week
+            <section className="rounded-[10px] border border-[#BEE8D3] bg-[#C7EEDC] p-6 shadow-sm">
+              <p className="text-[15px] font-bold tracking-wide text-[#4A6B5D]">Monthly Reduction</p>
+              <div className="mt-2 flex items-center gap-8">
+                <div>
+                  <ArrowDown size={23} className="mb-1 text-[#4A6B5D]" />
+                  <p className="text-[24px] font-extrabold text-[#4A6B5D]">{monthlyReduction || 17}%</p>
+                </div>
+                <p className="max-w-[220px] text-[14px] leading-relaxed text-[#6A7C73]">
+                  Great progress compared to last month!
                 </p>
-                <div className="flex items-end gap-2 mb-3">
-                  <span className="text-3xl font-bold text-gray-900">
-                    {weeklyAverage.toFixed(2)}
-                  </span>
-                  <span className="text-sm text-gray-600">kg avg</span>
-                </div>
-                <div className="flex gap-0.5 items-end h-8">
-                  {weeklyChartData.map((day, idx) => (
-                    <div
-                      key={idx}
-                      className="flex-1 bg-[#1B5E20] rounded-t opacity-70 hover:opacity-100 transition-opacity"
-                      style={{ height: `${(day.emissions / 3) * 100}%` }}
-                      title={`${day.day}: ${day.emissions}kg`}
-                    />
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* Monthly Reduction Card */}
-            {loading ? (
-              <Card><Skeleton height="h-28" /></Card>
-            ) : (
-              <Card className="bg-gradient-to-br from-[#E8F5E9] to-[#F1F4F2] border-[#C8E6C9]">
-                <p className="text-sm font-semibold text-[#1B5E20] uppercase tracking-wider mb-3">
-                  Monthly Reduction
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-[#1B5E20]">
-                    {monthlyReduction}%
-                  </span>
-                  <span className="text-sm text-gray-700">improvement</span>
-                </div>
-                <p className="text-xs text-gray-600 mt-2">vs. last month</p>
-              </Card>
-            )}
-          </div>
+              </div>
+            </section>
+          </aside>
         </div>
 
-        {/* Bottom Row: 3 Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Impact Score Ring */}
-          {loading ? (
-            <Card><Skeleton height="h-64" /></Card>
-          ) : (
-            <Card className="flex flex-col items-center justify-center py-8">
-              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-6">
-                Impact Score
-              </p>
-              <div className="relative inline-flex flex-col items-center">
-                <ProgressRing
-                  value={impactScore}
-                  max={100}
-                  size={140}
-                />
-                <div className="text-center mt-2">
-                  <span className="text-sm text-gray-600">/100</span>
-                </div>
+        <div className="mt-9 grid grid-cols-1 gap-6 lg:grid-cols-[0.95fr_1.95fr]">
+          <section className="min-h-[360px] rounded-xl border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-7">
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <p className="mb-4 text-[15px] font-bold tracking-wide text-[#4A5550]">Impact Score</p>
+              <div className="relative flex h-[126px] w-[126px] items-center justify-center rounded-full border-[9px] border-[#004332]">
+                <span className="text-[32px] font-extrabold text-[#17202A]">{impactScore}</span>
               </div>
-              <p className="text-sm font-semibold text-[#1B5E20] mt-6">
-                {impactScore >= 80 ? '🏆 Gold Status' : impactScore >= 60 ? '🥈 Silver Status' : '🥉 Bronze Status'}
-              </p>
-            </Card>
-          )}
+              <p className="mt-5 text-[18px] font-extrabold text-[#17202A]">{scoreStatus}</p>
+              <p className="mt-1 text-[14px] text-[#4A5550]">Top 5% in your grade</p>
+            </div>
+          </section>
 
-          {/* Carbon Mirror Teaser */}
-          {loading ? (
-            <Card><Skeleton height="h-64" /></Card>
-          ) : (
-            <Link href="/carbon-mirror">
-              <Card className="bg-gradient-to-br from-red-50 to-red-100/50 border-2 border-red-200 cursor-pointer hover:shadow-lg transition-shadow h-full flex flex-col items-center justify-center py-8">
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3">
-                    Visual Impact
-                  </p>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    The Carbon Mirror
-                  </h3>
-                  <p className="text-sm text-gray-700 mb-4">
-                    See what your emissions mean in real terms
-                  </p>
-                  <Button variant="secondary" size="sm">
-                    Open Mirror
-                  </Button>
-                </div>
-              </Card>
-            </Link>
-          )}
-
-          {/* Decorative Forest Panel */}
-          {loading ? (
-            <Card><Skeleton height="h-64" /></Card>
-          ) : (
-            <Card className="bg-gradient-to-br from-green-600 to-green-700 text-white flex flex-col items-center justify-center py-8 overflow-hidden relative">
-              <div className="absolute inset-0 opacity-10">
-                <Trees size={200} className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-              </div>
-              <div className="relative z-10 text-center">
-                <p className="text-sm font-semibold uppercase tracking-wider mb-3 text-green-100">
-                  You're Making a Difference
+          <Link href="/carbon-mirror" className="block">
+            <section
+              className="relative min-h-[360px] overflow-hidden rounded-xl border border-[#E0E5E2] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08)] transition-shadow hover:shadow-lg"
+              style={{
+                backgroundImage:
+                  'linear-gradient(90deg, #ffffff 0%, #ffffff 44%, rgba(255,255,255,0.82) 52%, rgba(255,255,255,0.18) 72%, rgba(255,255,255,0) 100%), url("/forest-visualization-preview.png")',
+                backgroundPosition: 'center, right center',
+                backgroundSize: 'cover, auto 100%',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
+              <div className="flex min-h-[360px] max-w-[420px] flex-col justify-center px-6 py-8 md:px-7">
+                <h2 className="text-[25px] font-extrabold text-[#17202A]">The Carbon Mirror</h2>
+                <p className="mt-3 text-[17px] leading-relaxed text-[#4A5550]">
+                  Visualize how your daily commute and diet choices affect the local rhododendron forests in real-time.
                 </p>
-                <p className="text-lg font-bold">
-                  Keep going! Your daily actions matter.
-                </p>
+                <span className="mt-8 inline-flex h-12 w-fit items-center justify-center rounded-full border-2 border-[#004332] px-7 text-[15px] font-bold text-[#004332] transition-colors hover:bg-[#E8F5E9]">
+                  Open Carbon Mirror
+                </span>
               </div>
-            </Card>
-          )}
-        </div>
-
-        {/* Action Links */}
-        <div className="flex gap-4 flex-wrap justify-center md:justify-start">
-          <Link href="/calculator">
-            <Button variant="primary" size="lg">
-              Log Activity
-            </Button>
-          </Link>
-          <Link href="/carbon-mirror">
-            <Button variant="secondary" size="lg">
-              View Carbon Mirror
-            </Button>
+            </section>
           </Link>
         </div>
       </div>
