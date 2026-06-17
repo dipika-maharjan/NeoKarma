@@ -1,11 +1,25 @@
+'use client';
+
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 // Direct imports with corrected relative path jumping up two levels to root
 import profileImg from '../../public/profile.png';
 import streakIcon from '../../public/streak.png'; 
 
-const Navbar = ({ currentView = 'dashboard', onNavigate }) => {
-  // Map currentView to match the capitalized tab names for active state checking
-  const activeTab = currentView.toLowerCase();
+const Navbar = () => {
+  const pathname = usePathname();
+
+  // Determine active tab based on current pathname
+  const getActiveTab = () => {
+    if (pathname.includes('/calculator')) return 'calculator';
+    if (pathname.includes('/carbon-mirror') || pathname.includes('/mirror')) return 'mirror';
+    if (pathname.includes('/plan')) return 'plan';
+    if (pathname.includes('/score')) return 'score';
+    return 'dashboard'; // default
+  };
+
+  const activeTab = getActiveTab();
 
   return (
     <nav className="w-full bg-[#FAFAFA] border-b border-gray-100 py-3.5 px-4 md:px-8 font-sans sticky top-0 z-50">
@@ -13,25 +27,26 @@ const Navbar = ({ currentView = 'dashboard', onNavigate }) => {
       <div className="max-w-[94%] mx-auto flex items-center justify-between">
         
         {/* Left: Branding Identity */}
-        <div className="flex items-center" onClick={() => onNavigate && onNavigate('dashboard')}>
+        <Link href="/dashboard" className="flex items-center no-underline select-none">
           <span className="text-2xl font-bold text-[#0A3D25] tracking-wide cursor-pointer">
             Neoकर्म
           </span>
-        </div>
+        </Link>
 
         {/* Center: Main App Menu Links Navigation */}
         <div className="hidden md:flex items-center gap-8">
           {["Dashboard", "Calculator", "Mirror", "Plan", "Score"].map((tab) => {
             const tabLower = tab.toLowerCase();
             const isActive = activeTab === tabLower;
+            let path = `/${tabLower}`;
+            if (tabLower === 'mirror') {
+              path = '/carbon-mirror';
+            }
             return (
-              <button
+              <Link
                 key={tab}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (onNavigate) onNavigate(tabLower);
-                }}
-                className={`text-[14px] font-medium transition-all relative py-1 px-0.5 cursor-pointer bg-transparent border-none outline-none ${
+                href={path}
+                className={`text-[14px] font-medium transition-all relative py-1 px-0.5 cursor-pointer no-underline ${
                   isActive 
                     ? 'text-[#0A3D25] font-semibold' 
                     : 'text-gray-500 hover:text-[#0A3D25]'
@@ -42,7 +57,7 @@ const Navbar = ({ currentView = 'dashboard', onNavigate }) => {
                 {isActive && (
                   <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#0A3D25] rounded-full" />
                 )}
-              </button>
+              </Link>
             );
           })}
         </div>
