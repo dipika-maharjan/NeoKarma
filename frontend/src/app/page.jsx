@@ -164,18 +164,6 @@ export default function Home() {
                   className="aspect-[1.22/1] w-full object-cover"
                   priority
                 />
-                <div className="absolute bottom-[16%] right-8 rounded-sm bg-white/90 px-4 py-3 text-center shadow-md">
-                  <p className="text-[11px] font-extrabold leading-tight text-[#558c24]">
-                    Reduce Today
-                  </p>
-                  <p className="text-[10px] font-bold leading-tight text-[#558c24]">
-                    Greener Tomorrow
-                  </p>
-                  <div className="mt-2 flex items-center justify-center gap-1">
-                    <Sprout size={24} className="text-[#6aa548]" />
-                    <Globe2 size={30} className="text-[#73a5c9]" />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -339,11 +327,11 @@ export default function Home() {
             {featureCards.map((card) => (
               <div
                 key={card.title}
-                className="rounded-xl border border-white/10 bg-[#07563F] p-8 text-white shadow-sm"
+                className="rounded-xl border border-white/10 bg-[#07563F] p-8 text-white "
               >
-                <div className="mb-5 text-[#72B99C]">{card.icon}</div>
+                <div className="mb-5 text-white">{card.icon}</div>
                 <h3 className="mb-3 text-[18px] font-bold text-white">{card.title}</h3>
-                <p className="text-[14px] text-[#BCE5D1] leading-relaxed">
+                <p className="text-[14px] text-whiteleading-relaxed">
                   {card.description}
                 </p>
               </div>
