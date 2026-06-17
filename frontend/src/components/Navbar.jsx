@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import ProfileDropdown from './ProfileDropdown';
 // Direct imports with corrected relative path jumping up two levels to root
 import profileImg from '../../public/profile.png';
 import streakIcon from '../../public/streak.png'; 
@@ -79,8 +78,14 @@ const Navbar = () => {
             </span>
           </div>
 
-          {/* Profile Dropdown Component */}
-          <ProfileDropdown avatarSrc={profileImg.src || profileImg} />
+          {/* User Rounded Avatar Node Frame mapped directly from public folder asset */}
+          <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:border-[#0A3D25] transition-colors flex items-center justify-center bg-white">
+            <img 
+              src={profileImg.src || profileImg} 
+              alt="User Profile Menu" 
+              className="w-full h-full object-cover"
+            />
+          </div>
 
         </div>
 
