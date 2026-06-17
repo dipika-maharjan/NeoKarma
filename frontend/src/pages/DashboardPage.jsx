@@ -65,7 +65,7 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] py-12 px-4 sm:px-8 lg:px-12">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-screen-2xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
           <div>

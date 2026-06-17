@@ -56,7 +56,7 @@ const CarbonMirrorPage = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] py-12 px-4 sm:px-8 lg:px-12">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-screen-2xl mx-auto">
         {/* Hero Section */}
         <div className="mb-12">
           <div className="bg-gradient-to-br from-[#1B5E20] to-[#43A047] rounded-3xl p-12 text-white text-center">

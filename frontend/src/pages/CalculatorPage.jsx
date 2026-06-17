@@ -86,7 +86,7 @@ const CalculatorPage = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] py-12 px-4 sm:px-8 lg:px-12">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-screen-2xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Carbon Calculator</h1>
           <p className="text-gray-600">Log your daily activities and calculate your carbon footprint</p>

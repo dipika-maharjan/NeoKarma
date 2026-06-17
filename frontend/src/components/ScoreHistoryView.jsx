@@ -231,12 +231,12 @@ const ScoreHistoryView = () => {
 
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] text-[#1E3322] px-4 md:px-12 py-8 font-sans">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-screen-2xl mx-auto">
         
         {/* Title & Subtitle */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-extrabold text-[#0A3D25] tracking-tight">
+            <h1 className="text-4xl font-bold text-[#0A3D25]">
               Your Impact Score
             </h1>
             <p className="text-sm text-gray-500 mt-1.5 max-w-xl">

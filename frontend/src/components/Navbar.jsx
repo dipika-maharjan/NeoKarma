@@ -25,7 +25,7 @@ const Navbar = () => {
   return (
     <nav className="w-full bg-[#FAFAFA] border-b border-gray-100 py-3.5 px-4 md:px-8 font-sans sticky top-0 z-50">
       {/* Outer wrapper matches footer horizontal alignment precisely */}
-      <div className="max-w-[94%] mx-auto flex items-center justify-between">
+      <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
         
         {/* Left: Branding Identity */}
         <Link href="/dashboard" className="flex items-center no-underline select-none">

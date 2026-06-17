@@ -2,15 +2,15 @@ import { fetchActivePlan, generateMitigationPlan, fetchPlanHistory } from '../ap
 
 export const getActivePlan = async () => {
   const response = await fetchActivePlan();
-  return response.data;
+  return response.data?.data ?? null;
 };
 
 export const generatePlan = async () => {
   const response = await generateMitigationPlan();
-  return response.data;
+  return response.data?.data ?? null;
 };
 
 export const getPlanHistory = async () => {
   const response = await fetchPlanHistory();
-  return response.data;
+  return response.data?.data ?? [];
 };
