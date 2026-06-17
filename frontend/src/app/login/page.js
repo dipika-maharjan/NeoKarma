@@ -35,7 +35,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f8f9ff]">
-      <section className="relative hidden w-[52%] overflow-hidden bg-[#07362b] lg:block">
+      <section className="relative hidden w-[52%] overflow-hidden bg-[#0A3D25] lg:block">
         <Image
           src="/Himalayan Mountains.png"
           alt="Himalayan Mountains"
@@ -43,7 +43,7 @@ const LoginPage = () => {
           className="object-cover opacity-80"
           priority
         />
-        <div className="absolute inset-0 bg-[#063f2f]/28" />
+        <div className="absolute inset-0 bg-[#0A3D25]/28" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_50%,rgba(50,215,134,0.08),transparent_34%)]" />
 
         <div className="relative z-10 flex h-full flex-col justify-center px-[20%] text-center">
@@ -75,11 +75,11 @@ const LoginPage = () => {
           <div className="mb-6 grid grid-cols-2 rounded-md bg-[#e9eefb] p-1">
             <Link
               href="/register"
-              className="rounded-md py-2 text-center text-[11px] font-bold text-[#6c7370] no-underline transition hover:text-[#063f2f]"
+              className="rounded-md py-2 text-center text-[11px] font-bold text-[#6c7370] no-underline transition hover:text-[#0A3D25]"
             >
               Sign Up
             </Link>
-            <div className="rounded-md bg-[#063f2f] py-2 text-center text-[11px] font-bold text-white shadow-sm">
+            <div className="rounded-md bg-[#0A3D25] py-2 text-center text-[11px] font-bold text-white shadow-sm">
               Login
             </div>
           </div>
@@ -101,7 +101,7 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@school.edu"
                 required
-                className="h-10 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
+                className="h-10 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
               />
             </div>
 
@@ -115,7 +115,7 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="********"
                 required
-                className="h-10 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
+                className="h-10 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
               />
             </div>
 
@@ -129,7 +129,7 @@ const LoginPage = () => {
                 />
                 Remember me
               </label>
-              <a href="#forgot" className="text-[#063f2f] no-underline hover:underline">
+              <a href="#forgot" className="text-[#0A3D25] no-underline hover:underline">
                 Forgot password?
               </a>
             </div>
@@ -137,7 +137,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#063f2f] text-[13px] font-extrabold text-white transition hover:bg-[#052f23] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#0A3D25] text-[13px] font-extrabold text-white transition hover:bg-[#072B1A] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -152,7 +152,7 @@ const LoginPage = () => {
 
           <p className="mt-4 text-center text-[11px] font-medium text-[#68706d]">
             Don&apos;t Have an Account?{' '}
-            <Link href="/register" className="font-extrabold text-[#063f2f] no-underline hover:underline">
+            <Link href="/register" className="font-extrabold text-[#0A3D25] no-underline hover:underline">
               Sign Up
             </Link>
           </p>

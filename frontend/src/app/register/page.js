@@ -61,7 +61,7 @@ const RegisterPage = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f8f9ff]">
-      <section className="relative hidden w-[52%] overflow-hidden bg-[#07362b] lg:block">
+      <section className="relative hidden w-[52%] overflow-hidden bg-[#0A3D25] lg:block">
         <Image
           src="/Himalayan Mountains.png"
           alt="Himalayan Mountains"
@@ -69,7 +69,7 @@ const RegisterPage = () => {
           className="object-cover opacity-80"
           priority
         />
-        <div className="absolute inset-0 bg-[#063f2f]/28" />
+        <div className="absolute inset-0 bg-[#0A3D25]/28" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_50%,rgba(50,215,134,0.08),transparent_34%)]" />
 
         <div className="relative z-10 flex h-full flex-col justify-center px-[20%] text-center">
@@ -99,12 +99,12 @@ const RegisterPage = () => {
           </div>
 
           <div className="mb-4 grid grid-cols-2 rounded-md bg-[#e9eefb] p-1">
-            <div className="rounded-md bg-[#063f2f] py-2 text-center text-[11px] font-bold text-white shadow-sm">
+            <div className="rounded-md bg-[#0A3D25] py-2 text-center text-[11px] font-bold text-white shadow-sm">
               Sign Up
             </div>
             <Link
               href="/login"
-              className="rounded-md py-2 text-center text-[11px] font-bold text-[#6c7370] no-underline transition hover:text-[#063f2f]"
+              className="rounded-md py-2 text-center text-[11px] font-bold text-[#6c7370] no-underline transition hover:text-[#0A3D25]"
             >
               Login
             </Link>
@@ -234,7 +234,7 @@ const RegisterPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#063f2f] text-[13px] font-extrabold text-white transition hover:bg-[#052f23] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#0A3D25] text-[13px] font-extrabold text-white transition hover:bg-[#072B1A] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -249,7 +249,7 @@ const RegisterPage = () => {
 
           <p className="mt-3 text-center text-[11px] font-medium text-[#68706d]">
             Already Have an Account?{' '}
-            <Link href="/login" className="font-extrabold text-[#063f2f] no-underline hover:underline">
+            <Link href="/login" className="font-extrabold text-[#0A3D25] no-underline hover:underline">
               Login
             </Link>
           </p>

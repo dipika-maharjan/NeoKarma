@@ -28,37 +28,37 @@ const LandingNavbar = () => {
         scrolled
           ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100'
           : 'bg-white border-b border-gray-100'
-      }`}
+      } py-3.5 px-4 md:px-8 font-sans`}
     >
-      <div className="mx-auto flex max-w-[1840px] items-center justify-between px-6 py-6 md:px-9">
+      <div className="max-w-[94%] mx-auto flex items-center justify-between">
         <Link href="/" className="no-underline select-none">
-          <span className="cursor-pointer text-2xl font-extrabold tracking-wide text-[#063f2f]">
+          <span className="text-2xl font-bold text-[#0A3D25] tracking-wide cursor-pointer">
             Neoकर्म
           </span>
         </Link>
 
-        <div className="hidden items-center gap-12 md:flex">
+        <div className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className="text-[15px] font-bold tracking-wide text-gray-600 no-underline transition-colors hover:text-[#0A3D25]"
+              className="text-[14px] font-medium text-gray-500 no-underline transition-colors hover:text-[#0A3D25]"
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-6 md:flex">
           <Link
             href="/login"
-            className="text-[15px] font-bold text-[#153f34] no-underline transition-colors hover:text-[#0A3D25]"
+            className="text-[14px] font-medium text-gray-500 no-underline transition-colors hover:text-[#0A3D25]"
           >
             Login
           </Link>
           <Link
             href="/register"
-            className="rounded-full bg-[#063f2f] px-8 py-3 text-sm font-bold text-white no-underline shadow-md shadow-green-900/15 transition-all duration-200 hover:bg-[#052f23]"
+            className="rounded-full bg-[#0A3D25] px-5 py-2 text-[14px] font-semibold text-white no-underline shadow-sm transition-all duration-200 hover:bg-[#072B1A]"
           >
             Get Started
           </Link>
@@ -96,7 +96,7 @@ const LandingNavbar = () => {
           <Link
             href="/register"
             onClick={() => setMobileOpen(false)}
-            className="block rounded-full bg-[#063f2f] px-6 py-2.5 text-center text-sm font-semibold text-white no-underline"
+            className="block rounded-full bg-[#0A3D25] px-6 py-2.5 text-center text-sm font-semibold text-white no-underline"
           >
             Get Started
           </Link>
