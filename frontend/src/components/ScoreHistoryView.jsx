@@ -222,7 +222,7 @@ const ScoreHistoryView = () => {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-[#F8FAFC] text-[#1E3322] px-4 md:px-12 py-16 font-sans flex flex-col items-center justify-center">
+      <div className="w-full min-h-[calc(100vh-76px)] bg-[#FAFAFA] text-[#1E3322] px-4 py-8 md:px-8 lg:px-12 xl:px-16 font-sans flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#0A3D25] border-t-transparent rounded-full animate-spin mb-4"></div>
         <p className="text-gray-500 font-medium">Loading your consistency logs...</p>
       </div>
@@ -230,13 +230,13 @@ const ScoreHistoryView = () => {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] text-[#1E3322] px-4 md:px-12 py-8 font-sans">
-      <div className="max-w-screen-2xl mx-auto">
+    <div className="w-full min-h-[calc(100vh-76px)] bg-[#FAFAFA] text-[#1E3322] px-4 py-8 md:px-8 lg:px-12 xl:px-16 font-sans">
+      <div className="mx-auto w-full max-w-[1500px]">
         
         {/* Title & Subtitle */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
           <div>
-            <h1 className="text-4xl font-bold text-[#0A3D25]">
+            <h1 className="text-[32px] font-extrabold tracking-tight text-[#0A3D25] md:text-[34px]">
               Your Impact Score
             </h1>
             <p className="text-sm text-gray-500 mt-1.5 max-w-xl">

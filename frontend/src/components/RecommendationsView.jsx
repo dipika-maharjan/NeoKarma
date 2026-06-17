@@ -317,8 +317,8 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   });
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] text-[#1E3322] px-4 md:px-12 py-8 font-sans">
-      <div className="max-w-screen-2xl mx-auto">
+    <div className="w-full min-h-[calc(100vh-76px)] bg-[#FAFAFA] text-[#1E3322] px-4 py-8 md:px-8 lg:px-12 xl:px-16 font-sans">
+      <div className="mx-auto w-full max-w-[1500px]">
         
         {/* Toggle between Recommendations and Plan */}
         {activeTab === 'recommendations' ? (
@@ -326,7 +326,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
             {/* Header row */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <div>
-                <h1 className="text-4xl font-bold text-[#0A3D25]">
+                <h1 className="text-[32px] font-extrabold tracking-tight text-[#0A3D25] md:text-[34px]">
                   Smart Recommendations
                 </h1>
                 <p className="text-sm text-gray-500 mt-1.5 max-w-xl">
@@ -431,7 +431,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
             {/* Header row */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <div>
-                <h1 className="text-3xl font-extrabold text-[#0A3D25] tracking-tight">
+                <h1 className="text-[32px] font-extrabold tracking-tight text-[#0A3D25] md:text-[34px]">
                   Action Plan & Commitment
                 </h1>
                 <p className="text-sm text-gray-500 mt-1.5">

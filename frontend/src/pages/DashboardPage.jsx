@@ -77,7 +77,7 @@ const DashboardPage = () => {
           </h1>
           <Link
             href="/calculator"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#004332] px-8 text-[15px] font-bold text-white shadow-[0_3px_8px_rgba(0,67,50,0.25)] transition-colors hover:bg-[#003729]"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-8 text-[15px] font-bold text-white shadow-[0_3px_8px_rgba(10,61,37,0.2)] transition-colors hover:bg-[#072B1A]"
           >
             <Plus size={20} />
             Log Today&apos;s Carbon
@@ -92,14 +92,14 @@ const DashboardPage = () => {
         )}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2.05fr_1fr]">
-          <section className="relative min-h-[290px] overflow-hidden rounded-xl bg-[#07563F] p-6 text-white shadow-sm md:p-7">
+          <section className="relative min-h-[290px] overflow-hidden rounded-xl bg-[#0A3D25] p-6 text-white shadow-sm md:p-7">
             <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-white/8" />
             <div className="absolute -bottom-24 right-0 h-56 w-56 rotate-45 border-[18px] border-white/8" />
             {loading ? (
               <div className="h-full animate-pulse rounded-xl bg-white/10" />
             ) : (
               <>
-                <p className="text-[14px] font-bold uppercase tracking-[0.2em] text-[#72B99C]">
+                <p className="text-[14px] font-bold uppercase tracking-[0.2em] text-[#A2CBA0]">
                   Today&apos;s Emission
                 </p>
                 <div className="mt-4 flex items-end gap-2">
@@ -135,7 +135,7 @@ const DashboardPage = () => {
                     {weeklyBars.map((height, index) => (
                       <div
                         key={index}
-                        className={`flex-1 rounded-sm ${index === 5 ? 'bg-[#004332]' : 'bg-[#E1E8E5]'}`}
+                        className={`flex-1 rounded-sm ${index === 5 ? 'bg-[#0A3D25]' : 'bg-[#E1E8E5]'}`}
                         style={{ height: `${Math.max(22, height * 52)}px` }}
                       />
                     ))}
@@ -163,7 +163,7 @@ const DashboardPage = () => {
           <section className="min-h-[360px] rounded-xl border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-7">
             <div className="flex h-full flex-col items-center justify-center text-center">
               <p className="mb-4 text-[15px] font-bold tracking-wide text-[#4A5550]">Impact Score</p>
-              <div className="relative flex h-[126px] w-[126px] items-center justify-center rounded-full border-[9px] border-[#004332]">
+              <div className="relative flex h-[126px] w-[126px] items-center justify-center rounded-full border-[9px] border-[#0A3D25]">
                 <span className="text-[32px] font-extrabold text-[#17202A]">{impactScore}</span>
               </div>
               <p className="mt-5 text-[18px] font-extrabold text-[#17202A]">{scoreStatus}</p>
@@ -187,7 +187,7 @@ const DashboardPage = () => {
                 <p className="mt-3 text-[17px] leading-relaxed text-[#4A5550]">
                   Visualize how your daily commute and diet choices affect the local rhododendron forests in real-time.
                 </p>
-                <span className="mt-8 inline-flex h-12 w-fit items-center justify-center rounded-full border-2 border-[#004332] px-7 text-[15px] font-bold text-[#004332] transition-colors hover:bg-[#E8F5E9]">
+                <span className="mt-8 inline-flex h-12 w-fit items-center justify-center rounded-full border-2 border-[#0A3D25] px-7 text-[15px] font-bold text-[#0A3D25] transition-colors hover:bg-[#E8F5E9]">
                   Open Carbon Mirror
                 </span>
               </div>

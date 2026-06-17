@@ -113,10 +113,10 @@ const ResultPage = () => {
   const emissionProgress = Math.min(100, (emissionKg / averageEmission) * 100);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] px-4 py-8 font-sans md:px-8 lg:px-12 xl:px-16">
+    <div className="min-h-[calc(100vh-76px)] bg-[#FAFAFA] px-4 py-8 font-sans md:px-8 lg:px-12 xl:px-16">
       <div className="mx-auto w-full max-w-[1500px]">
         <div className="mb-8">
-          <h1 className="mb-2 text-[32px] font-extrabold leading-tight text-[#073F30] md:text-[34px]">
+          <h1 className="mb-2 text-[32px] font-extrabold leading-tight text-[#0A3D25] md:text-[34px]">
             Your Carbon Footprint Today
           </h1>
           <p className="text-[16px] text-[#4A5550]">
@@ -125,44 +125,44 @@ const ResultPage = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_0.95fr]">
-          <section className="rounded-[12px] border border-[#DFE8E1] bg-white p-6 shadow-sm md:p-7">
-            <div className="grid min-h-[220px] grid-cols-1 items-center gap-6 md:grid-cols-[1fr_0.95fr]">
+          <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.06)] md:p-6">
+            <div className="grid min-h-[200px] grid-cols-1 items-center gap-6 md:grid-cols-[1fr_0.95fr]">
               <div>
-                <p className="mb-3 text-[13px] font-extrabold uppercase tracking-[0.14em] text-[#476257]">
+                <p className="mb-3 text-[13px] font-bold uppercase tracking-[0.14em] text-[#4A5550]">
                   Daily Total
                 </p>
-                <div className="flex items-end gap-2 text-[#063F30]">
+                <div className="flex items-end gap-2 text-[#0A3D25]">
                   <span className="text-[58px] font-extrabold leading-none md:text-[66px]">
                     {emissionKg.toFixed(1)}
                   </span>
-                  <span className="pb-2 text-[19px] font-extrabold text-[#6E837A]">
-                    kg CO2
+                  <span className="pb-2 text-[19px] font-extrabold text-[#A2CBA0]">
+                    kg CO₂
                   </span>
                 </div>
-                <div className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full bg-[#BDECCF] px-4 py-2 text-[13px] font-extrabold tracking-[0.03em] text-[#4A6D5E]">
+                <div className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full bg-[#E8F5E9] px-4 py-2 text-[13px] font-bold tracking-[0.03em] text-[#1B5E20]">
                   <Leaf size={16} fill="currentColor" />
                   Great result! {percentageBelow}% lower than your average.
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="min-h-[126px] rounded-[8px] border border-[#DCE3F1] bg-[#F0F3FD] p-4">
-                  <TreePine className="mb-2 text-[#073F30]" size={22} fill="currentColor" />
-                  <p className="text-[14px] text-[#4E575F]">Equivalent to</p>
-                  <p className="text-[19px] font-extrabold leading-tight text-[#073F30]">
+                <div className="min-h-[126px] rounded-lg border border-[#E0E5E2] bg-[#FAFAFA] p-4">
+                  <TreePine className="mb-2 text-[#0A3D25]" size={22} fill="currentColor" />
+                  <p className="text-[13px] text-[#4A5550]">Equivalent to</p>
+                  <p className="text-[19px] font-bold leading-tight text-[#0A3D25]">
                     {treesEquivalent} trees
                   </p>
-                  <p className="mt-1 max-w-[180px] text-[13px] leading-snug text-[#667077]">
+                  <p className="mt-1 max-w-[180px] text-[12px] leading-snug text-gray-500">
                     needed to absorb this daily
                   </p>
                 </div>
-                <div className="min-h-[126px] rounded-[8px] border border-[#DCE3F1] bg-[#F0F3FD] p-4">
-                  <Car className="mb-2 text-[#073F30]" size={22} fill="currentColor" />
-                  <p className="text-[14px] text-[#4E575F]">Equivalent to</p>
-                  <p className="text-[19px] font-extrabold leading-tight text-[#073F30]">
+                <div className="min-h-[126px] rounded-lg border border-[#E0E5E2] bg-[#FAFAFA] p-4">
+                  <Car className="mb-2 text-[#0A3D25]" size={22} fill="currentColor" />
+                  <p className="text-[13px] text-[#4A5550]">Equivalent to</p>
+                  <p className="text-[19px] font-bold leading-tight text-[#0A3D25]">
                     {distanceEquivalent} miles
                   </p>
-                  <p className="mt-1 max-w-[180px] text-[13px] leading-snug text-[#667077]">
+                  <p className="mt-1 max-w-[180px] text-[12px] leading-snug text-gray-500">
                     driven in a standard car
                   </p>
                 </div>
@@ -170,17 +170,17 @@ const ResultPage = () => {
             </div>
           </section>
 
-          <section className="relative overflow-hidden rounded-[12px] bg-[#004330] p-6 text-white md:p-7">
+          <section className="relative overflow-hidden rounded-xl bg-[#0A3D25] p-5 md:p-6 text-white shadow-sm">
             <div className="space-y-7">
               <div className="space-y-5">
                 <div>
                   <div className="mb-3 flex items-center justify-between gap-4">
-                    <span className="text-[16px] text-[#CBE3D8]">Your Emission</span>
-                    <span className="text-[20px] font-extrabold">{emissionKg.toFixed(1)} kg</span>
+                    <span className="text-[15px] text-[#CBE3D8]">Your Emission</span>
+                    <span className="text-[19px] font-bold">{emissionKg.toFixed(1)} kg</span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#2B745C]">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-[#A8E0C7]"
+                      className="h-full rounded-full bg-[#72B99C]"
                       style={{ width: `${emissionProgress}%` }}
                     />
                   </div>
@@ -188,11 +188,11 @@ const ResultPage = () => {
 
                 <div>
                   <div className="mb-3 flex items-center justify-between gap-4">
-                    <span className="text-[16px] text-[#CBE3D8]">Your Average</span>
-                    <span className="text-[20px] font-extrabold">{averageEmission.toFixed(1)} kg</span>
+                    <span className="text-[15px] text-[#CBE3D8]">Your Average</span>
+                    <span className="text-[19px] font-bold">{averageEmission.toFixed(1)} kg</span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#2B745C]">
-                    <div className="h-full w-[85%] rounded-full bg-[#8DCEB4]" />
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full w-[85%] rounded-full bg-[#72B99C]" />
                   </div>
                 </div>
               </div>
@@ -202,7 +202,7 @@ const ResultPage = () => {
               </p>
             </div>
             <Medal
-              className="absolute bottom-5 right-7 text-[#286A55]/55"
+              className="absolute bottom-5 right-7 text-white/5"
               size={96}
               strokeWidth={1.4}
             />
@@ -210,7 +210,7 @@ const ResultPage = () => {
 
           <Link
             href="/carbon-mirror"
-            className="block overflow-hidden rounded-[12px] border border-[#DFE8E1] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md lg:row-start-2"
+            className="block overflow-hidden rounded-xl border border-[#E0E5E2] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-md lg:row-start-2"
           >
             <div
               className="flex h-[180px] items-end bg-cover bg-center p-6"
@@ -225,25 +225,25 @@ const ResultPage = () => {
                 Visualize the collective impact of your actions. See how small daily
                 reductions add up to forests protected.
               </p>
-              <div className="flex h-12 items-center justify-center gap-3 rounded-full bg-[#C5EFD7] text-[14px] font-extrabold tracking-[0.03em] text-[#557367]">
-                <Eye size={20} />
+              <div className="flex h-11 items-center justify-center gap-3 rounded-full bg-[#E8F5E9] text-[14px] font-extrabold tracking-[0.03em] text-[#1B5E20]">
+                <Eye size={18} />
                 View Carbon Mirror
               </div>
             </div>
           </Link>
 
-          <section className="rounded-[12px] border border-[#DCE3F1] bg-[#F0F3FD] p-6 shadow-sm md:p-7 lg:row-start-2">
+          <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)] lg:row-start-2">
             <div className="flex h-full min-h-[240px] flex-col justify-center">
-              <Award className="mb-5 text-[#073F30]" size={30} />
-              <h2 className="mb-4 text-[20px] font-extrabold text-[#111827]">
+              <Award className="mb-5 text-[#0A3D25]" size={28} />
+              <h2 className="mb-3 text-[20px] font-bold text-[#111827]">
                 Your Impact Score
               </h2>
-              <p className="mb-6 max-w-[360px] text-[16px] leading-relaxed text-[#4B5350]">
+              <p className="mb-6 max-w-[360px] text-[15px] leading-relaxed text-[#4B5350]">
                 We score consistency, not perfection. Keep making small changes to see
                 your impact grow over time.
               </p>
               <Link href="/score" className="block">
-                <div className="flex h-12 max-w-[300px] items-center justify-center rounded-full bg-[#004330] text-[14px] font-extrabold tracking-[0.03em] text-white">
+                <div className="flex h-11 max-w-[240px] items-center justify-center rounded-full bg-[#0A3D25] hover:bg-[#072B1A] transition-colors text-[14px] font-bold text-white">
                   View Impact Score
                 </div>
               </Link>

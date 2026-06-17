@@ -194,19 +194,19 @@ const CalculatorPage = () => {
   return (
     <div className="min-h-[calc(100vh-76px)] bg-[#FAFAFA] px-4 py-8 md:px-8 lg:px-12 xl:px-16 xl:py-9">
       <div className="mx-auto w-full max-w-[1500px]">
-        <div className="mb-8 grid grid-cols-1 items-center gap-5 lg:grid-cols-[1fr_520px] xl:grid-cols-[1fr_560px]">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div>
-            <h1 className="text-[32px] font-extrabold leading-tight text-[#053D2F] md:text-[34px]">
+            <h1 className="text-[32px] font-extrabold leading-tight text-[#0A3D25] md:text-[34px]">
               Log Today&apos;s Carbon
             </h1>
             <p className="mt-1 text-[16px] text-[#4A5550]">
               Fill in the details below to understand your environmental footprint. All fields are optional.
             </p>
           </div>
-          <Link href="/calculator/result" className="block">
+          <Link href="/calculator/result" className="block w-full md:w-auto">
             <Button
               variant="primary"
-              className="h-[50px] w-full rounded-full bg-[#004332] text-[19px] font-bold hover:bg-[#003729]"
+              className="h-12 px-8 rounded-full bg-[#0A3D25] text-[15px] font-bold text-white hover:bg-[#072B1A] transition-colors shadow-none w-full md:w-auto flex items-center justify-center"
             >
               Today&apos;s Carbon Footprint
             </Button>
@@ -224,7 +224,7 @@ const CalculatorPage = () => {
           <div className="space-y-6">
             <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
-                <Bus size={22} className="text-[#004332]" />
+                <Bus size={22} className="text-[#0A3D25]" />
                 <h2 className="text-[24px] font-extrabold leading-none">1. Transport</h2>
               </div>
               <p className="mb-[18px] text-[16px] text-[#4A5550]">How did you travel to school today?</p>
@@ -238,11 +238,11 @@ const CalculatorPage = () => {
                       onClick={() => setField('transportationMode', option.value)}
                       className={`flex h-[75px] min-w-0 flex-col items-center justify-center rounded-[10px] border text-[12px] font-semibold transition-all ${
                         selected
-                          ? 'border-[#00724E] bg-[#C7EEDC] text-[#004332]'
-                          : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#00724E]'
+                          ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25]'
+                          : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
                       }`}
                     >
-                      <span className="mb-1 flex h-6 items-center justify-center text-[#004332]">{option.icon}</span>
+                      <span className="mb-1 flex h-6 items-center justify-center text-[#0A3D25]">{option.icon}</span>
                       <span>{option.label}</span>
                     </button>
                   );
@@ -262,7 +262,7 @@ const CalculatorPage = () => {
 
             <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
-                <ForkKnife size={22} className="text-[#004332]" />
+                <ForkKnife size={22} className="text-[#0A3D25]" />
                 <h2 className="text-[24px] font-extrabold leading-none">2. Lunch</h2>
               </div>
               <p className="mb-[18px] text-[16px] text-[#4A5550]">What did you have for lunch?</p>
@@ -274,14 +274,14 @@ const CalculatorPage = () => {
                       key={option.value}
                       type="button"
                       onClick={() => setField('foodMealType', option.value)}
-                      className={`h-[74px] rounded-[10px] border text-center transition-all ${
+                      className={`h-[54px] rounded-lg border text-center transition-all ${
                         selected
-                          ? 'border-[#00724E] bg-[#C7EEDC] text-[#004332]'
-                          : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#00724E]'
+                          ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25] font-semibold'
+                          : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
                       }`}
                     >
-                      <span className="block text-[16px] font-medium">{option.label}</span>
-                      <span className="mt-1 block text-[12px] text-[#4A5550]">{option.estimate}</span>
+                      <span className="block text-[15px] font-medium">{option.label}</span>
+                      <span className="mt-0.5 block text-[11px] text-[#4A5550] font-normal">{option.estimate}</span>
                     </button>
                   );
                 })}
@@ -295,7 +295,7 @@ const CalculatorPage = () => {
                 size="lg"
                 isLoading={submitting}
                 disabled={submitting}
-                className="mx-auto h-[50px] w-full max-w-[450px] rounded-full bg-[#004332] text-[19px] font-bold hover:bg-[#003729]"
+                className="mx-auto h-12 w-full max-w-[320px] rounded-full bg-[#0A3D25] text-[15px] font-bold text-white hover:bg-[#072B1A] transition-colors"
               >
                 Calculate my emission →
               </Button>
@@ -305,7 +305,7 @@ const CalculatorPage = () => {
           <div className="space-y-6">
             <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
-                <Trash2 size={21} className="text-[#004332]" />
+                <Trash2 size={21} className="text-[#0A3D25]" />
                 <h2 className="text-[24px] font-extrabold leading-none">3. Waste &amp; Plastic</h2>
               </div>
               <div className="space-y-[26px]">
@@ -326,7 +326,7 @@ const CalculatorPage = () => {
 
             <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
-                <Zap size={23} className="text-[#004332]" />
+                <Zap size={23} className="text-[#0A3D25]" />
                 <h2 className="text-[24px] font-extrabold leading-none">4. Energy</h2>
               </div>
               <p className="mb-[18px] text-[16px] text-[#4A5550]">
@@ -345,15 +345,19 @@ const CalculatorPage = () => {
               )}
             </section>
 
-            <section className="relative min-h-[252px] overflow-hidden rounded-xl bg-[#E2F7F3] p-5 md:p-6">
-              <div className="absolute bottom-0 right-0 h-28 w-32 opacity-25">
-                <div className="absolute bottom-0 right-0 h-24 w-24 rotate-12 border-[12px] border-[#4E666B]" />
-                <div className="absolute bottom-3 right-16 h-20 w-20 rotate-12 border-[10px] border-[#4E666B]" />
+            <section className="relative overflow-hidden rounded-xl bg-[#E8F5E9] border border-[#BEE8D3] p-6 text-[#1B5E20]">
+              <div className="absolute -bottom-10 -right-10 h-28 w-28 opacity-10 rounded-full bg-[#1B5E20]" />
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🔥</span>
+                <div>
+                  <p className="text-[16px] font-extrabold text-[#1B5E20]">
+                    Keep logging to maintain your streak!
+                  </p>
+                  <p className="text-[13px] text-[#1B5E20]/80 mt-1">
+                    Every consecutive log increases your multiplier.
+                  </p>
+                </div>
               </div>
-              <p className="absolute left-6 top-[88px] max-w-[210px] text-[20px] font-extrabold leading-[1.25] text-[#004332]">
-                Keep logging to maintain your streak!
-              </p>
-              <span className="absolute left-6 top-[166px] text-xl">🔥</span>
             </section>
           </div>
         </form>
