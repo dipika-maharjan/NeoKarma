@@ -80,8 +80,8 @@ const ResultPage = () => {
     );
   }
 
-  // Mock calculation data - in real app this comes from backend
-  const emissionKg = todayLog.totalEmission || 2.4;
+  const emissionKg = Number(todayLog.totalEmissionKg ?? todayLog.totalEmission ?? 0);
+  const breakdown = todayLog.breakdown || {};
   const averageEmission = 3.2;
   const percentageBelow = Math.round(((averageEmission - emissionKg) / averageEmission) * 100);
   const treesEquivalent = (emissionKg / 0.024).toFixed(1);
@@ -128,6 +128,34 @@ const ResultPage = () => {
 
             {/* Equivalence Stats */}
             <div className="space-y-3 border-t pt-6">
+              <StatCard
+                label="Transport"
+                value={(breakdown.transportKg || 0).toFixed(2)}
+                unit="kg"
+                compact={true}
+                size="md"
+              />
+              <StatCard
+                label="Food"
+                value={(breakdown.foodKg || 0).toFixed(2)}
+                unit="kg"
+                compact={true}
+                size="md"
+              />
+              <StatCard
+                label="Waste"
+                value={(breakdown.wasteKg || 0).toFixed(2)}
+                unit="kg"
+                compact={true}
+                size="md"
+              />
+              <StatCard
+                label="Energy"
+                value={(breakdown.energyKg || 0).toFixed(2)}
+                unit="kg"
+                compact={true}
+                size="md"
+              />
               <StatCard
                 label="Trees needed to offset"
                 value={treesEquivalent}

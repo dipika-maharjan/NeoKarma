@@ -2,50 +2,53 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Card, Button, ToggleButtonGroup, SegmentedYesNo, NumericStepper 
-} from '@/components/ui';
+import { Button } from '@/components/ui';
 import { logDailyCarbon, getTodayLog } from '@/lib/actions/calculatorActions';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { 
-  Zap, Leaf, Droplets, UtensilsCrossed, Bike, Wind, AlertCircle, Trees 
+import {
+  AlertCircle,
+  Bike,
+  Bus,
+  Car,
+  ForkKnife,
+  Minus,
+  Plus,
+  Trash2,
+  Zap
 } from 'lucide-react';
 
 const CalculatorPage = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [todayLog, setTodayLog] = useState(null);
   const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
-    transportationMode: 'bus',
-    transportationDistanceKm: 0,
+    transportationMode: 'walk',
+    transportationDistanceKm: 12,
     foodMealType: 'vegetarian',
-    usedSingleUsePlastic: null,
-    wastedFood: null,
-    energyUsageHours: 0,
+    usedSingleUsePlastic: false,
+    wastedFood: false,
+    energyUsageHours: 3,
     extraProfileAnswer: null
   });
 
-  // Transportation options with icons
   const transportationOptions = [
-    { value: 'walk', label: 'Walk', icon: <Leaf size={24} /> },
-    { value: 'bicycle', label: 'Bicycle', icon: <Bike size={24} /> },
-    { value: 'bus', label: 'Bus', icon: <Wind size={24} /> },
-    { value: 'motorbike', label: 'Motorbike', icon: <Bike size={24} /> },
-    { value: 'car', label: 'Car', icon: <Zap size={24} /> }
+    { value: 'walk', label: 'Walk', icon: <span className="text-2xl leading-none">🚶</span> },
+    { value: 'bicycle', label: 'Bicycle', icon: <Bike size={21} strokeWidth={2.5} /> },
+    { value: 'bus', label: 'Bus', icon: <Bus size={21} strokeWidth={2.5} /> },
+    { value: 'motorbike', label: 'Motorbike', icon: <Bike size={21} strokeWidth={2.5} /> },
+    { value: 'car', label: 'Car', icon: <Car size={21} strokeWidth={2.5} /> }
   ];
 
-  // Food options
   const foodOptions = [
-    { value: 'vegan', label: 'Vegan' },
-    { value: 'vegetarian', label: 'Vegetarian' },
-    { value: 'non-vegetarian', label: 'Non-veg' }
+    { value: 'vegetarian', label: 'Vegetarian', estimate: '0.9 kg CO2' },
+    { value: 'mixed', label: 'Mixed', estimate: '1.5 kg CO2' },
+    { value: 'non-vegetarian', label: 'Non-Veg', estimate: '2.5 kg CO2' }
   ];
 
-  // Check if today's log already exists
   useEffect(() => {
     const checkTodayLog = async () => {
       if (isAuthenticated) {
@@ -62,34 +65,24 @@ const CalculatorPage = () => {
     checkTodayLog();
   }, [isAuthenticated]);
 
-  const handleTransportChange = (mode) => {
-    setFormData(prev => ({ ...prev, transportationMode: mode }));
-    setErrors(prev => ({ ...prev, transportationMode: '' }));
+  const setField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => ({ ...prev, [field]: '', submit: '' }));
   };
 
-  const handleFoodChange = (type) => {
-    setFormData(prev => ({ ...prev, foodMealType: type }));
-    setErrors(prev => ({ ...prev, foodMealType: '' }));
+  const changeNumber = (field, amount, min, max) => {
+    setFormData(prev => {
+      const nextValue = Math.min(max, Math.max(min, Number(prev[field]) + amount));
+      return { ...prev, [field]: nextValue };
+    });
+    setErrors(prev => ({ ...prev, [field]: '', submit: '' }));
   };
 
-  const handleDistanceChange = (value) => {
-    setFormData(prev => ({ ...prev, transportationDistanceKm: value }));
-    setErrors(prev => ({ ...prev, transportationDistanceKm: '' }));
-  };
-
-  const handleEnergyChange = (value) => {
-    setFormData(prev => ({ ...prev, energyUsageHours: value }));
-    setErrors(prev => ({ ...prev, energyUsageHours: '' }));
-  };
-
-  const handlePlasticChange = (value) => {
-    setFormData(prev => ({ ...prev, usedSingleUsePlastic: value }));
-    setErrors(prev => ({ ...prev, usedSingleUsePlastic: '' }));
-  };
-
-  const handleFoodWasteChange = (value) => {
-    setFormData(prev => ({ ...prev, wastedFood: value }));
-    setErrors(prev => ({ ...prev, wastedFood: '' }));
+  const handleNumberInput = (field, value, min, max) => {
+    const parsed = value === '' ? 0 : Number(value);
+    if (!Number.isNaN(parsed)) {
+      setField(field, Math.min(max, Math.max(min, parsed)));
+    }
   };
 
   const validateForm = () => {
@@ -116,9 +109,8 @@ const CalculatorPage = () => {
 
     setSubmitting(true);
     try {
-      // Convert yes/no responses to waste count
       const wasteCount = (formData.usedSingleUsePlastic ? 1 : 0) + (formData.wastedFood ? 1 : 0);
-      
+
       const payload = {
         transportationMode: formData.transportationMode,
         transportationDistanceKm: formData.transportationDistanceKm,
@@ -129,207 +121,259 @@ const CalculatorPage = () => {
       };
 
       await logDailyCarbon(payload);
-      // Navigate to result page
       router.push('/calculator/result');
     } catch (error) {
       console.error('Error logging carbon:', error);
-      setErrors(prev => ({ 
-        ...prev, 
-        submit: error.message || 'Failed to submit. Please try again.' 
+      setErrors(prev => ({
+        ...prev,
+        submit: error.message || 'Failed to submit. Please try again.'
       }));
     } finally {
       setSubmitting(false);
     }
   };
 
+  const Stepper = ({ label, value, field, unit, max, step = 1 }) => (
+    <div>
+      <label className="block text-[14px] font-bold tracking-wide text-[#17202A] mb-2">
+        {label}
+      </label>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => changeNumber(field, -step, 0, max)}
+          disabled={value <= 0}
+          className="h-10 w-10 rounded-lg border border-[#BFCBC5] bg-[#EEF3FE] text-[#1B2733] disabled:text-gray-300 disabled:bg-white flex items-center justify-center"
+          aria-label={`Decrease ${label}`}
+        >
+          <Minus size={15} />
+        </button>
+        <input
+          type="number"
+          value={value}
+          min={0}
+          max={max}
+          step={step}
+          onChange={(event) => handleNumberInput(field, event.target.value, 0, max)}
+          className="h-10 w-20 rounded-lg border border-[#BFCBC5] bg-white text-center text-[15px] font-medium text-[#111827] outline-none focus:border-[#004332]"
+        />
+        <button
+          type="button"
+          onClick={() => changeNumber(field, step, 0, max)}
+          disabled={value >= max}
+          className="h-10 w-10 rounded-lg border border-[#BFCBC5] bg-[#EEF3FE] text-[#1B2733] disabled:text-gray-300 disabled:bg-white flex items-center justify-center"
+          aria-label={`Increase ${label}`}
+        >
+          <Plus size={15} />
+        </button>
+        {unit && <span className="ml-3 text-[16px] text-[#4A5550]">{unit}</span>}
+      </div>
+    </div>
+  );
+
+  const YesNo = ({ label, value, onChange, error }) => (
+    <div>
+      <p className="mb-2.5 text-[15px] font-bold text-[#17202A]">{label}</p>
+      <div className="grid grid-cols-2 rounded-xl border border-[#BFCBC5] bg-[#EEF3FE] p-1">
+        {[true, false].map(option => {
+          const selected = value === option;
+          return (
+            <button
+              key={String(option)}
+              type="button"
+              onClick={() => onChange(option)}
+              className={`h-8 rounded-lg text-[14px] font-semibold transition-all ${
+                selected
+                  ? 'bg-white text-[#004332] shadow-sm'
+                  : 'text-[#17202A] hover:text-[#004332]'
+              }`}
+            >
+              {option ? 'Yes' : 'No'}
+            </button>
+          );
+        })}
+      </div>
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
-        <Card>
+      <div className="min-h-[60vh] flex items-center justify-center bg-[#FAFAFA]">
+        <div className="rounded-2xl border border-[#E0E5E2] bg-white p-6 shadow-sm">
           <p className="text-center text-gray-600">Please log in to access the calculator</p>
-        </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] py-8 md:py-12 px-4 md:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="min-h-[calc(100vh-76px)] bg-[#FAFAFA] px-4 py-8 md:px-8 lg:px-12 xl:px-16 xl:py-9">
+      <div className="mx-auto w-full max-w-[1500px]">
+        <div className="mb-8 grid grid-cols-1 items-center gap-5 lg:grid-cols-[1fr_520px] xl:grid-cols-[1fr_560px]">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              Log Today's Carbon
+            <h1 className="text-[32px] font-extrabold leading-tight text-[#053D2F] md:text-[34px]">
+              Log Today&apos;s Carbon
             </h1>
-            <p className="text-gray-600">Track your daily activities and emissions</p>
+            <p className="mt-1 text-[16px] text-[#4A5550]">
+              Fill in the details below to understand your environmental footprint. All fields are optional.
+            </p>
           </div>
           {todayLog && (
-            <Link href="/calculator/result">
-              <Button variant="secondary">
-                Today's Carbon Footprint →
+            <Link href="/calculator/result" className="block">
+              <Button
+                variant="primary"
+                className="h-[50px] w-full rounded-full bg-[#004332] text-[19px] font-bold hover:bg-[#003729]"
+              >
+                Today&apos;s Carbon Footprint
               </Button>
             </Link>
           )}
         </div>
 
-        {/* Error Alert */}
         {errors.submit && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3">
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-red-700 text-sm">{errors.submit}</p>
+          <div className="mb-5 flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+            <AlertCircle size={20} className="mt-0.5 flex-shrink-0 text-red-600" />
+            <p className="text-sm text-red-700">{errors.submit}</p>
           </div>
         )}
 
-        {/* Form Grid */}
-        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-0">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 1. Transport Card */}
-            <Card>
-              <div className="flex items-center gap-2 mb-4">
-                <Bike className="text-[#1B5E20]" size={24} />
-                <h2 className="text-xl font-bold text-gray-900">1. Transport</h2>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-[1.42fr_1fr] xl:grid-cols-[1.48fr_1fr]">
+          <div className="space-y-6">
+            <section className="rounded-[18px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+              <div className="mb-7 flex items-center gap-2 text-[#17202A]">
+                <Bus size={22} className="text-[#004332]" />
+                <h2 className="text-[24px] font-extrabold leading-none">1. Transport</h2>
               </div>
-
-              <div className="space-y-6">
-                <ToggleButtonGroup
-                  options={transportationOptions}
-                  selected={formData.transportationMode}
-                  onChange={handleTransportChange}
-                  label="Choose your transport mode"
-                  fullWidth={true}
-                  size="md"
-                />
-
-                <NumericStepper
-                  value={formData.transportationDistanceKm}
-                  onChange={handleDistanceChange}
-                  label="Distance traveled"
-                  unit="km"
-                  min={0}
-                  max={200}
-                  step={0.5}
-                  decimals={1}
-                />
-                {errors.transportationDistanceKm && (
-                  <p className="text-red-600 text-sm">{errors.transportationDistanceKm}</p>
-                )}
+              <p className="mb-[18px] text-[16px] text-[#4A5550]">How did you travel to school today?</p>
+              <div className="mb-6 grid grid-cols-5 gap-2">
+                {transportationOptions.map(option => {
+                  const selected = formData.transportationMode === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setField('transportationMode', option.value)}
+                      className={`flex h-[75px] min-w-0 flex-col items-center justify-center rounded-[10px] border text-[12px] font-semibold transition-all ${
+                        selected
+                          ? 'border-[#00724E] bg-[#C7EEDC] text-[#004332]'
+                          : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#00724E]'
+                      }`}
+                    >
+                      <span className="mb-1 flex h-6 items-center justify-center text-[#004332]">{option.icon}</span>
+                      <span>{option.label}</span>
+                    </button>
+                  );
+                })}
               </div>
-            </Card>
-
-            {/* 2. Food Card */}
-            <Card>
-              <div className="flex items-center gap-2 mb-4">
-                <UtensilsCrossed className="text-[#1B5E20]" size={24} />
-                <h2 className="text-xl font-bold text-gray-900">2. Food</h2>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-3">
-                    What did you eat?
-                  </label>
-                  <div className="flex gap-2">
-                    {foodOptions.map(opt => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => handleFoodChange(opt.value)}
-                        className={`
-                          flex-1 py-2.5 px-3 rounded-lg font-semibold text-sm 
-                          transition-all duration-200 border-2
-                          ${formData.foodMealType === opt.value
-                            ? 'bg-[#1B5E20] text-white border-[#1B5E20]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#1B5E20]'
-                          }
-                        `}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* 3. Waste & Plastic Card */}
-            <Card>
-              <div className="flex items-center gap-2 mb-4">
-                <Droplets className="text-[#1B5E20]" size={24} />
-                <h2 className="text-xl font-bold text-gray-900">3. Waste</h2>
-              </div>
-
-              <div className="space-y-4">
-                <SegmentedYesNo
-                  value={formData.usedSingleUsePlastic}
-                  onChange={handlePlasticChange}
-                  label="Did you use single-use plastic today?"
-                  size="md"
-                />
-                {errors.usedSingleUsePlastic && (
-                  <p className="text-red-600 text-sm">{errors.usedSingleUsePlastic}</p>
-                )}
-
-                <SegmentedYesNo
-                  value={formData.wastedFood}
-                  onChange={handleFoodWasteChange}
-                  label="Did you waste food today?"
-                  size="md"
-                />
-                {errors.wastedFood && (
-                  <p className="text-red-600 text-sm">{errors.wastedFood}</p>
-                )}
-              </div>
-            </Card>
-
-            {/* 4. Energy Card */}
-            <Card>
-              <div className="flex items-center gap-2 mb-4">
-                <Zap className="text-[#1B5E20]" size={24} />
-                <h2 className="text-xl font-bold text-gray-900">4. Energy</h2>
-              </div>
-
-              <NumericStepper
-                value={formData.energyUsageHours}
-                onChange={handleEnergyChange}
-                label="Electricity & appliance use"
-                unit="hours"
-                min={0}
-                max={24}
-                step={0.5}
-                decimals={1}
+              <Stepper
+                label="Distance (km)"
+                value={formData.transportationDistanceKm}
+                field="transportationDistanceKm"
+                max={200}
+                step={1}
               />
-              {errors.energyUsageHours && (
-                <p className="text-red-600 text-sm mt-2">{errors.energyUsageHours}</p>
+              {errors.transportationDistanceKm && (
+                <p className="mt-2 text-sm text-red-600">{errors.transportationDistanceKm}</p>
               )}
-            </Card>
+            </section>
+
+            <section className="rounded-[18px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+              <div className="mb-7 flex items-center gap-2 text-[#17202A]">
+                <ForkKnife size={22} className="text-[#004332]" />
+                <h2 className="text-[24px] font-extrabold leading-none">2. Lunch</h2>
+              </div>
+              <p className="mb-[18px] text-[16px] text-[#4A5550]">What did you have for lunch?</p>
+              <div className="grid grid-cols-3 gap-4">
+                {foodOptions.map(option => {
+                  const selected = formData.foodMealType === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setField('foodMealType', option.value)}
+                      className={`h-[74px] rounded-[10px] border text-center transition-all ${
+                        selected
+                          ? 'border-[#00724E] bg-[#C7EEDC] text-[#004332]'
+                          : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#00724E]'
+                      }`}
+                    >
+                      <span className="block text-[16px] font-medium">{option.label}</span>
+                      <span className="mt-1 block text-[12px] text-[#4A5550]">{option.estimate}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <div className="pt-8 text-center lg:pt-7">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                isLoading={submitting}
+                disabled={submitting}
+                className="mx-auto h-[50px] w-full max-w-[450px] rounded-full bg-[#004332] text-[19px] font-bold hover:bg-[#003729]"
+              >
+                Calculate my emission →
+              </Button>
+            </div>
           </div>
 
-          {/* Motivational Panel */}
-          <Card className="bg-gradient-to-br from-[#E8F5E9] to-[#F1F4F2] border-[#C8E6C9]">
-            <div className="flex items-center gap-4">
-              <Trees className="text-[#1B5E20] flex-shrink-0" size={32} />
-              <div>
-                <p className="text-lg font-semibold text-[#1B5E20] mb-1">
-                  Keep logging to maintain your streak!
-                </p>
-                <p className="text-sm text-gray-700">
-                  Every day you log adds to your environmental impact tracking journey.
-                </p>
+          <div className="space-y-6">
+            <section className="rounded-[18px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+              <div className="mb-7 flex items-center gap-2 text-[#17202A]">
+                <Trash2 size={21} className="text-[#004332]" />
+                <h2 className="text-[24px] font-extrabold leading-none">3. Waste &amp; Plastic</h2>
               </div>
-            </div>
-          </Card>
+              <div className="space-y-[26px]">
+                <YesNo
+                  label="Did you use single-use plastic today?"
+                  value={formData.usedSingleUsePlastic}
+                  onChange={(value) => setField('usedSingleUsePlastic', value)}
+                  error={errors.usedSingleUsePlastic}
+                />
+                <YesNo
+                  label="Did you waste food today?"
+                  value={formData.wastedFood}
+                  onChange={(value) => setField('wastedFood', value)}
+                  error={errors.wastedFood}
+                />
+              </div>
+            </section>
 
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            isLoading={submitting}
-            disabled={submitting}
-            className="w-full rounded-full h-12 text-lg"
-          >
-            Calculate my emission →
-          </Button>
+            <section className="rounded-[18px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+              <div className="mb-7 flex items-center gap-2 text-[#17202A]">
+                <Zap size={23} className="text-[#004332]" />
+                <h2 className="text-[24px] font-extrabold leading-none">4. Energy</h2>
+              </div>
+              <p className="mb-[18px] text-[16px] text-[#4A5550]">
+                Approx. hours of electricity use (at school + home)
+              </p>
+              <Stepper
+                label=""
+                value={formData.energyUsageHours}
+                field="energyUsageHours"
+                unit="Hours"
+                max={24}
+                step={1}
+              />
+              {errors.energyUsageHours && (
+                <p className="mt-2 text-sm text-red-600">{errors.energyUsageHours}</p>
+              )}
+            </section>
+
+            <section className="relative min-h-[273px] overflow-hidden rounded-[18px] bg-[#E2F7F3] p-6">
+              <div className="absolute bottom-0 right-0 h-28 w-32 opacity-25">
+                <div className="absolute bottom-0 right-0 h-24 w-24 rotate-12 border-[12px] border-[#4E666B]" />
+                <div className="absolute bottom-3 right-16 h-20 w-20 rotate-12 border-[10px] border-[#4E666B]" />
+              </div>
+              <p className="absolute left-6 top-[88px] max-w-[210px] text-[20px] font-extrabold leading-[1.25] text-[#004332]">
+                Keep logging to maintain your streak!
+              </p>
+              <span className="absolute left-6 top-[166px] text-xl">🔥</span>
+            </section>
+          </div>
         </form>
       </div>
     </div>

@@ -14,8 +14,8 @@ const submitLogValidator = [
     .withMessage('Distance must be a non-negative number'),
 
   body('foodMealType')
-    .isIn(['vegetarian', 'non-vegetarian', 'vegan'])
-    .withMessage('Meal type must be one of: vegetarian, non-vegetarian, vegan'),
+    .isIn(['vegetarian', 'mixed', 'non-vegetarian', 'vegan'])
+    .withMessage('Meal type must be one of: vegetarian, mixed, non-vegetarian, vegan'),
 
   body('wasteAndPlasticCount')
     .isInt({ min: 0 })

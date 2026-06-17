@@ -40,7 +40,7 @@ const DailyLogSchema = new mongoose.Schema(
     food: {
       mealType: {
         type: String,
-        enum: ['vegetarian', 'non-vegetarian', 'vegan'],
+        enum: ['vegetarian', 'mixed', 'non-vegetarian', 'vegan'],
         required: [true, 'Meal type is required']
       },
       foodWasteGrams: {

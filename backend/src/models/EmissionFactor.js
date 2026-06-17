@@ -21,7 +21,7 @@ const EmissionFactorSchema = new mongoose.Schema(
      * Sub-type within category
      * Examples:
      * - transportation: 'walk', 'bicycle', 'bus', 'motorbike', 'car'
-     * - food: 'vegetarian', 'non-vegetarian', 'vegan'
+     * - food: 'vegetarian', 'mixed', 'non-vegetarian', 'vegan'
      * - waste: 'plastic', 'paper', 'organic'
      * - energy: 'electricity', 'lpg', 'biomass'
      */

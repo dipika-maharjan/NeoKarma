@@ -1,10 +1,11 @@
 /**
  * Seed Script for EmissionFactor Collection
- * Populates initial emission factors with placeholder values
- * 
- * WARNING: All values marked "TODO: confirm with carbon mentor" should be replaced
- * with values from IPCC, UNFCCC, or AsianTransportObservatory after research
- * 
+ * Populates initial emission factors with placeholder values.
+ *
+ * WARNING: All values marked "TODO: confirm with carbon mentor" should be
+ * replaced with values from IPCC, UNFCCC, or AsianTransportObservatory after
+ * research.
+ *
  * Run: npm run seed
  */
 require('dotenv').config({ path: '.env' });
@@ -12,7 +13,6 @@ const mongoose = require('mongoose');
 const EmissionFactor = require('../src/models/EmissionFactor');
 
 const emissionFactorsData = [
-  // ==================== TRANSPORTATION ====================
   {
     category: 'transportation',
     subType: 'walk',
@@ -21,7 +21,8 @@ const emissionFactorsData = [
     source: 'IPCC',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'Zero emissions for walking'
+    notes: 'Zero emissions for walking',
+    isActive: true
   },
   {
     category: 'transportation',
@@ -31,7 +32,8 @@ const emissionFactorsData = [
     source: 'IPCC',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'Zero direct emissions for cycling'
+    notes: 'Zero direct emissions for cycling',
+    isActive: true
   },
   {
     category: 'transportation',
@@ -41,7 +43,8 @@ const emissionFactorsData = [
     source: 'AsianTransportObservatory',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'TODO: confirm with carbon mentor - Asia-specific bus emissions factor'
+    notes: 'TODO: confirm with carbon mentor - Asia-specific bus emissions factor',
+    isActive: true
   },
   {
     category: 'transportation',
@@ -51,7 +54,8 @@ const emissionFactorsData = [
     source: 'AsianTransportObservatory',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'TODO: confirm with carbon mentor - common two-wheeler in Nepal'
+    notes: 'TODO: confirm with carbon mentor - common two-wheeler in Nepal',
+    isActive: true
   },
   {
     category: 'transportation',
@@ -61,10 +65,9 @@ const emissionFactorsData = [
     source: 'UNFCCC',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'TODO: confirm with carbon mentor - average passenger car emissions'
+    notes: 'TODO: confirm with carbon mentor - average passenger car emissions',
+    isActive: true
   },
-
-  // ==================== FOOD ====================
   {
     category: 'food',
     subType: 'vegan',
@@ -73,30 +76,42 @@ const emissionFactorsData = [
     source: 'IPCC',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'TODO: confirm with carbon mentor - plant-based meal emissions'
+    notes: 'TODO: confirm with carbon mentor - plant-based meal emissions',
+    isActive: true
   },
   {
     category: 'food',
     subType: 'vegetarian',
-    factorValue: 1.1,
+    factorValue: 0.9,
     unit: 'kg CO2/meal',
     source: 'IPCC',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'TODO: confirm with carbon mentor - vegetarian meal including dairy'
+    notes: 'TODO: confirm with carbon mentor - vegetarian meal including dairy',
+    isActive: true
+  },
+  {
+    category: 'food',
+    subType: 'mixed',
+    factorValue: 1.5,
+    unit: 'kg CO2/meal',
+    source: 'IPCC',
+    version: 1,
+    effectiveDate: new Date('2024-01-01'),
+    notes: 'TODO: confirm with carbon mentor - mixed meal emissions',
+    isActive: true
   },
   {
     category: 'food',
     subType: 'non-vegetarian',
-    factorValue: 2.8,
+    factorValue: 2.5,
     unit: 'kg CO2/meal',
     source: 'IPCC',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'TODO: confirm with carbon mentor - meat-based meal emissions'
+    notes: 'TODO: confirm with carbon mentor - meat-based meal emissions',
+    isActive: true
   },
-
-  // ==================== WASTE & PLASTIC ====================
   {
     category: 'waste',
     subType: 'plastic',
@@ -105,10 +120,9 @@ const emissionFactorsData = [
     source: 'LocalResearch',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'TODO: confirm with carbon mentor - plastic production and disposal emissions per item'
+    notes: 'TODO: confirm with carbon mentor - plastic production and disposal emissions per item',
+    isActive: true
   },
-
-  // ==================== ENERGY ====================
   {
     category: 'energy',
     subType: 'electricity',
@@ -117,54 +131,53 @@ const emissionFactorsData = [
     source: 'UNFCCC',
     version: 1,
     effectiveDate: new Date('2024-01-01'),
-    notes: 'TODO: confirm with carbon mentor - Nepal grid electricity mix emissions (hydro-dominant)'
+    notes: 'TODO: confirm with carbon mentor - Nepal grid electricity mix emissions (hydro-dominant)',
+    isActive: true
   }
 ];
 
 async function seedDatabase() {
   try {
-    console.log('🌱 Starting emission factor seed...');
+    console.log('Starting emission factor seed...');
 
-    // Connect to MongoDB
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log('Connected to MongoDB');
 
-    // Clear existing factors (optional - comment out to preserve existing data)
-    // await EmissionFactor.deleteMany({});
-    // console.log('🗑️  Cleared existing emission factors');
+    const result = await EmissionFactor.bulkWrite(
+      emissionFactorsData.map((factor) => ({
+        updateOne: {
+          filter: {
+            category: factor.category,
+            subType: factor.subType,
+            isActive: true
+          },
+          update: { $set: factor },
+          upsert: true
+        }
+      }))
+    );
 
-    // Insert seed data
-    const insertedFactors = await EmissionFactor.insertMany(emissionFactorsData, {
-      ordered: false // Continue on duplicate key errors
-    });
-    console.log(`✅ Inserted ${insertedFactors.length} emission factors`);
+    console.log(
+      `Seed complete: ${result.upsertedCount} new and ${result.modifiedCount} updated emission factors`
+    );
+    console.log('\nSeeded Emission Factors:');
+    console.log('='.repeat(80));
 
-    // Display inserted data
-    console.log('\n📋 Seeded Emission Factors:');
-    console.log('═'.repeat(80));
-    insertedFactors.forEach((factor) => {
+    emissionFactorsData.forEach((factor) => {
       console.log(
         `${factor.category.padEnd(15)} | ${factor.subType.padEnd(20)} | ${factor.factorValue} ${factor.unit.padEnd(15)} | ${factor.source}`
       );
       if (factor.notes && factor.notes.includes('TODO')) {
-        console.log(`  ⚠️  ${factor.notes}`);
+        console.log(`  WARNING: ${factor.notes}`);
       }
     });
 
-    console.log('═'.repeat(80));
-    console.log(
-      '\n✨ Seed completed! Review all "TODO" items above with your carbon mentor.'
-    );
+    console.log('='.repeat(80));
+    console.log('\nSeed completed. Review all TODO items with your carbon mentor.');
 
     process.exit(0);
   } catch (error) {
-    // If error is duplicate key and we're not clearing, that's fine
-    if (error.code === 11000) {
-      console.log('⚠️  Some factors already exist (duplicate key). Skipping duplicates.');
-      process.exit(0);
-    }
-
-    console.error('❌ Seed failed:', error.message);
+    console.error('Seed failed:', error.message);
     process.exit(1);
   }
 }
