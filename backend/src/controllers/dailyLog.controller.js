@@ -39,58 +39,6 @@ class DailyLogController {
     }
 
     const today = getTodayStr();
-    const emissionResult = await emissionCalculationService.calculateEmissions({
-      transportationMode,
-      transportationDistanceKm,
-      foodMealType,
-      wasteAndPlasticCount,
-      energyUsageHours
-    });
-
-    // Check if already logged today
-    const existingLog = await dailyLogRepository.findByUserAndDate(userId, today);
-    if (existingLog) {
-      // Allow update: delete old and create new
-      await dailyLogRepository.update(existingLog._id, {
-        transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
-        food: { mealType: foodMealType },
-        wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
-        energy: { usageHours: energyUsageHours },
-        extraAnswer: extraAnswer || null,
-        breakdown: emissionResult.breakdown,
-        totalEmissionKg: emissionResult.totalEmissionKg
-      });
-    } else {
-      // Create log
-      await dailyLogRepository.create({
-        userId,
-        date: today,
-        transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
-        food: { mealType: foodMealType },
-        wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
-        energy: { usageHours: energyUsageHours },
-        extraAnswer: extraAnswer || null,
-        breakdown: emissionResult.breakdown,
-        totalEmissionKg: emissionResult.totalEmissionKg
-      });
-
-      // Update streak
-      await streakService.updateStreakAfterLogCreation(userId);
-
-      // Update monthly snapshot
-      const monthStr = today.slice(0, 7); // YYYY-MM
-      const snapshot = await monthlySnapshotRepository.findByUserAndMonth(userId, monthStr);
-      if (snapshot) {
-        await monthlySnapshotRepository.update(snapshot._id, {
-          totalEmissionKg: snapshot.totalEmissionKg + emissionResult.totalEmissionKg,
-          logsCount: snapshot.logsCount + 1,
-          'breakdown.transportKg': snapshot.breakdown.transportKg + emissionResult.breakdown.transportKg,
-          'breakdown.foodKg': snapshot.breakdown.foodKg + emissionResult.breakdown.foodKg,
-          'breakdown.wasteKg': snapshot.breakdown.wasteKg + emissionResult.breakdown.wasteKg,
-          'breakdown.energyKg': snapshot.breakdown.energyKg + emissionResult.breakdown.energyKg
-        });
-      }
-    }
 
     // Calculate emissions using service
     const emissionResult = await emissionCalculationService.calculateEmissions({

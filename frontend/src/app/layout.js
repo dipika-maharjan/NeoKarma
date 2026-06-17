@@ -1,8 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import LayoutShell from "@/components/layout/LayoutShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "नेओकर्म - Carbon Footprint Tracker",
-  description: "Track your carbon footprint and learn sustainable habits",
+  title: "Neoकर्म - Carbon Footprint Tracker",
+  description: "Track your carbon footprint and learn sustainable habits. Made for Nepalese students.",
 };
 
 export default function RootLayout({ children }) {
@@ -27,11 +26,9 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col bg-[#FAFAFA]">
         <AuthProvider>
-          <Navbar />
-          <main className="flex-grow">
+          <LayoutShell>
             {children}
-          </main>
-          <Footer />
+          </LayoutShell>
         </AuthProvider>
       </body>
     </html>
