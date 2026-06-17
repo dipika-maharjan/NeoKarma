@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 
 // Unified recommendations list matching the Smart Recommendations view
 const PRESETS = [
@@ -148,15 +150,122 @@ const INITIAL_PLAN_ITEMS = [
   }
 ];
 
+const mapBackendRecToCard = (rec, index) => {
+  const id = rec._id || `backend-rec-${index}`;
+  let badge = 'EASY WIN';
+  let badgeColor = 'bg-blue-50 text-blue-500 border border-blue-100';
+  if (rec.effortLevel === 'medium') {
+    badge = 'MEDIUM IMPACT';
+    badgeColor = 'bg-green-50 text-green-600 border border-green-100';
+  } else if (rec.effortLevel === 'high') {
+    badge = 'HIGH IMPACT';
+    badgeColor = 'bg-red-50 text-red-500 border border-red-100';
+  }
+
+  let category = rec.category || 'general';
+  if (category === 'transportation') category = 'transport';
+
+  let visualType = 'lightbulb';
+  if (category === 'transport') visualType = 'bus';
+  else if (category === 'food') visualType = 'fork-knife';
+  else if (category === 'waste') visualType = 'bin';
+
+  return {
+    id,
+    category,
+    badge,
+    badgeColor,
+    title: rec.text,
+    description: rec.description,
+    reduction: `-${rec.estimatedReductionKg.toFixed(1)} kg CO2`,
+    reductionUnit: '/month',
+    visualType,
+    personalSaving: rec.estimatedReductionKg,
+    actionDesc: rec.description
+  };
+};
+
 const RecommendationsView = ({ onNavigateToDashboard }) => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('recommendations'); // 'recommendations' or 'plan'
-  const [addedIds, setAddedIds] = useState(new Set(['bus', 'energy', 'lunch'])); // Default added recommendations
-  const [planItems, setPlanItems] = useState(INITIAL_PLAN_ITEMS);
+  const [addedIds, setAddedIds] = useState(new Set());
+  const [planItems, setPlanItems] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'transport', 'energy', 'waste', 'food'
+  
+  const [recommendations, setRecommendations] = useState(PRESETS);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load planItems from localStorage unique to the logged-in user
+  useEffect(() => {
+    if (!user) return;
+    const storageKey = `neokarma_plan_items_${user._id || user.id || 'default'}`;
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        setPlanItems(JSON.parse(stored));
+      } catch (e) {
+        console.error('Error parsing stored plan items:', e);
+        setPlanItems(INITIAL_PLAN_ITEMS);
+      }
+    } else {
+      setPlanItems(INITIAL_PLAN_ITEMS);
+    }
+    setIsLoaded(true);
+  }, [user]);
+
+  // Save planItems to localStorage unique to the logged-in user
+  useEffect(() => {
+    if (!user || !isLoaded) return;
+    const storageKey = `neokarma_plan_items_${user._id || user.id || 'default'}`;
+    localStorage.setItem(storageKey, JSON.stringify(planItems));
+  }, [planItems, user, isLoaded]);
+
+  // Synchronize addedIds with planItems
+  useEffect(() => {
+    setAddedIds(new Set(planItems.map(item => item.id)));
+  }, [planItems]);
+
+  // Fetch or generate recommendations from the backend
+  useEffect(() => {
+    const loadPlan = async () => {
+      if (!user) return;
+      
+      setLoading(true);
+      setError(null);
+      try {
+        let planData = await getActivePlan();
+        if (!planData || !planData.recommendations || planData.recommendations.length === 0) {
+          // If no active plan, trigger plan generation
+          try {
+            const newPlan = await generatePlan();
+            planData = newPlan;
+          } catch (genErr) {
+            console.warn('Could not generate plan automatically, using presets:', genErr);
+          }
+        }
+
+        if (planData && planData.recommendations && planData.recommendations.length > 0) {
+          const cards = planData.recommendations.map((rec, index) => mapBackendRecToCard(rec, index));
+          setRecommendations(cards);
+        } else {
+          setRecommendations(PRESETS);
+        }
+      } catch (err) {
+        console.error('Error loading recommendations:', err);
+        setError(err.message || 'Failed to load recommendations');
+        setRecommendations(PRESETS);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPlan();
+  }, [user]);
 
   // Add recommendation to Plan list dynamically
   const addToPlan = (rec) => {
-    // Avoid double addition
     if (planItems.some(item => item.id === rec.id)) {
       setActiveTab('plan');
       return;
@@ -173,7 +282,6 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
     };
 
     setPlanItems([newItem, ...planItems]);
-    setAddedIds(new Set([...addedIds, rec.id]));
     setActiveTab('plan'); // Direct redirect to show plan
   };
 
@@ -189,9 +297,6 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   // Delete an item from the plan
   const deletePlanItem = (id) => {
     setPlanItems(planItems.filter(item => item.id !== id));
-    const nextAdded = new Set(addedIds);
-    nextAdded.delete(id);
-    setAddedIds(nextAdded);
   };
 
   // Calculate Plan metrics
@@ -238,79 +343,86 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
             {/* Grid layout matching Figma Screen 1 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {PRESETS.map((rec) => {
-                const isAdded = planItems.some(item => item.id === rec.id);
-                return (
-                  <div 
-                    key={rec.id} 
-                    className="bg-white border border-gray-100/80 shadow-sm rounded-3xl p-6 flex flex-col justify-between transition-all hover:shadow-md"
-                  >
-                    <div>
-                      {/* Badge */}
-                      <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${rec.badgeColor}`}>
-                        {rec.badge}
-                      </span>
-
-                      {/* Main Title & Description */}
-                      <h3 className="text-xl font-bold text-[#0A3D25] mt-4 tracking-tight">
-                        {rec.title}
-                      </h3>
-                      <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                        {rec.description}
-                      </p>
-                    </div>
-
-                    {/* Bottom Section with visual graphic and impact reduction / actions */}
-                    <div className="mt-6 flex items-end justify-between">
+              {loading ? (
+                <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-16 bg-white border border-gray-100/80 shadow-sm rounded-3xl">
+                  <div className="w-12 h-12 border-4 border-[#0A3D25] border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <p className="text-gray-500 font-medium">Loading smart recommendations...</p>
+                </div>
+              ) : (
+                recommendations.map((rec) => {
+                  const isAdded = planItems.some(item => item.id === rec.id);
+                  return (
+                    <div 
+                      key={rec.id} 
+                      className="bg-white border border-gray-100/80 shadow-sm rounded-3xl p-6 flex flex-col justify-between transition-all hover:shadow-md"
+                    >
                       <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                          Impact Reduction
+                        {/* Badge */}
+                        <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${rec.badgeColor}`}>
+                          {rec.badge}
+                        </span>
+
+                        {/* Main Title & Description */}
+                        <h3 className="text-xl font-bold text-[#0A3D25] mt-4 tracking-tight">
+                          {rec.title}
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                          {rec.description}
                         </p>
-                        <p className="text-lg font-extrabold text-gray-800 mt-0.5">
-                          {rec.reduction}
-                          <span className="text-xs font-semibold text-gray-400">
-                            {rec.reductionUnit}
-                          </span>
-                        </p>
-                        <button
-                          onClick={() => addToPlan(rec)}
-                          className={`mt-3 text-xs font-bold py-2 px-5 rounded-full transition-all border ${
-                            isAdded
-                              ? 'bg-[#E2F0D9] text-[#0A3D25] border-[#C5E0B4]'
-                              : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232] cursor-pointer'
-                          }`}
-                        >
-                          {isAdded ? '✓ Added' : 'Add To Plan'}
-                        </button>
                       </div>
 
-                      {/* Icon/Graphic representation */}
-                      <div className="w-32 h-24 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100">
-                        {rec.visualType === 'bus' && (
-                          <div className="w-full h-full relative bg-emerald-50 flex items-center justify-center">
-                            <span className="text-4xl">🚌</span>
-                          </div>
-                        )}
-                        {rec.visualType === 'fork-knife' && (
-                          <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center">
-                            <span className="text-2xl">🍽️</span>
-                          </div>
-                        )}
-                        {rec.visualType === 'bin' && (
-                          <div className="w-full h-full relative bg-stone-50 flex items-center justify-center">
-                            <span className="text-4xl">🗑️</span>
-                          </div>
-                        )}
-                        {rec.visualType === 'lightbulb' && (
-                          <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center">
-                            <span className="text-2xl">💡</span>
-                          </div>
-                        )}
+                      {/* Bottom Section with visual graphic and impact reduction / actions */}
+                      <div className="mt-6 flex items-end justify-between">
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                            Impact Reduction
+                          </p>
+                          <p className="text-lg font-extrabold text-gray-800 mt-0.5">
+                            {rec.reduction}
+                            <span className="text-xs font-semibold text-gray-400">
+                              {rec.reductionUnit}
+                            </span>
+                          </p>
+                          <button
+                            onClick={() => addToPlan(rec)}
+                            className={`mt-3 text-xs font-bold py-2 px-5 rounded-full transition-all border ${
+                              isAdded
+                                ? 'bg-[#E2F0D9] text-[#0A3D25] border-[#C5E0B4]'
+                                : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232] cursor-pointer'
+                            }`}
+                          >
+                            {isAdded ? '✓ Added' : 'Add To Plan'}
+                          </button>
+                        </div>
+
+                        {/* Icon/Graphic representation */}
+                        <div className="w-32 h-24 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100">
+                          {rec.visualType === 'bus' && (
+                            <div className="w-full h-full relative bg-emerald-50 flex items-center justify-center">
+                              <span className="text-4xl">🚌</span>
+                            </div>
+                          )}
+                          {rec.visualType === 'fork-knife' && (
+                            <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center">
+                              <span className="text-2xl">🍽️</span>
+                            </div>
+                          )}
+                          {rec.visualType === 'bin' && (
+                            <div className="w-full h-full relative bg-stone-50 flex items-center justify-center">
+                              <span className="text-4xl">🗑️</span>
+                            </div>
+                          )}
+                          {rec.visualType === 'lightbulb' && (
+                            <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center">
+                              <span className="text-2xl">💡</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
         ) : (
