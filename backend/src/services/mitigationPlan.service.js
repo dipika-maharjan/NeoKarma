@@ -149,15 +149,55 @@ class MitigationPlanService {
   }
 
   /**
-   * Find users who need a new plan generated (30 days since last log, no pending plan)
+   * Find users who need a new plan generated (at least 1 log, no active plan)
    * Called by scheduled job
    */
   async findUsersNeedingPlanGeneration() {
-    // This would typically query for users who:
-    // 1. Have logged regularly for 30 days
-    // 2. Don't have an active plan
-    // For now, return empty (will be called by node-cron job)
-    return [];
+    const User = require('../models/User');
+    const DailyLog = require('../models/DailyLog');
+
+    const users = await User.find({});
+    const needingUsers = [];
+    
+    for (const user of users) {
+      const activePlan = await mitigationPlanRepository.findActivePlan(user._id);
+      if (!activePlan) {
+        const logsCount = await DailyLog.countDocuments({ userId: user._id });
+        if (logsCount > 0) {
+          needingUsers.push(user);
+        }
+      }
+    }
+    return needingUsers;
+  }
+
+  /**
+   * Initialize daily scheduled cron job to run plan generation
+   */
+  startCronScheduler() {
+    const cron = require('node-cron');
+    
+    // Run every day at midnight (0 0 * * *)
+    cron.schedule('0 0 * * *', async () => {
+      console.log('⏰ Running scheduled daily mitigation plan generation check...');
+      try {
+        const users = await this.findUsersNeedingPlanGeneration();
+        let generatedCount = 0;
+        for (const user of users) {
+          try {
+            await this.generatePlanForUser(user._id);
+            generatedCount++;
+          } catch (err) {
+            console.error(`❌ Failed to automatically generate plan for user ${user._id}:`, err.message);
+          }
+        }
+        console.log(`⏰ Scheduled mitigation plan generation check finished. Generated ${generatedCount} plans.`);
+      } catch (err) {
+        console.error('❌ Scheduled daily mitigation plan check failed:', err.message);
+      }
+    });
+    
+    console.log('🗓️ Mitigation plan cron scheduler initialized successfully.');
   }
 }
 

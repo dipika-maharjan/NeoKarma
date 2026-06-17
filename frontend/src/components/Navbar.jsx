@@ -3,12 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-// Direct imports with corrected relative path jumping up two levels to root
-import profileImg from '../../public/profile.png';
+import { useAuth } from '@/context/AuthContext';
+import ProfileDropdown from './ProfileDropdown';
 import streakIcon from '../../public/streak.png'; 
 
 const Navbar = () => {
   const pathname = usePathname();
+  const { user, isAuthenticated } = useAuth();
 
   // Determine active tab based on current pathname
   const getActiveTab = () => {
@@ -65,27 +66,32 @@ const Navbar = () => {
         {/* Right: Streak Metrics Status & Profile Action Wrapper */}
         <div className="flex items-center gap-4">
           
-          {/* Day Streak Pill Layout */}
-          <div className="flex items-center gap-1.5 bg-[#F1F4F2] text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-gray-100/60 shadow-none select-none">
-            {/* Streak Image Asset from public directory */}
-            <img 
-              src={streakIcon.src || streakIcon} 
-              alt="Streak" 
-              className="w-4 h-4 object-contain"
-            />
-            <span className="text-xs font-semibold tracking-wide">
-              6 Day Streak
-            </span>
-          </div>
+          {isAuthenticated && user ? (
+            <>
+              {/* Day Streak Pill Layout */}
+              <div className="flex items-center gap-1.5 bg-[#F1F4F2] text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-gray-100/60 shadow-none select-none">
+                {/* Streak Image Asset from public directory */}
+                <img 
+                  src={streakIcon.src || streakIcon} 
+                  alt="Streak" 
+                  className="w-4 h-4 object-contain"
+                />
+                <span className="text-xs font-semibold tracking-wide">
+                  {user.streak?.current || 0} Day Streak
+                </span>
+              </div>
 
-          {/* User Rounded Avatar Node Frame mapped directly from public folder asset */}
-          <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:border-[#0A3D25] transition-colors flex items-center justify-center bg-white">
-            <img 
-              src={profileImg.src || profileImg} 
-              alt="User Profile Menu" 
-              className="w-full h-full object-cover"
-            />
-          </div>
+              {/* Profile Dropdown */}
+              <ProfileDropdown />
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm font-semibold text-[#0A3D25] hover:text-[#43A047] transition-colors no-underline"
+            >
+              Sign In
+            </Link>
+          )}
 
         </div>
 

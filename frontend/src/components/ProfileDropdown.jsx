@@ -1,35 +1,25 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, Settings, User, LayoutDashboard } from 'lucide-react';
+import profileImg from '../../public/profile.png';
 
-/**
- * ProfileDropdown - User profile dropdown menu
- * Mounted in navbar next to streak badge
- */
-const ProfileDropdown = ({ avatarSrc = '' }) => {
+export default function ProfileDropdown() {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const triggerRef = useRef(null);
 
-  // Close dropdown on outside click
+  const toggleDropdown = () => setIsOpen((prev) => !prev);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        triggerRef.current &&
-        !dropdownRef.current.contains(event.target) &&
-        !triggerRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
 
-    // Close on Escape key
-    const handleKeyDown = (event) => {
+    const handleEscapeKey = (event) => {
       if (event.key === 'Escape') {
         setIsOpen(false);
       }
@@ -37,133 +27,87 @@ const ProfileDropdown = ({ avatarSrc = '' }) => {
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keydown', handleEscapeKey);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleEscapeKey);
     };
   }, [isOpen]);
 
-  const handleLogout = () => {
-    logout();
-    setIsOpen(false);
-    window.location.href = '/login';
-  };
-
-  const handleMenuItemClick = () => {
-    setIsOpen(false);
-  };
+  if (!user) return null;
 
   return (
-    <div className="relative">
-      {/* Trigger Button - Avatar */}
+    <div className="relative" ref={dropdownRef}>
+      {/* Trigger: User Rounded Avatar Node Frame */}
       <button
-        ref={triggerRef}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`
-          w-9 h-9 rounded-full overflow-hidden border-2 cursor-pointer 
-          transition-all duration-200 flex items-center justify-center bg-white
-          ${isOpen 
-            ? 'border-[#1B5E20] shadow-md' 
-            : 'border-gray-200 hover:border-[#1B5E20]'
-          }
-        `}
+        onClick={toggleDropdown}
+        aria-expanded={isOpen}
+        className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:border-forest-green transition-colors flex items-center justify-center bg-white outline-none focus:ring-2 focus:ring-forest-green"
       >
-        {avatarSrc ? (
-          <img
-            src={avatarSrc}
-            alt="User Profile"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#1B5E20] to-[#0D3D14] flex items-center justify-center text-white text-sm font-bold">
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
-          </div>
-        )}
+        <img
+          src={profileImg.src || profileImg}
+          alt="User Profile Menu"
+          className="w-full h-full object-cover"
+        />
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Panel */}
       {isOpen && (
-        <div
-          ref={dropdownRef}
-          className={`
-            absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-gray-200 
-            shadow-lg z-50 overflow-hidden
-            animate-in fade-in slide-in-from-top-2 duration-150
-          `}
-        >
-          {/* User Info Section */}
-          <div className="px-4 py-3 border-b border-gray-100 bg-[#FAFAFA]">
-            <p className="font-semibold text-gray-900 text-sm">
-              {user?.name || 'User'}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {user?.email || 'user@example.com'}
-            </p>
+        <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+          {/* Header: Name and Email */}
+          <div className="px-4 py-2 border-b border-gray-100">
+            <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+            <span className="inline-block mt-1 text-[10px] font-bold text-forest-green bg-[#E8F5E9] px-2 py-0.5 rounded-full uppercase">
+              Grade {user.grade} • {user.locationType}
+            </span>
           </div>
 
-          {/* Menu Items */}
-          <nav className="py-2">
-            {/* Profile */}
+          {/* Links */}
+          <div className="py-1">
             <Link
               href="/profile"
-              onClick={handleMenuItemClick}
-              className={`
-                flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-[#F1F4F2] 
-                transition-colors duration-150 text-sm font-medium
-              `}
+              onClick={() => setIsOpen(false)}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-forest-green transition-colors cursor-pointer no-underline"
             >
-              <User size={18} />
-              <span>Profile</span>
+              Profile / Account
             </Link>
-
-            {/* Dashboard */}
             <Link
               href="/dashboard"
-              onClick={handleMenuItemClick}
-              className={`
-                flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-[#F1F4F2] 
-                transition-colors duration-150 text-sm font-medium
-              `}
+              onClick={() => setIsOpen(false)}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-forest-green transition-colors cursor-pointer no-underline"
             >
-              <LayoutDashboard size={18} />
-              <span>Dashboard</span>
+              Dashboard
             </Link>
-
-            {/* Settings */}
             <Link
               href="/settings"
-              onClick={handleMenuItemClick}
-              className={`
-                flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-[#F1F4F2] 
-                transition-colors duration-150 text-sm font-medium
-              `}
+              onClick={() => setIsOpen(false)}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-forest-green transition-colors cursor-pointer no-underline"
             >
-              <Settings size={18} />
-              <span>Settings</span>
+              Settings
             </Link>
+          </div>
 
-            {/* Divider */}
-            <div className="border-t border-gray-100 my-1" />
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-1"></div>
 
-            {/* Logout */}
+          {/* Logout Action */}
+          <div className="py-1">
             <button
-              onClick={handleLogout}
-              className={`
-                w-full flex items-center gap-3 px-4 py-2.5 text-[#E53935] 
-                hover:bg-red-50 transition-colors duration-150 text-sm font-medium
-              `}
+              onClick={() => {
+                setIsOpen(false);
+                logout();
+                window.location.href = '/login';
+              }}
+              className="w-full text-left block px-4 py-2 text-sm text-rose-accent hover:bg-rose-50 transition-colors font-medium cursor-pointer"
             >
-              <LogOut size={18} />
-              <span>Logout</span>
+              Logout
             </button>
-          </nav>
+          </div>
         </div>
       )}
     </div>
   );
-};
-
-export default ProfileDropdown;
+}

@@ -6,7 +6,6 @@ const dailyLogRepository = require('../repositories/dailyLog.repository');
 const emissionCalculationService = require('../services/emissionCalculation.service');
 const streakService = require('../services/streak.service');
 const carbonMirrorService = require('../services/carbonMirror.service');
-const monthlySnapshotRepository = require('../repositories/monthlySnapshot.repository');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { getTodayStr } = require('../utils/dateHelpers');
@@ -93,17 +92,42 @@ class DailyLogController {
       }
     }
 
-    // Get updated log
-    const log = await dailyLogRepository.findByUserAndDate(userId, today);
+    // Calculate emissions using service
+    const emissionResult = await emissionCalculationService.calculateEmissions({
+      transportationMode,
+      transportationDistanceKm,
+      foodMealType,
+      wasteAndPlasticCount,
+      energyUsageHours
+    });
+
+    // Create log
+    const createdLog = await dailyLogRepository.create({
+      userId,
+      date: today,
+      transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
+      food: { mealType: foodMealType },
+      wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
+      energy: { usageHours: energyUsageHours },
+      extraAnswer: extraAnswer || null,
+      breakdown: emissionResult.breakdown,
+      totalEmissionKg: emissionResult.totalEmissionKg
+    });
+
+    // Update streak
+    await streakService.updateStreakAfterLogCreation(userId);
+
+    // Update monthly snapshot
+    await carbonMirrorService.updateSnapshotAfterLog(userId, today, emissionResult);
 
     // Generate Carbon Mirror
-    const mirror = await carbonMirrorService.generateMirror(log.totalEmissionKg);
+    const mirror = await carbonMirrorService.generateMirror(createdLog.totalEmissionKg);
 
     res.status(201).json({
       success: true,
       message: 'Daily log submitted successfully',
       data: {
-        log,
+        log: createdLog,
         mirror
       }
     });
