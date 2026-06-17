@@ -19,7 +19,7 @@ class AuthController {
       throw new AppError('Missing required fields: name, email, password, grade, locationType', 400);
     }
 
-    const user = await authService.registerStudent({
+    const result = await authService.registerStudent({
       name,
       email,
       password,
@@ -32,7 +32,7 @@ class AuthController {
     res.status(201).json({
       success: true,
       message: 'Student registered successfully',
-      data: user
+      data: result
     });
   });
 
