@@ -6,6 +6,8 @@
  */
 const config = require('../config/env');
 const emissionCalculationService = require('./emissionCalculation.service');
+const monthlySnapshotRepository = require('../repositories/monthlySnapshot.repository');
+const dailyLogRepository = require('../repositories/dailyLog.repository');
 const AppError = require('../utils/AppError');
 
 class CarbonMirrorService {
@@ -104,6 +106,136 @@ class CarbonMirrorService {
         message: 'Your emissions are the same as last month.'
       };
     }
+  }
+
+  /**
+   * Update monthly snapshot after a new daily log is created
+   */
+  async updateSnapshotAfterLog(userId, dateStr, emissionResult) {
+    try {
+      const monthStr = dateStr.slice(0, 7); // YYYY-MM
+      let snapshot = await monthlySnapshotRepository.findByUserAndMonth(userId, monthStr);
+      
+      let updatedTotal = emissionResult.totalEmissionKg;
+      let updatedLogsCount = 1;
+      let updatedBreakdown = {
+        transportKg: emissionResult.breakdown.transportKg,
+        foodKg: emissionResult.breakdown.foodKg,
+        wasteKg: emissionResult.breakdown.wasteKg,
+        energyKg: emissionResult.breakdown.energyKg
+      };
+
+      if (snapshot) {
+        updatedTotal = snapshot.totalEmissionKg + emissionResult.totalEmissionKg;
+        updatedLogsCount = snapshot.logsCount + 1;
+        updatedBreakdown = {
+          transportKg: snapshot.breakdown.transportKg + emissionResult.breakdown.transportKg,
+          foodKg: snapshot.breakdown.foodKg + emissionResult.breakdown.foodKg,
+          wasteKg: snapshot.breakdown.wasteKg + emissionResult.breakdown.wasteKg,
+          energyKg: snapshot.breakdown.energyKg + emissionResult.breakdown.energyKg
+        };
+      }
+
+      // Calculate tree equivalent: totalEmissionKg / (KG_CO2_PER_TREE_PER_YEAR / 12)
+      const kgTreeYear = config.KG_CO2_PER_TREE_PER_YEAR || 21;
+      const treeEquivalentKg = parseFloat((updatedTotal / (kgTreeYear / 12)).toFixed(1));
+
+      // Month-over-month comparison
+      let comparedToPreviousMonth = { deltaKg: 0, direction: 'noData' };
+      
+      // Calculate previous month string (YYYY-MM)
+      const parts = monthStr.split('-');
+      let year = parseInt(parts[0]);
+      let month = parseInt(parts[1]) - 1;
+      if (month === 0) {
+        month = 12;
+        year -= 1;
+      }
+      const prevMonthStr = `${year}-${month.toString().padStart(2, '0')}`;
+
+      const prevSnapshot = await monthlySnapshotRepository.findByUserAndMonth(userId, prevMonthStr);
+      if (prevSnapshot && prevSnapshot.totalEmissionKg > 0) {
+        const delta = prevSnapshot.totalEmissionKg - updatedTotal;
+        comparedToPreviousMonth = {
+          deltaKg: parseFloat(Math.abs(delta).toFixed(3)),
+          direction: delta >= 0 ? 'improved' : 'worsened'
+        };
+      }
+
+      const snapshotData = {
+        totalEmissionKg: parseFloat(updatedTotal.toFixed(3)),
+        logsCount: updatedLogsCount,
+        breakdown: {
+          transportKg: parseFloat(updatedBreakdown.transportKg.toFixed(3)),
+          foodKg: parseFloat(updatedBreakdown.foodKg.toFixed(3)),
+          wasteKg: parseFloat(updatedBreakdown.wasteKg.toFixed(3)),
+          energyKg: parseFloat(updatedBreakdown.energyKg.toFixed(3))
+        },
+        treeEquivalentKg,
+        comparedToPreviousMonth
+      };
+
+      if (snapshot) {
+        return await monthlySnapshotRepository.update(snapshot._id, snapshotData);
+      } else {
+        return await monthlySnapshotRepository.create({
+          userId,
+          month: monthStr,
+          ...snapshotData
+        });
+      }
+    } catch (error) {
+      throw new AppError(`Failed to update monthly snapshot: ${error.message}`, 500);
+    }
+  }
+
+  /**
+   * Run What-If simulation by applying multipliers to user's 30-day logs
+   */
+  async calculateWhatIfScenarioForUser(userId, multipliers) {
+    const { transportMultiplier = 1, foodMultiplier = 1, energyMultiplier = 1 } = multipliers;
+
+    // Fetch user's logs for last 30 days
+    const logs = await dailyLogRepository.getRecentLogs(userId, 30);
+    if (!logs || logs.length === 0) {
+      throw new AppError('Insufficient log history to run simulation. Please log activities first.', 400);
+    }
+
+    let originalTransport = 0;
+    let originalFood = 0;
+    let originalEnergy = 0;
+    let originalWaste = 0;
+
+    logs.forEach((log) => {
+      originalTransport += log.breakdown.transportKg || 0;
+      originalFood += log.breakdown.foodKg || 0;
+      originalEnergy += log.breakdown.energyKg || 0;
+      originalWaste += log.breakdown.wasteKg || 0;
+    });
+
+    const originalTotalKg = originalTransport + originalFood + originalEnergy + originalWaste;
+
+    // Apply multipliers
+    const hypotheticalTransport = originalTransport * transportMultiplier;
+    const hypotheticalFood = originalFood * foodMultiplier;
+    const hypotheticalEnergy = originalEnergy * energyMultiplier;
+    const hypotheticalWaste = originalWaste; // Waste remains constant
+
+    const hypotheticalTotalKg = hypotheticalTransport + hypotheticalFood + hypotheticalEnergy + hypotheticalWaste;
+
+    const reductionKg = originalTotalKg - hypotheticalTotalKg;
+    const reductionPercent = originalTotalKg > 0 ? parseFloat(((reductionKg / originalTotalKg) * 100).toFixed(1)) : 0;
+
+    // Generate trees equivalent for new total
+    const hypotheticalMirror = await this.generateMirror(hypotheticalTotalKg);
+
+    return {
+      originalKg: parseFloat(originalTotalKg.toFixed(3)),
+      hypotheticalKg: parseFloat(hypotheticalTotalKg.toFixed(3)),
+      reductionKg: parseFloat(reductionKg.toFixed(3)),
+      reductionPercent,
+      newMirror: hypotheticalMirror
+    };
   }
 }
 

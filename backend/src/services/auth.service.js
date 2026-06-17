@@ -43,10 +43,25 @@ class AuthService {
       }
     });
 
-    // Return user without password
+    // Return user without password and sign JWT
     const userObj = user.toObject();
     delete userObj.passwordHash;
-    return userObj;
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+        grade: user.grade,
+        locationType: user.locationType
+      },
+      config.JWT_SECRET,
+      { expiresIn: config.JWT_EXPIRE }
+    );
+
+    return {
+      user: userObj,
+      token
+    };
   }
 
   /**

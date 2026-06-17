@@ -4,12 +4,16 @@
  */
 const app = require('./app');
 const config = require('./config/env');
+const mitigationPlanService = require('./services/mitigationPlan.service');
 
 const PORT = config.PORT;
 
 const server = app.listen(PORT, () => {
   console.log(`neokarma Backend Server Running on Port: ${PORT.toString().padEnd(48)}               
   `);
+  
+  // Start the mitigation plan daily generation scheduler
+  mitigationPlanService.startCronScheduler();
 });
 
 // Graceful shutdown

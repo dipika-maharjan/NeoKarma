@@ -63,20 +63,18 @@ class CarbonMirrorController {
 
   /**
    * POST /api/carbon-mirror/what-if
-   * Calculate what-if scenario with hypothetical inputs
-   * Body: { originalTotalKg, hypotheticalInputs: {...} }
+   * Calculate what-if scenario with hypothetical multipliers
+   * Body: { transportMultiplier, foodMultiplier, energyMultiplier }
    */
   calculateWhatIf = asyncHandler(async (req, res) => {
-    const { originalTotalKg, hypotheticalInputs } = req.body;
+    const userId = req.user.userId;
+    const { transportMultiplier, foodMultiplier, energyMultiplier } = req.body;
 
-    if (originalTotalKg === undefined || !hypotheticalInputs) {
-      throw new AppError('Missing originalTotalKg or hypotheticalInputs', 400);
-    }
-
-    const scenario = await carbonMirrorService.generateWhatIfScenario(
-      { totalEmissionKg: originalTotalKg },
-      hypotheticalInputs
-    );
+    const scenario = await carbonMirrorService.calculateWhatIfScenarioForUser(userId, {
+      transportMultiplier,
+      foodMultiplier,
+      energyMultiplier
+    });
 
     res.status(200).json({
       success: true,

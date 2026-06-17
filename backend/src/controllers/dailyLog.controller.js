@@ -6,7 +6,6 @@ const dailyLogRepository = require('../repositories/dailyLog.repository');
 const emissionCalculationService = require('../services/emissionCalculation.service');
 const streakService = require('../services/streak.service');
 const carbonMirrorService = require('../services/carbonMirror.service');
-const monthlySnapshotRepository = require('../repositories/monthlySnapshot.repository');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { getTodayStr } = require('../utils/dateHelpers');
@@ -44,66 +43,45 @@ class DailyLogController {
     // Check if already logged today
     const existingLog = await dailyLogRepository.findByUserAndDate(userId, today);
     if (existingLog) {
-      // Allow update: delete old and create new
-      await dailyLogRepository.update(existingLog._id, {
-        transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
-        food: { mealType: foodMealType },
-        wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
-        energy: { usageHours: energyUsageHours },
-        extraAnswer: extraAnswer || null
-      });
-    } else {
-      // Calculate emissions using service
-      const emissionResult = await emissionCalculationService.calculateEmissions({
-        transportationMode,
-        transportationDistanceKm,
-        foodMealType,
-        wasteAndPlasticCount,
-        energyUsageHours
-      });
-
-      // Create log
-      await dailyLogRepository.create({
-        userId,
-        date: today,
-        transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
-        food: { mealType: foodMealType },
-        wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
-        energy: { usageHours: energyUsageHours },
-        extraAnswer: extraAnswer || null,
-        breakdown: emissionResult.breakdown,
-        totalEmissionKg: emissionResult.totalEmissionKg
-      });
-
-      // Update streak
-      await streakService.updateStreakAfterLogCreation(userId);
-
-      // Update monthly snapshot
-      const monthStr = today.slice(0, 7); // YYYY-MM
-      const snapshot = await monthlySnapshotRepository.findByUserAndMonth(userId, monthStr);
-      if (snapshot) {
-        await monthlySnapshotRepository.update(snapshot._id, {
-          totalEmissionKg: snapshot.totalEmissionKg + emissionResult.totalEmissionKg,
-          logsCount: snapshot.logsCount + 1,
-          'breakdown.transportKg': snapshot.breakdown.transportKg + emissionResult.breakdown.transportKg,
-          'breakdown.foodKg': snapshot.breakdown.foodKg + emissionResult.breakdown.foodKg,
-          'breakdown.wasteKg': snapshot.breakdown.wasteKg + emissionResult.breakdown.wasteKg,
-          'breakdown.energyKg': snapshot.breakdown.energyKg + emissionResult.breakdown.energyKg
-        });
-      }
+      throw new AppError('Daily log has already been submitted for today', 400);
     }
 
-    // Get updated log
-    const log = await dailyLogRepository.findByUserAndDate(userId, today);
+    // Calculate emissions using service
+    const emissionResult = await emissionCalculationService.calculateEmissions({
+      transportationMode,
+      transportationDistanceKm,
+      foodMealType,
+      wasteAndPlasticCount,
+      energyUsageHours
+    });
+
+    // Create log
+    const createdLog = await dailyLogRepository.create({
+      userId,
+      date: today,
+      transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
+      food: { mealType: foodMealType },
+      wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
+      energy: { usageHours: energyUsageHours },
+      extraAnswer: extraAnswer || null,
+      breakdown: emissionResult.breakdown,
+      totalEmissionKg: emissionResult.totalEmissionKg
+    });
+
+    // Update streak
+    await streakService.updateStreakAfterLogCreation(userId);
+
+    // Update monthly snapshot
+    await carbonMirrorService.updateSnapshotAfterLog(userId, today, emissionResult);
 
     // Generate Carbon Mirror
-    const mirror = await carbonMirrorService.generateMirror(log.totalEmissionKg);
+    const mirror = await carbonMirrorService.generateMirror(createdLog.totalEmissionKg);
 
     res.status(201).json({
       success: true,
       message: 'Daily log submitted successfully',
       data: {
-        log,
+        log: createdLog,
         mirror
       }
     });
