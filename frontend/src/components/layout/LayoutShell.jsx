@@ -14,6 +14,7 @@ const LayoutShell = ({ children }) => {
   const { isAuthenticated } = useAuth();
 
   const isLandingRoute = pathname === '/';
+  const isAuthRoute = pathname === '/login' || pathname === '/register';
   const isPublicRoute = PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
   );
@@ -26,7 +27,7 @@ const LayoutShell = ({ children }) => {
     }
   }, [isProtectedRoute, isAuthenticated, router]);
 
-  if (isLandingRoute || isAdminRoute) {
+  if (isLandingRoute || isAdminRoute || isAuthRoute) {
     return <>{children}</>;
   }
 
