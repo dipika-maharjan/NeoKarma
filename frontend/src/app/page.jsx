@@ -95,7 +95,7 @@ export default function Home() {
       icon: <FlaskConical size={28} />,
       title: 'Science Based',
       description:
-        "Calculations aligned with DEFRA and international climate standards, localized for Nepal's specific grid and transport mix.",
+        "Calculations aligned with international climate standards, localized for Nepal's specific grid and transport mix.",
     },
     {
       icon: <Users size={28} />,

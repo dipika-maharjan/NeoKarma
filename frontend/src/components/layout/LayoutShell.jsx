@@ -1,21 +1,37 @@
 'use client';
 
-import React from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/context/AuthContext';
 
-const LANDING_ROUTES = ['/', '/login', '/register'];
+const PUBLIC_PREFIXES = ['/', '/login', '/register', '/share'];
 
 const LayoutShell = ({ children }) => {
   const pathname = usePathname();
-  
-  // Landing page, login, register, and admin pages manage their own layout
-  const isLandingRoute = LANDING_ROUTES.includes(pathname);
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const isLandingRoute = pathname === '/';
+  const isPublicRoute = PUBLIC_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
+  );
   const isAdminRoute = pathname.startsWith('/admin');
+  const isProtectedRoute = !isPublicRoute && !isAdminRoute;
+
+  useEffect(() => {
+    if (isProtectedRoute && !isAuthenticated) {
+      router.replace('/');
+    }
+  }, [isProtectedRoute, isAuthenticated, router]);
 
   if (isLandingRoute || isAdminRoute) {
     return <>{children}</>;
+  }
+
+  if (isProtectedRoute && !isAuthenticated) {
+    return null;
   }
 
   return (

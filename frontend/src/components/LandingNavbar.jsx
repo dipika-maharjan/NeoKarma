@@ -22,9 +22,8 @@ const LandingNavbar = () => {
   }, []);
 
   const navLinks = [
-    { label: t('howItWorks'), href: '#how' },
-    { label: t('about'), href: '#about' },
-    // calculator href will be resolved based on current page
+    { label: t('howItWorks'), href: '/#journey' },
+    { label: t('about'), href: '/#features' },
     { label: t('calculator'), href: '/calculator' },
   ];
 
