@@ -1,14 +1,17 @@
 import React from 'react';
 
-const DashboardSummary = ({ onNavigateToCalculator, onNavigateToMirror }) => {
-  // Mock statistics matching your precise "Dashboard Summary" layout variables
+const DashboardSummary = ({
+  onNavigateToCalculator,
+  onNavigateToMirror,
+  summary = {}
+}) => {
   const studentData = {
-    name: "User",
-    dailyEmissionsKG: 2.4,
-    impactScore: 82,
-    scoreStatus: "Good/Bonus",
-    totalTreesEquivalentKG: 14.2,
-    treesTrendPercentage: "+4%"
+    name: summary.name || 'User',
+    dailyEmissionsKG: summary.dailyEmissionsKG ?? '--',
+    impactScore: summary.impactScore ?? '--',
+    scoreStatus: summary.scoreStatus || 'Loading...',
+    totalTreesEquivalentKG: summary.totalTreesEquivalentKG ?? '--',
+    treesTrendPercentage: summary.treesTrendPercentage || '--'
   };
 
   return (

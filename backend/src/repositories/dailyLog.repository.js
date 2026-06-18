@@ -81,6 +81,13 @@ class DailyLogRepository {
   async hasLoggedToday(userId, today) {
     return await DailyLog.findOne({ userId, date: today });
   }
+
+  /**
+   * Count total logs for a user
+   */
+  async countByUser(userId) {
+    return await DailyLog.countDocuments({ userId });
+  }
 }
 
 module.exports = new DailyLogRepository();

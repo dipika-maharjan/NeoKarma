@@ -13,6 +13,8 @@ import {
   TreePine
 } from 'lucide-react';
 import { Button, Skeleton } from '@/components/ui';
+import { getDashboardSummary } from '@/lib/actions/dashboardActions';
+import { getAppConfig } from '@/lib/actions/configActions';
 import { useAuth } from '@/context/AuthContext';
 import { getTodayLog } from '@/lib/actions/calculatorActions';
 
@@ -40,6 +42,10 @@ const ResultPage = () => {
   const [loading, setLoading] = useState(true);
   const [todayLog, setTodayLog] = useState(null);
   const [error, setError] = useState(null);
+  const [averageEmission, setAverageEmission] = useState(null);
+  const [appConfig, setAppConfig] = useState(null);
+  const [configError, setConfigError] = useState(null);
+  const [distanceEquivalent, setDistanceEquivalent] = useState(null);
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -49,12 +55,30 @@ const ResultPage = () => {
       }
 
       try {
-        const log = await getTodayLog();
+        const [log, config] = await Promise.all([
+          getTodayLog(),
+          getAppConfig().catch((err) => {
+            setConfigError('Failed to load app configuration');
+            return null;
+          })
+        ]);
+
         if (!log) {
           router.push('/calculator');
           return;
         }
+
         setTodayLog(log);
+        if (config) {
+          setAppConfig(config);
+        }
+
+        try {
+          const dash = await getDashboardSummary();
+          setAverageEmission(dash?.weekly?.averagePerDay ?? null);
+        } catch (e) {
+          setAverageEmission(null);
+        }
       } catch (err) {
         console.error('Error fetching today log:', err);
         setError('Failed to load results');
@@ -67,6 +91,30 @@ const ResultPage = () => {
       fetchResult();
     }
   }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!todayLog) return;
+    
+    let mounted = true;
+    async function compute() {
+      try {
+        const ef = await import('@/lib/api/emissionFactors');
+        const map = await ef.getEmissionFactors();
+        const emissionKgValue = getEmissionValue(todayLog);
+        const factor = map['transportation_car'] ?? map['transportation_bus'] ?? map['transportation_motorbike'];
+        if (factor && emissionKgValue) {
+          const val = Math.max(0.1, emissionKgValue / factor).toFixed(0);
+          if (mounted) setDistanceEquivalent(val);
+        } else if (mounted) {
+          setDistanceEquivalent('--');
+        }
+      } catch (err) {
+        if (mounted) setDistanceEquivalent('--');
+      }
+    }
+    compute();
+    return () => { mounted = false; };
+  }, [todayLog]);
 
   if (!isAuthenticated) {
     return null;
@@ -106,11 +154,12 @@ const ResultPage = () => {
 
   const emissionKg = getEmissionValue(todayLog);
   const breakdown = getBreakdown(todayLog);
-  const averageEmission = 5.2;
-  const percentageBelow = Math.max(0, Math.round(((averageEmission - emissionKg) / averageEmission) * 100));
-  const treesEquivalent = Math.max(0.1, emissionKg / 21.77).toFixed(2);
-  const distanceEquivalent = Math.max(0.1, emissionKg / 0.4).toFixed(0);
-  const emissionProgress = Math.min(100, (emissionKg / averageEmission) * 100);
+  const percentageBelow = averageEmission ? Math.max(0, Math.round(((averageEmission - emissionKg) / averageEmission) * 100)) : null;
+  const dailyTreeAbsorptionKg = appConfig?.dailyTreeAbsorptionKg ?? null;
+  const treesEquivalent = emissionKg && dailyTreeAbsorptionKg
+    ? Math.max(0.1, emissionKg / dailyTreeAbsorptionKg).toFixed(2)
+    : '0.00';
+  const emissionProgress = averageEmission ? Math.min(100, (emissionKg / averageEmission) * 100) : 0;
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-[#FAFAFA] px-4 py-8 font-sans md:px-8 lg:px-12 xl:px-16">
@@ -139,10 +188,10 @@ const ResultPage = () => {
                     kg CO₂
                   </span>
                 </div>
-                <div className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full bg-[#E8F5E9] px-4 py-2 text-[13px] font-bold tracking-[0.03em] text-[#1B5E20]">
-                  <Leaf size={16} fill="currentColor" />
-                  Great result! {percentageBelow}% lower than your average.
-                </div>
+                  <div className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full bg-[#E8F5E9] px-4 py-2 text-[13px] font-bold tracking-[0.03em] text-[#1B5E20]">
+                    <Leaf size={16} fill="currentColor" />
+                    {percentageBelow !== null ? `Great result! ${percentageBelow}% lower than your average.` : 'Daily result available.'}
+                  </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -160,7 +209,7 @@ const ResultPage = () => {
                   <Car className="mb-2 text-[#0A3D25]" size={22} fill="currentColor" />
                   <p className="text-[13px] text-[#4A5550]">Equivalent to</p>
                   <p className="text-[19px] font-bold leading-tight text-[#0A3D25]">
-                    {distanceEquivalent} miles
+                    {distanceEquivalent ?? '--'} miles
                   </p>
                   <p className="mt-1 max-w-[180px] text-[12px] leading-snug text-gray-500">
                     driven in a standard car
@@ -189,7 +238,7 @@ const ResultPage = () => {
                 <div>
                   <div className="mb-3 flex items-center justify-between gap-4">
                     <span className="text-[15px] text-[#CBE3D8]">Your Average</span>
-                    <span className="text-[19px] font-bold">{averageEmission.toFixed(1)} kg</span>
+                    <span className="text-[19px] font-bold">{averageEmission ? averageEmission.toFixed(1) : '--'} kg</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                     <div className="h-full w-[85%] rounded-full bg-[#72B99C]" />

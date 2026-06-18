@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getStreak } from '@/lib/actions/streakActions';
 import { getDailyLogHistory } from '@/lib/actions/calculatorActions';
+import { getScoreConfig } from '@/lib/actions/scoreConfigActions';
 
 const formatDateString = (dateStr) => {
   if (!dateStr) return '';
@@ -25,6 +26,7 @@ const ScoreHistoryView = () => {
   const [streakData, setStreakData] = useState({ current: 0, longest: 0, participationScore: 0 });
   const [historyLogs, setHistoryLogs] = useState([]);
   const [planItems, setPlanItems] = useState([]);
+  const [scoreConfig, setScoreConfig] = useState(null);
   
   const itemsPerPage = 5;
 
@@ -34,9 +36,10 @@ const ScoreHistoryView = () => {
       
       setLoading(true);
       try {
-        const [streakInfo, historyResponse] = await Promise.all([
+        const [streakInfo, historyResponse, config] = await Promise.all([
           getStreak(),
-          getDailyLogHistory()
+          getDailyLogHistory(),
+          getScoreConfig()
         ]);
         
         if (streakInfo) {
@@ -47,6 +50,10 @@ const ScoreHistoryView = () => {
           // Sort logs newest first
           const sorted = [...historyResponse.data].sort((a, b) => new Date(b.date) - new Date(a.date));
           setHistoryLogs(sorted);
+        }
+
+        if (config) {
+          setScoreConfig(config);
         }
       } catch (err) {
         console.error('Error fetching score/history data:', err);
@@ -69,26 +76,38 @@ const ScoreHistoryView = () => {
     }
   }, [user]);
 
-  // Calculate points dynamically
+  // Calculate points dynamically using backend config
   const currentStreak = streakData.current || 0;
-  const streakPts = Math.min(currentStreak * 5, 25);
+  const streakMultiplier = scoreConfig?.streakMultiplier ?? 5;
+  const streakMaxPts = scoreConfig?.streakMaxPoints ?? 25;
+  const streakPts = Math.min(currentStreak * streakMultiplier, streakMaxPts);
   
   const totalActions = planItems.length;
   const completedActions = planItems.filter(item => item.completed);
   const completedCount = completedActions.length;
+  const actionsWeight = scoreConfig?.actionsWeight ?? 35;
+  const actionsDefaultPts = scoreConfig?.actionsDefaultPoints ?? 15;
   const actionsPts = totalActions > 0 
-    ? Math.round((completedCount / totalActions) * 35) 
-    : 15; // default points if no actions committed yet
+    ? Math.round((completedCount / totalActions) * actionsWeight) 
+    : actionsDefaultPts;
 
   const logsCount = historyLogs.length;
-  const consistencyPts = Math.min(logsCount * 2.5, 25);
+  const consistencyMultiplier = scoreConfig?.consistencyMultiplier ?? 2.5;
+  const consistencyMaxPts = scoreConfig?.consistencyMaxPoints ?? 25;
+  const consistencyPts = Math.min(logsCount * consistencyMultiplier, consistencyMaxPts);
   
-  const completenessPts = currentStreak >= 3 ? 15 : Math.min(currentStreak * 5, 15);
+  const completenessThreshold = scoreConfig?.completenessThreshold ?? 3;
+  const completenessHighPts = scoreConfig?.completenessHighPoints ?? 15;
+  const completenessLowMultiplier = scoreConfig?.completenessLowMultiplier ?? 5;
+  const completenessLowMaxPts = scoreConfig?.completenessLowMaxPoints ?? 15;
+  const completenessPts = currentStreak >= completenessThreshold ? completenessHighPts : Math.min(currentStreak * completenessLowMultiplier, completenessLowMaxPts);
   
-  const overallScore = Math.min(streakPts + actionsPts + consistencyPts + completenessPts, 100);
+  const overallMaxScore = scoreConfig?.overallMaxScore ?? 100;
+  const overallScore = Math.min(streakPts + actionsPts + consistencyPts + completenessPts, overallMaxScore);
 
   // Calculate dynamic impact drop from history
-  let impactDrop = 17; // default fallback matching mock
+  const impactDropDefault = scoreConfig?.impactDropDefault ?? 17;
+  let impactDrop = impactDropDefault;
   if (logsCount >= 2) {
     const sortedLogs = [...historyLogs].sort((a, b) => new Date(a.date) - new Date(b.date));
     const mid = Math.floor(sortedLogs.length / 2);
@@ -191,6 +210,7 @@ const ScoreHistoryView = () => {
       // Table Rows
       doc.setFont('helvetica', 'normal');
       const rowsToPrint = historyLogs.slice(0, 15); // Print up to 15 logs in PDF
+      const pdfPointsPerLog = scoreConfig?.pdfPointsPerLog ?? 10;
       
       if (rowsToPrint.length === 0) {
         currentY += 10;
@@ -200,7 +220,7 @@ const ScoreHistoryView = () => {
           currentY += 8;
           doc.text(formatDateString(row.date), 20, currentY);
           doc.text(`${row.totalEmissionKg.toFixed(2)} kg CO2`, 80, currentY);
-          doc.text('+10 pts', 150, currentY);
+          doc.text(`+${pdfPointsPerLog} pts`, 150, currentY);
           doc.line(15, currentY + 3, 195, currentY + 3);
           currentY += 3;
         });
