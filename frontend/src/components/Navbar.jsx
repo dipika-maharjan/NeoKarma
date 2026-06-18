@@ -6,10 +6,13 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ProfileDropdown from './ProfileDropdown';
 import streakIcon from '../../public/streak.png'; 
+import LanguageToggle from './LanguageToggle';
+import { useTranslations } from 'next-intl';
 
 const Navbar = () => {
   const pathname = usePathname();
   const { user, isAuthenticated } = useAuth();
+  const t = useTranslations('Navbar');
 
   // Determine active tab based on current pathname
   const getActiveTab = () => {
@@ -36,16 +39,17 @@ const Navbar = () => {
 
         {/* Center: Main App Menu Links Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          {["Dashboard", "Calculator", "Mirror", "Plan", "Score"].map((tab) => {
-            const tabLower = tab.toLowerCase();
-            const isActive = activeTab === tabLower;
-            let path = `/${tabLower}`;
-            if (tabLower === 'mirror') {
-              path = '/carbon-mirror';
-            }
+          {[
+            { key: 'dashboard', label: t('dashboard'), path: '/dashboard' },
+            { key: 'calculator', label: t('calculator'), path: '/calculator' },
+            { key: 'mirror', label: t('mirror'), path: '/carbon-mirror' },
+            { key: 'plan', label: t('plan'), path: '/plan' },
+            { key: 'score', label: t('score'), path: '/score' }
+          ].map(({ key, label, path }) => {
+            const isActive = activeTab === key;
             return (
               <Link
-                key={tab}
+                key={key}
                 href={path}
                 className={`text-[14px] font-medium transition-all relative py-1 px-0.5 cursor-pointer no-underline ${
                   isActive 
@@ -53,8 +57,7 @@ const Navbar = () => {
                     : 'text-gray-500 hover:text-[#0A3D25]'
                 }`}
               >
-                {tab}
-                {/* Clean matching underline indicator accent for active state */}
+                {label}
                 {isActive && (
                   <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#0A3D25] rounded-full" />
                 )}
@@ -65,6 +68,7 @@ const Navbar = () => {
 
         {/* Right: Streak Metrics Status & Profile Action Wrapper */}
         <div className="flex items-center gap-4">
+          <LanguageToggle />
           
           {isAuthenticated && user ? (
             <>
@@ -89,7 +93,7 @@ const Navbar = () => {
               href="/login"
               className="text-sm font-semibold text-[#0A3D25] hover:text-[#43A047] transition-colors no-underline"
             >
-              Sign In
+              {t('signIn')}
             </Link>
           )}
 

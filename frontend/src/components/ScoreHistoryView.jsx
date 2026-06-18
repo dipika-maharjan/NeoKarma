@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context/AuthContext';
 import { getStreak } from '@/lib/actions/streakActions';
 import { getDailyLogHistory } from '@/lib/actions/calculatorActions';
@@ -17,6 +18,7 @@ const formatDateString = (dateStr) => {
 };
 
 const ScoreHistoryView = () => {
+  const t = useTranslations('Score');
   const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
@@ -243,8 +245,8 @@ const ScoreHistoryView = () => {
   if (loading) {
     return (
       <div className="w-full min-h-[calc(100vh-76px)] bg-[#FAFAFA] text-[#1E3322] px-4 py-8 md:px-8 lg:px-12 xl:px-16 font-sans flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#0A3D25] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-gray-500 font-medium">Loading your consistency logs...</p>
+          <div className="w-12 h-12 border-4 border-[#0A3D25] border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-500 font-medium">{t('subtitle')}</p>
       </div>
     );
   }
@@ -257,13 +259,13 @@ const ScoreHistoryView = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
           <div>
             <h1 className="text-[32px] font-extrabold tracking-tight text-[#0A3D25] md:text-[34px]">
-              Your Impact Score
+              {t('title')}
             </h1>
             <p className="text-sm text-gray-500 mt-1.5 max-w-xl">
-              We score consistency, not perfection. Keep making small changes to see your impact grow over time.
+              {t('subtitle')}
             </p>
             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A3D25] bg-[#E2F0D9] border border-[#C5E0B4] px-3.5 py-1 rounded-full mt-4">
-              🌱 Eco-Warrior
+              🌱 {t('badge')}
             </span>
           </div>
  
@@ -395,19 +397,19 @@ const ScoreHistoryView = () => {
         <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
             <div>
-              <h2 className="text-xl font-bold text-[#0A3D25]">Daily Carbon History</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Log daily and take actions to improve your score.</p>
+              <h2 className="text-xl font-bold text-[#0A3D25]">{t('dailyHistoryTitle')}</h2>
+              <p className="text-xs text-gray-400 mt-0.5">{t('dailyHistorySubtitle')}</p>
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <button className="flex-1 sm:flex-initial flex items-center justify-center gap-2 border border-gray-300 hover:border-gray-400 text-gray-600 font-bold text-xs py-2 px-4 rounded-xl transition-all cursor-pointer bg-white">
-                <span>⚡</span> Filter
+                <span>⚡</span> {t('filter')}
               </button>
               <button 
                 onClick={exportPDF}
                 disabled={isExporting}
                 className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-[#0A3D25] hover:bg-[#0D5232] disabled:bg-gray-400 text-white font-bold text-xs py-2 px-4 rounded-xl transition-all cursor-pointer"
               >
-                <span>📥</span> {isExporting ? 'Exporting...' : 'Export PDF'}
+                <span>📥</span> {isExporting ? t('exporting') : t('exportPDF')}
               </button>
             </div>
           </div>
@@ -417,7 +419,7 @@ const ScoreHistoryView = () => {
             {currentRows.length === 0 ? (
               <div className="text-center py-12 text-gray-400">
                 <span className="text-4xl block mb-2">📋</span>
-                No daily logs recorded yet. Visit the Calculator to log today's carbon!
+                {t('noDailyLogs')}
               </div>
             ) : (
               <table className="w-full text-left border-collapse">

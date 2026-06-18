@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, Copy, Check, Share2, Leaf } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const SharePage = ({ params }) => {
   const [loading, setLoading] = useState(true);
   const [shareData, setShareData] = useState(null);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
+  const t = useTranslations('Share');
 
   useEffect(() => {
     const fetchShare = async () => {
@@ -47,7 +49,7 @@ const SharePage = ({ params }) => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E8F5E9] to-[#FAFAFA]">
         <div className="text-center font-sans">
           <div className="w-12 h-12 border-4 border-[#1B5E20] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading achievement...</p>
+          <p className="text-gray-600 font-medium">{t('loading')}</p>
         </div>
       </div>
     );
@@ -59,14 +61,14 @@ const SharePage = ({ params }) => {
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 max-w-md w-full">
           <div className="flex gap-3 mb-3">
             <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
-            <p className="text-red-700 font-semibold">Oops!</p>
+            <p className="text-red-700 font-semibold">{t('oops')}</p>
           </div>
           <p className="text-red-600 text-sm">{error}</p>
           <a
             href="/"
             className="mt-4 inline-block text-sm font-semibold text-red-700 hover:underline"
           >
-            ← Back to home
+            ← {t('backHome')}
           </a>
         </div>
       </div>
@@ -93,7 +95,7 @@ const SharePage = ({ params }) => {
             {shareData.displayName}
           </h1>
           <p className="text-[14px] text-[#4A5550]">
-            Climate Action Champion
+            {t('climateChampion')}
           </p>
         </div>
 
@@ -102,9 +104,9 @@ const SharePage = ({ params }) => {
           {/* Green Header */}
           <div className="bg-gradient-to-r from-[#0A3D25] to-[#1B5E20] p-6 text-white text-center">
             <div className="mb-3">
-              <p className="text-[13px] font-semibold opacity-90">Current Streak</p>
+              <p className="text-[13px] font-semibold opacity-90">{t('currentStreak')}</p>
               <p className="text-4xl font-extrabold">{shareData.currentStreak}</p>
-              <p className="text-[12px] mt-1 opacity-90">days in a row</p>
+              <p className="text-[12px] mt-1 opacity-90">{t('daysInRow')}</p>
             </div>
           </div>
 
@@ -113,7 +115,7 @@ const SharePage = ({ params }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-lg bg-[#E8F5E9] p-4 text-center">
                 <p className="text-[12px] text-[#4A5550] font-semibold mb-1">
-                  Longest Streak
+                  {t('longestStreak')}
                 </p>
                 <p className="text-2xl font-extrabold text-[#0A3D25]">
                   {shareData.longestStreak}
@@ -121,7 +123,7 @@ const SharePage = ({ params }) => {
               </div>
               <div className="rounded-lg bg-[#E8F5E9] p-4 text-center">
                 <p className="text-[12px] text-[#4A5550] font-semibold mb-1">
-                  Logs Submitted
+                  {t('logsSubmitted')}
                 </p>
                 <p className="text-2xl font-extrabold text-[#0A3D25]">
                   {shareData.totalLogsSubmitted}
@@ -135,18 +137,18 @@ const SharePage = ({ params }) => {
                 🌱 Environmental Impact
               </p>
               <div className="space-y-1">
-                <p className="text-[14px] text-[#F57F17]">
-                  <span className="font-bold">{shareData.treesEquivalent}</span> trees worth of CO₂ tracked
-                </p>
-                <p className="text-[13px] text-[#F57F17] opacity-80">
-                  ≈ {shareData.estimatedTotalCo2Kg} kg CO₂ avoided
-                </p>
+                  <p className="text-[13px] text-[#F57F17]">
+                    <span className="font-bold">{shareData.treesEquivalent}</span> {t('treesTracked')}
+                  </p>
+                  <p className="text-[13px] text-[#F57F17] opacity-80">
+                    ≈ {shareData.estimatedTotalCo2Kg} {t('kgCO2Avoided')}
+                  </p>
               </div>
             </div>
 
             {/* Member Info */}
             <div className="border-t border-[#E0E5E2] pt-4 mt-4 text-center">
-              <p className="text-[12px] text-[#4A5550] mb-1">Member since</p>
+              <p className="text-[12px] text-[#4A5550] mb-1">{t('memberSince')}</p>
               <p className="text-[14px] font-semibold text-[#0A3D25]">
                 {shareData.joinedMonth}
               </p>
@@ -184,14 +186,14 @@ const SharePage = ({ params }) => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-[12px] text-[#4A5550] mb-3">
-            Join {shareData.displayName} in tracking climate action
+            {t('joinIn', { name: shareData.displayName })}
           </p>
           <a
             href="/"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border-2 border-[#0A3D25] text-[0A3D25] font-bold text-[14px] hover:bg-[#C7EEDC] transition-colors"
           >
             <Share2 size={16} />
-            Start Your Journey
+            {t('startJourney')}
           </a>
         </div>
 

@@ -9,10 +9,13 @@ import { getScoreConfig } from '@/lib/actions/scoreConfigActions';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowDown, ArrowUpRight, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const DashboardPage = () => {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
+  const t = useTranslations('Dashboard');
+  const tStatus = useTranslations('Status');
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [streakData, setStreakData] = useState(null);
@@ -89,8 +92,8 @@ const DashboardPage = () => {
   const goldThreshold = scoreConfig?.goldThreshold ?? 800;
   const silverThreshold = scoreConfig?.silverThreshold ?? 600;
   const scoreStatus = impactScore !== null
-    ? impactScore >= goldThreshold ? 'Gold Status' : impactScore >= silverThreshold ? 'Silver Status' : 'Bronze Status'
-    : 'No score yet';
+    ? impactScore >= goldThreshold ? tStatus('gold') : impactScore >= silverThreshold ? tStatus('silver') : tStatus('bronze')
+    : tStatus('none');
   const weeklyBars = Array.isArray(dashboardData?.weekly?.dailyValues)
     ? dashboardData.weekly.dailyValues.map(v => Number(v))
     : [];
@@ -100,14 +103,14 @@ const DashboardPage = () => {
       <div className="mx-auto w-full max-w-[1500px]">
         <div className="mb-12 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-[32px] font-extrabold tracking-tight text-[#17202A] md:text-[34px]">
-            Good morning, {studentName}!
+            {t('greeting', { name: studentName })}
           </h1>
           <Link
             href="/calculator"
             className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-8 text-[15px] font-bold text-white shadow-[0_3px_8px_rgba(10,61,37,0.2)] transition-colors hover:bg-[#072B1A]"
           >
             <Plus size={20} />
-            Log Today&apos;s Carbon
+            {t('logToday')}
           </Link>
         </div>
 
@@ -127,7 +130,7 @@ const DashboardPage = () => {
             ) : (
               <>
                 <p className="text-[14px] font-bold uppercase tracking-[0.2em] text-[#A2CBA0]">
-                  Today&apos;s Emission
+                  {t('todayEmission')}
                 </p>
                 <div className="mt-4 flex items-end gap-2">
                   <span className="text-[50px] font-extrabold leading-none">
@@ -136,7 +139,7 @@ const DashboardPage = () => {
                   <span className="pb-1 text-[22px] font-bold text-[#BCE5D1]">kg CO2</span>
                 </div>
                 <p className="mt-5 text-[17px] text-[#BCE5D1]">
-                  You&apos;re doing better today. Keep up the green choices!
+                  {t('youDoingBetter')}
                 </p>
               </>
             )}
@@ -145,7 +148,7 @@ const DashboardPage = () => {
           <aside className="space-y-7">
             <section className="rounded-[10px] border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
               <div className="mb-4 flex items-start justify-between">
-                <p className="text-[15px] font-bold tracking-wide text-[#4A5550]">This Week</p>
+                <p className="text-[15px] font-bold tracking-wide text-[#4A5550]">{t('thisWeek')}</p>
                 <span className="inline-flex items-center gap-0.5 text-[14px] font-bold text-[#0A3D25]">
                   <ArrowUpRight size={15} />
                   {monthlyReduction !== null ? `${monthlyReduction}%` : '--'}
@@ -169,7 +172,7 @@ const DashboardPage = () => {
                       ))
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-[13px] text-[#4A5550]">
-                        Weekly data unavailable
+                        {t('weeklyDataUnavailable')}
                       </div>
                     )}
                   </div>
@@ -178,7 +181,7 @@ const DashboardPage = () => {
             </section>
 
             <section className="rounded-[10px] border border-[#BEE8D3] bg-[#C7EEDC] p-6 shadow-sm">
-              <p className="text-[15px] font-bold tracking-wide text-[#4A6B5D]">Monthly Reduction</p>
+              <p className="text-[15px] font-bold tracking-wide text-[#4A6B5D]">{t('monthlyReduction')}</p>
               <div className="mt-2 flex items-center gap-8">
                 <div>
                   <ArrowDown size={23} className="mb-1 text-[#4A6B5D]" />
@@ -187,7 +190,7 @@ const DashboardPage = () => {
                   </p>
                 </div>
                 <p className="max-w-[220px] text-[14px] leading-relaxed text-[#6A7C73]">
-                  Great progress compared to last month!
+                  {t('greatProgress')}
                 </p>
               </div>
             </section>
@@ -197,7 +200,7 @@ const DashboardPage = () => {
         <div className="mt-9 grid grid-cols-1 gap-6 lg:grid-cols-[0.95fr_1.95fr]">
           <section className="min-h-[360px] rounded-xl border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-7">
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <p className="mb-4 text-[15px] font-bold tracking-wide text-[#4A5550]">Impact Score</p>
+              <p className="mb-4 text-[15px] font-bold tracking-wide text-[#4A5550]">{t('impactScore')}</p>
               <div className="relative flex h-[126px] w-[126px] items-center justify-center rounded-full border-[9px] border-[#0A3D25]">
                 <span className="text-[32px] font-extrabold text-[#17202A]">
                   {impactScore !== null ? impactScore : '--'}
@@ -220,12 +223,12 @@ const DashboardPage = () => {
               }}
             >
               <div className="flex min-h-[360px] max-w-[420px] flex-col justify-center px-6 py-8 md:px-7">
-                <h2 className="text-[25px] font-extrabold text-[#17202A]">The Carbon Mirror</h2>
+                <h2 className="text-[25px] font-extrabold text-[#17202A]">{useTranslations('CarbonMirror')('title')}</h2>
                 <p className="mt-3 text-[17px] leading-relaxed text-[#4A5550]">
-                  Visualize how your daily commute and diet choices affect the local  forests in real-time.
+                  {useTranslations('CarbonMirror')('overview')}
                 </p>
                 <span className="mt-8 inline-flex h-12 w-fit items-center justify-center rounded-full border-2 border-[#0A3D25] px-7 text-[15px] font-bold text-[#0A3D25] transition-colors hover:bg-[#E8F5E9]">
-                  Open Carbon Mirror
+                  {t('openCarbonMirror')}
                 </span>
               </div>
             </section>

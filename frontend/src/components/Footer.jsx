@@ -3,8 +3,10 @@ import React from 'react';
 import earthIcon from '../../public/earth.png';
 import leafIcon from '../../public/leaf.png';
 import groupIcon from '../../public/group.png';
+import { useTranslations } from 'next-intl';
 
 const Footer = () => {
+  const t = useTranslations('Footer');
   return (
     <footer className="w-full bg-[#F6F8F6] text-[#1E3322] pt-14 pb-8 px-4 md:px-8 font-sans">
       <div className="max-w-screen-2xl mx-auto">
@@ -59,7 +61,7 @@ const Footer = () => {
           {/* EXPLORE Link Set */}
           <div className="flex flex-col gap-3">
             <span className="text-[11px] font-bold text-[#0A3D25] tracking-widest uppercase">
-              Explore
+              {t('explore')}
             </span>
             <a href="#about" className="text-[13px] text-gray-500 hover:text-[#0A3D25] font-normal transition-colors">About Us</a>
             <a href="#sustainability" className="text-[13px] text-gray-500 hover:text-[#0A3D25] font-normal transition-colors">Sustainability Report</a>
@@ -69,7 +71,7 @@ const Footer = () => {
           {/* RESOURCES Link Set */}
           <div className="flex flex-col gap-3">
             <span className="text-[11px] font-bold text-[#0A3D25] tracking-widest uppercase">
-              Resources
+              {t('resources')}
             </span>
             <a href="#support" className="text-[13px] text-gray-500 hover:text-[#0A3D25] font-normal transition-colors">Support</a>
             <a href="#contact" className="text-[13px] text-gray-500 hover:text-[#0A3D25] font-normal transition-colors">Contact</a>
@@ -79,7 +81,7 @@ const Footer = () => {
           {/* LEGAL Link Set */}
           <div className="flex flex-col gap-3">
             <span className="text-[11px] font-bold text-[#0A3D25] tracking-widest uppercase">
-              Legal
+              {t('legal')}
             </span>
             <a href="#privacy" className="text-[13px] text-gray-500 hover:text-[#0A3D25] font-normal transition-colors">Privacy Policy</a>
             <a href="#terms" className="text-[13px] text-gray-500 hover:text-[#0A3D25] font-normal transition-colors">Terms of Service</a>
@@ -89,7 +91,7 @@ const Footer = () => {
           {/* STAY CONNECTED Custom Input Form Frame */}
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-bold text-[#0A3D25] tracking-widest uppercase mb-1">
-              Stay Connected
+              {t('stayConnected')}
             </span>
             <div className="flex items-center bg-[#EAECE9] border border-gray-200 rounded-xl p-1 w-full max-w-xs focus-within:border-[#0A3D25]/40 transition-all">
               <input 

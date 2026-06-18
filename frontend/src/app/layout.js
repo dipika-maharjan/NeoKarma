@@ -2,6 +2,8 @@ import { Newsreader, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import LayoutShell from "@/components/layout/LayoutShell";
+import { NextIntlClientProvider } from 'next-intl';
+import { getI18nConfig } from '@/i18n/request';
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
@@ -19,18 +21,22 @@ export const metadata = {
   description: "Track your carbon footprint and learn sustainable habits. Made for Nepalese students.",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const { locale, messages } = await getI18nConfig();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${newsreader.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#FAFAFA]">
-        <AuthProvider>
-          <LayoutShell>
-            {children}
-          </LayoutShell>
-        </AuthProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <AuthProvider>
+            <LayoutShell>
+              {children}
+            </LayoutShell>
+          </AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

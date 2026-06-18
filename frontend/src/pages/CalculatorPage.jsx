@@ -40,6 +40,30 @@ const CalculatorPage = () => {
     extraProfileAnswer: null
   });
 
+  // Persist draft to sessionStorage so toggling locale (which may re-render server components)
+  // does not lose the user's in-progress inputs.
+  useEffect(() => {
+    try {
+      const key = 'calculatorFormDraft';
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setFormData(prev => ({ ...prev, ...parsed }));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const key = 'calculatorFormDraft';
+      sessionStorage.setItem(key, JSON.stringify(formData));
+    } catch (e) {
+      // ignore
+    }
+  }, [formData]);
+
   const transportationOptions = [
     { value: 'walk', label: 'Walk', icon: <Footprints size={21} strokeWidth={2.5} /> },
     { value: 'bicycle', label: 'Bicycle', icon: <Bike size={21} strokeWidth={2.5} /> },
@@ -63,7 +87,7 @@ const CalculatorPage = () => {
         ? 'Loading…'
         : factor != null
           ? `${factor.toFixed(1)} kg CO₂`
-          : 'Unavailable'
+          : ''
     };
   });
 
@@ -150,6 +174,8 @@ const CalculatorPage = () => {
       };
 
       await logDailyCarbon(payload);
+      // clear draft on successful submit
+      try { sessionStorage.removeItem('calculatorFormDraft'); } catch (e) {}
       router.push('/calculator/result');
     } catch (error) {
       console.error('Error logging carbon:', error);

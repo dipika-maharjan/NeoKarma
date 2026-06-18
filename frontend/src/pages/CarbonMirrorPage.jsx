@@ -16,6 +16,7 @@ import {
 import { getCarbonMirror } from '@/lib/actions/mirrorActions';
 import { getAppConfig } from '@/lib/actions/configActions';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslations } from 'next-intl';
 
 const CARD_CLASS = 'rounded-[10px] border border-[#E0E5E2] bg-white';
 const CARD_PADDING = 'p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]';
@@ -29,6 +30,8 @@ const CarbonMirrorPage = () => {
   const [loading, setLoading] = useState(true);
   const [mirrorData, setMirrorData] = useState(null);
   const [appConfig, setAppConfig] = useState(null);
+  const t = useTranslations('CarbonMirror');
+  const tImg = useTranslations('Images');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -130,19 +133,19 @@ const CarbonMirrorPage = () => {
         <section className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div>
             <h1 className="text-[32px] font-extrabold leading-tight text-[#0A3D25] md:text-[34px]">
-              This is your carbon mirror
+              {t('title')}
             </h1>
-            <p className={BODY_CLASS}>This Month&apos;s Impact Overview</p>
+            <p className={BODY_CLASS}>{t('overview')}</p>
           </div>
 
           <div className={`${CARD_CLASS} flex items-center justify-between gap-6 border-[#E0E5E2] px-5 py-4`}>
             <div>
-              <p className={`mb-1 ${EYEBROW_CLASS}`}>You Emitted</p>
+              <p className={`mb-1 ${EYEBROW_CLASS}`}>{t('youEmitted')}</p>
               <p className="text-[20px] font-extrabold leading-none text-[#0A3D25]">
                 {totalEmitted.toFixed(1)} <span className="text-[14px]">kg CO₂</span>
               </p>
               <p className="mt-1.5 text-[13px] font-bold text-[#1B5E20]">
-                ~ {improvement}% better than last month
+                {improvement !== null ? t('improvementText', { improvement }) : ''}
               </p>
             </div>
 
@@ -165,7 +168,7 @@ const CarbonMirrorPage = () => {
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FFCDD2] text-[#D32F2F]">
                 <AlertTriangle size={18} />
               </span>
-              <h2 className={`${CARD_TITLE_CLASS} text-[#C62828]`}>Environmental Cost</h2>
+              <h2 className={`${CARD_TITLE_CLASS} text-[#C62828]`}>{t('environmentalCost')}</h2>
             </div>
 
             <div className="relative mb-5 h-[200px] overflow-hidden rounded-xl">
@@ -179,10 +182,10 @@ const CarbonMirrorPage = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 text-white">
                 <p className="text-[18px] font-extrabold leading-tight !text-white">
-                  {todayMirror.treesEquivalent ? `${todayMirror.treesEquivalent} trees today` : 'Current tree equivalence'}
+                  {todayMirror.treesEquivalent ? `${todayMirror.treesEquivalent} trees today` : t('currentTreeEquivalence')}
                 </p>
                 <p className="text-[14px] font-normal !text-white/85">
-                  {todayMirror.story || 'Your latest daily footprint visualized through tree absorption equivalence.'}
+                  {todayMirror.story || t('latestDaily')}
                 </p>
               </div>
             </div>
@@ -194,7 +197,7 @@ const CarbonMirrorPage = () => {
                 </div>
               ) : (
                 <div className="rounded-lg border border-[#FFCDD2] bg-white px-4 py-4 text-[#17202A]">
-                  <p className="text-[14px]">Daily mirror data will appear once you log your activities.</p>
+                  <p className="text-[14px]">{t('dailyMirrorPlaceholder')}</p>
                 </div>
               )}
             </div>
@@ -205,7 +208,7 @@ const CarbonMirrorPage = () => {
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C8E6C9] text-[#1B5E20]">
                 <Leaf size={18} fill="currentColor" />
               </span>
-              <h2 className={`${CARD_TITLE_CLASS} text-[#1B5E20]`}>Positive Progress</h2>
+              <h2 className={`${CARD_TITLE_CLASS} text-[#1B5E20]`}>{t('positiveProgress')}</h2>
             </div>
 
             <div className="relative mb-5 h-[200px] overflow-hidden rounded-xl">
@@ -218,7 +221,7 @@ const CarbonMirrorPage = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 text-white">
                 <p className="text-[18px] font-extrabold leading-tight !text-white">
-                  {monthlyMirror.treesEquivalent ? `${monthlyMirror.treesEquivalent} trees this month` : 'Monthly mirror summary'}
+                  {monthlyMirror.treesEquivalent ? `${monthlyMirror.treesEquivalent} trees this month` : t('monthlyMirrorSummary')}
                 </p>
                 <p className="text-[14px] font-normal !text-white/85">
                   {summaryMessage}
@@ -233,7 +236,7 @@ const CarbonMirrorPage = () => {
                 </div>
               ) : (
                 <div className="rounded-lg border border-[#C8E6C9] bg-white/70 px-4 py-4 text-[#17202A]">
-                  <p className="text-[14px]">Monthly comparison will update when enough data is available.</p>
+                  <p className="text-[14px]">{t('monthlyComparisonPlaceholder')}</p>
                 </div>
               )}
             </div>
@@ -242,32 +245,32 @@ const CarbonMirrorPage = () => {
 
         <section className="grid gap-6 lg:grid-cols-3">
           <div className={`${CARD_CLASS} border-[#E0E5E2] p-5`}>
-            <h3 className={`mb-1 ${EYEBROW_CLASS}`}>What If We Change?</h3>
+            <h3 className={`mb-1 ${EYEBROW_CLASS}`}>{t('whatIfTitle')}</h3>
             <p className="mb-4 text-[15px] font-bold text-[#0A3D25]">
-              Small habits, big results
+              {t('smallHabits')}
             </p>
             <p className={`mb-4 max-w-[230px] ${BODY_CLASS}`}>
-              Use logged data to compare real scenarios and see potential savings.
+              {t('useLoggedData')}
             </p>
             <div className="flex items-center gap-4 rounded-lg bg-[#C7EEDC] px-4 py-4 text-[#0A3D25]">
               <Bus size={22} />
               <div>
                 <p className="text-[15px] font-bold">
-                  Compare transport and diet choices
+                  {t('compareChoices')}
                 </p>
                 <p className="text-[13px] text-[#0A3D25]/90 font-medium">
-                  Simulations are based on your actual emission factors.
+                  {t('simulationsNote')}
                 </p>
               </div>
             </div>
           </div>
 
           <div className={`${CARD_CLASS} border-[#E0E5E2] p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]`}>
-            <h3 className={`mb-6 ${EYEBROW_CLASS}`}>Monthly Trend</h3>
+            <h3 className={`mb-6 ${EYEBROW_CLASS}`}>{t('monthlyTrend')}</h3>
             <div className="min-h-[88px] rounded-xl border border-dashed border-[#E1E8E5] bg-[#F7FCF8] p-6 text-[14px] leading-relaxed text-[#4A5550]">
               {monthlyMirror.kgCO2
-                ? 'Trend charts will appear once we have enough historical monthly data.'
-                : 'Add more daily logs to build your monthly trend and compare your seasonal progress.'}
+                ? t('trendPlaceholder')
+                : t('addMoreLogs')}
             </div>
           </div>
 

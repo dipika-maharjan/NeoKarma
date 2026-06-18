@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { register } from '@/lib/actions/authActions';
 import { Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ const RegisterPage = () => {
   const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('Auth');
 
   const gradeOptions = Array.from({ length: 5 }, (_, i) => ({
     value: String(i + 8),
@@ -68,7 +70,7 @@ const RegisterPage = () => {
       <section className="relative hidden w-[52%] overflow-hidden bg-[#0A3D25] lg:block">
         <Image
           src="/Himalayan Mountains.png"
-          alt="Himalayan Mountains"
+          alt={useTranslations('Images')('himalayanAlt')}
           fill
           className="object-cover opacity-80"
           priority
@@ -78,13 +80,12 @@ const RegisterPage = () => {
 
         <div className="relative z-10 flex h-full flex-col justify-center px-[20%] text-center">
           <h1 className="mb-6 text-[42px] font-extrabold leading-[1.08] !text-white">
-            Measure. Reflect.
+            {t('heroLine1')}
             <br />
-            Improve.
+            {t('heroLine2')}
           </h1>
           <p className="mx-auto max-w-[340px] text-[14px] font-medium leading-6 !text-white/85">
-            Join our mission to build a carbon-neutral and sustainable future for the
-            Himalayas and beyond.
+            {t('marketingParagraph')}
           </p>
         </div>
       </section>
@@ -94,17 +95,17 @@ const RegisterPage = () => {
           <div className="mb-4 text-center">
             <Link href="/" className="no-underline">
               <h1 className="mb-1.5 text-[23px] font-extrabold text-[#202434]">
-                Welcome to Neoकर्म
+                {t('welcome')}
               </h1>
             </Link>
             <p className="text-[12px] font-medium leading-4 text-[#68706d]">
-              Join your school and start your climate journey today.
+              {t('joinMission')}
             </p>
           </div>
 
           <div className="mb-4 grid grid-cols-2 rounded-md bg-[#e9eefb] p-1">
             <div className="rounded-md bg-[#0A3D25] py-2 text-center text-[11px] font-bold text-white shadow-sm">
-              Sign Up
+              {t('signUp')}
             </div>
             <Link
               href="/login"
@@ -123,14 +124,14 @@ const RegisterPage = () => {
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                Full Name
+                {t('fullName')}
               </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Your name"
+                placeholder={t('fullName')}
                 required
                 className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
               />
@@ -138,14 +139,14 @@ const RegisterPage = () => {
 
             <div>
               <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                Email Address
+                {t('email')}
               </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="name@school.edu"
+                placeholder={t('emailPlaceholder')}
                 required
                 className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
               />
@@ -154,14 +155,14 @@ const RegisterPage = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                  Password
+                  {t('password')}
                 </label>
                 <input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="********"
+                  placeholder={t('passwordPlaceholder')}
                   required
                   className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                 />
@@ -169,14 +170,14 @@ const RegisterPage = () => {
 
               <div>
                 <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                  Confirm
+                  {t('confirm')}
                 </label>
                 <input
                   type="password"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  placeholder="********"
+                  placeholder={t('passwordPlaceholder')}
                   required
                   className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                 />
@@ -186,7 +187,7 @@ const RegisterPage = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                  Grade
+                  {t('grade')}
                 </label>
                 <select
                   name="grade"
@@ -195,10 +196,10 @@ const RegisterPage = () => {
                   required
                   className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                 >
-                  <option value="">Select grade</option>
+                  <option value="">{t('selectGrade')}</option>
                   {gradeOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                      {t('grade') + ' ' + opt.value}
                     </option>
                   ))}
                 </select>
@@ -206,7 +207,7 @@ const RegisterPage = () => {
 
               <div>
                 <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                  Location
+                  {t('location')}
                 </label>
                 <select
                   name="locationType"
@@ -215,22 +216,22 @@ const RegisterPage = () => {
                   required
                   className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                 >
-                  <option value="urban">Urban</option>
-                  <option value="rural">Rural</option>
+                  <option value="urban">{t('urban')}</option>
+                  <option value="rural">{t('rural')}</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                School Name <span className="font-medium text-[#8b9490]">(optional)</span>
+                {t('schoolName')} <span className="font-medium text-[#8b9490]">(optional)</span>
               </label>
               <input
                 type="text"
                 name="schoolName"
                 value={formData.schoolName}
                 onChange={handleChange}
-                placeholder="Your school name"
+                placeholder={t('schoolName')}
                 className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
               />
             </div>
@@ -243,26 +244,26 @@ const RegisterPage = () => {
               {loading ? (
                 <>
                   <Loader2 size={15} className="animate-spin" />
-                  Creating...
+                  {t('creating')}
                 </>
               ) : (
-                'Create Account'
+                t('createAccount')
               )}
             </button>
           </form>
 
           <p className="mt-3 text-center text-[11px] font-medium text-[#68706d]">
-            Already Have an Account?{' '}
+            {t('alreadyHaveAccount')}{' '}
             <Link
               href={searchParams.get('next') ? `/login?next=${encodeURIComponent(searchParams.get('next'))}` : '/login'}
               className="font-extrabold text-[#0A3D25] no-underline hover:underline"
             >
-              Login
+              {t('login')}
             </Link>
           </p>
 
           <p className="mx-auto mt-3 max-w-[280px] text-center text-[10px] font-medium leading-4 text-[#68706d]">
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+            {t('termsText')}
           </p>
         </div>
       </section>
