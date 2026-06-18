@@ -4,7 +4,16 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { getCookie } from '../lib/api/cookie';
 import { login as authLogin, logout as authLogout, getProfile } from '../lib/actions/authActions';
 
-const AuthContext = createContext();
+const defaultAuthValue = {
+  user: null,
+  token: null,
+  loading: false,
+  login: async () => ({ success: false, error: 'Auth provider is unavailable' }),
+  logout: () => {},
+  isAuthenticated: false
+};
+
+const AuthContext = createContext(defaultAuthValue);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -26,7 +35,7 @@ export const AuthProvider = ({ children }) => {
       window.addEventListener('auth-unauthorized', handleUnauthorized);
     }
 
-    const savedToken = getCookie('neokarma_token');
+    const savedToken = getCookie('token') || localStorage.getItem('token');
     if (savedToken) {
       // Fetch user profile on load/mount
       getProfile()
@@ -54,7 +63,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const { user: userData, token: authToken } = await authLogin(credentials);
+      const { user: userData, token: authToken, role } = await authLogin(credentials);
       setUser(userData);
       setToken(authToken);
       return { success: true, user: userData, token: authToken };

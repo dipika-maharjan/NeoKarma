@@ -1,9 +1,8 @@
 /**
  * User Model
- * Represents a student in the Neoकर्म system
+ * Represents a student or school admin in the Neoकर्म system
  */
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema(
   {
@@ -25,43 +24,48 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
-      select: false // Don't return password by default
+      select: false
+    },
+    role: {
+      type: String,
+      enum: ['student', 'school_admin'],
+      default: 'student',
+      required: true
+    },
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
     },
     grade: {
       type: Number,
-      required: [true, 'Grade is required'],
       min: [8, 'Grade must be between 8 and 12'],
       max: [12, 'Grade must be between 8 and 12']
     },
+    section: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: null
+    },
     locationType: {
       type: String,
-      enum: ['urban', 'rural'],
-      required: [true, 'Location type (urban/rural) is required']
+      enum: ['urban', 'rural']
     },
     schoolName: {
       type: String,
       trim: true,
       maxlength: [200, 'School name cannot exceed 200 characters']
     },
-    /**
-     * Data-driven extra profile slot for urban/rural-specific questions
-     * Example: { questionKey: "internetUsageHours", value: 5 }
-     * Or: { questionKey: "cookingFuelType", value: "lpg" }
-     * The questionKey can be updated via API without schema migration
-     */
     extraProfile: {
       questionKey: {
         type: String,
         default: null
       },
       value: {
-        type: mongoose.Schema.Types.Mixed // Can be string, number, boolean, etc.
+        type: mongoose.Schema.Types.Mixed
       }
     },
-
-    /**
-     * Streak tracking and participation metrics
-     */
     streak: {
       current: {
         type: Number,
@@ -74,7 +78,7 @@ const UserSchema = new mongoose.Schema(
         min: 0
       },
       lastLogDate: {
-        type: String, // Format: YYYY-MM-DD
+        type: String,
         default: null
       },
       participationScore: {
@@ -83,12 +87,50 @@ const UserSchema = new mongoose.Schema(
         min: 0
       }
     },
-
+    practicalMarks: {
+      currentStreak: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      longestStreak: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      totalLogDays: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      marksAwarded: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      lastSyncedAt: {
+        type: Date,
+        default: null
+      },
+      manualOverride: {
+        value: {
+          type: Number,
+          default: null
+        },
+        updatedBy: {
+          type: String,
+          default: null
+        },
+        updatedAt: {
+          type: Date,
+          default: null
+        }
+      }
+    },
     isActive: {
       type: Boolean,
       default: true
     },
-
     createdAt: {
       type: Date,
       default: Date.now

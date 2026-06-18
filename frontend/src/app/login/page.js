@@ -1,18 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 const LoginPage = () => {
   const { login: authLogin } = useAuth();
-  const t = useTranslations('Auth');
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -51,7 +46,7 @@ const LoginPage = () => {
       <section className="relative hidden w-[52%] overflow-hidden bg-[#0A3D25] lg:block">
         <Image
           src="/Himalayan Mountains.png"
-          alt={useTranslations('Images')('himalayanAlt')}
+          alt="Himalayan Mountains"
           fill
           className="object-cover opacity-80"
           priority
@@ -61,12 +56,13 @@ const LoginPage = () => {
 
         <div className="relative z-10 flex h-full flex-col justify-center px-[20%] text-center">
           <h1 className="mb-6 text-[42px] font-extrabold leading-[1.08] !text-white">
-            {t('heroLine1')}
+            Measure. Reflect.
             <br />
-            {t('heroLine2')}
+            Improve.
           </h1>
           <p className="mx-auto max-w-[340px] text-[14px] font-medium leading-6 !text-white/85">
-            {t('marketingParagraph')}
+            Join our mission to build a carbon-neutral and sustainable future for the
+            Himalayas and beyond.
           </p>
         </div>
       </section>
@@ -76,23 +72,23 @@ const LoginPage = () => {
           <div className="mb-6 text-center">
             <Link href="/" className="no-underline">
               <h1 className="mb-2 text-[23px] font-extrabold text-[#202434]">
-                {t('welcome')}
+                Welcome to Neoकर्म
               </h1>
             </Link>
             <p className="text-[12px] font-medium leading-4 text-[#68706d]">
-              {t('joinMission')}
+              Join your school and start your climate journey today.
             </p>
           </div>
 
           <div className="mb-6 grid grid-cols-2 rounded-md bg-[#e9eefb] p-1">
             <Link
-              href={searchParams.get('next') ? `/register?next=${encodeURIComponent(searchParams.get('next'))}` : '/register'}
+              href="/register"
               className="rounded-md py-2 text-center text-[11px] font-bold text-[#6c7370] no-underline transition hover:text-[#0A3D25]"
             >
-              {t('signUp')}
+              Sign Up
             </Link>
             <div className="rounded-md bg-[#0A3D25] py-2 text-center text-[11px] font-bold text-white shadow-sm">
-              {t('login')}
+              Login
             </div>
           </div>
 
@@ -105,13 +101,13 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="mb-1.5 block text-[12px] font-extrabold text-[#303542]">
-                {t('email')}
+                Email Address
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={t('emailPlaceholder')}
+                placeholder="name@school.edu"
                 required
                 className="h-10 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
               />
@@ -119,13 +115,13 @@ const LoginPage = () => {
 
             <div>
               <label className="mb-1.5 block text-[12px] font-extrabold text-[#303542]">
-                {t('password')}
+                Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={t('passwordPlaceholder')}
+                placeholder="********"
                 required
                 className="h-10 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
               />
@@ -139,10 +135,10 @@ const LoginPage = () => {
                   onChange={(e) => setRemember(e.target.checked)}
                   className="h-3.5 w-3.5 rounded border-[#cfd7df]"
                 />
-                {t('remember')}
+                Remember me
               </label>
               <a href="#forgot" className="text-[#0A3D25] no-underline hover:underline">
-                {t('forgot')}
+                Forgot password?
               </a>
             </div>
 
@@ -154,26 +150,23 @@ const LoginPage = () => {
               {loading ? (
                 <>
                   <Loader2 size={15} className="animate-spin" />
-                  {t('signInButton')}
+                  Signing in...
                 </>
               ) : (
-                t('signInButton')
+                'Login to Dashboard'
               )}
             </button>
           </form>
 
           <p className="mt-4 text-center text-[11px] font-medium text-[#68706d]">
-            {t('dontHaveAccount')}{' '}
-            <Link
-              href={searchParams.get('next') ? `/register?next=${encodeURIComponent(searchParams.get('next'))}` : '/register'}
-              className="font-extrabold text-[#0A3D25] no-underline hover:underline"
-            >
-              {t('signUp')}
+            Don&apos;t Have an Account?{' '}
+            <Link href="/register" className="font-extrabold text-[#0A3D25] no-underline hover:underline">
+              Sign Up
             </Link>
           </p>
 
           <p className="mx-auto mt-4 max-w-[280px] text-center text-[10px] font-medium leading-4 text-[#68706d]">
-            {t('termsText')}
+            By continuing, you agree to our Terms of Service and Privacy Policy.
           </p>
         </div>
       </section>
