@@ -88,6 +88,10 @@ class DailyLogRepository {
   async countByUser(userId) {
     return await DailyLog.countDocuments({ userId });
   }
+
+  async getLogsCount(userId) {
+    return await this.countByUser(userId);
+  }
 }
 
 module.exports = new DailyLogRepository();
