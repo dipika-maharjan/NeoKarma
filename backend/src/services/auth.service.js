@@ -4,7 +4,6 @@
  */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 const userRepository = require('../repositories/user.repository');
 const config = require('../config/env');
 const AppError = require('../utils/AppError');
@@ -35,15 +34,22 @@ class AuthService {
       locationType,
       schoolName: schoolName || null,
       extraProfile: extraProfile || null,
+      role: 'student',
       streak: {
         current: 0,
         longest: 0,
         lastLogDate: null,
         participationScore: 0
+      },
+      practicalMarks: {
+        currentStreak: 0,
+        longestStreak: 0,
+        totalLogDays: 0,
+        marksAwarded: 0,
+        lastSyncedAt: null
       }
     });
 
-    // Return user without password and sign JWT
     const userObj = user.toObject();
     delete userObj.passwordHash;
 
@@ -51,6 +57,8 @@ class AuthService {
       {
         userId: user._id,
         email: user.email,
+        role: user.role,
+        schoolId: user.schoolId || null,
         grade: user.grade,
         locationType: user.locationType
       },
@@ -60,7 +68,8 @@ class AuthService {
 
     return {
       user: userObj,
-      token
+      token,
+      role: user.role
     };
   }
 
@@ -68,23 +77,22 @@ class AuthService {
    * Authenticate student and return JWT token
    */
   async loginStudent(email, password) {
-    // Find user and include password hash
     const user = await userRepository.findByEmailWithPassword(email);
     if (!user) {
       throw new AppError('Invalid email or password', 401);
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new AppError('Invalid email or password', 401);
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       {
         userId: user._id,
         email: user.email,
+        role: user.role,
+        schoolId: user.schoolId || null,
         grade: user.grade,
         locationType: user.locationType
       },
@@ -92,12 +100,12 @@ class AuthService {
       { expiresIn: config.JWT_EXPIRE }
     );
 
-    // Return token and user info (without password)
     const userObj = user.toObject();
     delete userObj.passwordHash;
 
     return {
       token,
+      role: user.role,
       user: userObj
     };
   }

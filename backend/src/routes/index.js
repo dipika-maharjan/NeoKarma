@@ -11,6 +11,7 @@ const carbonMirrorRoutes = require('./carbonMirror.routes');
 const mitigationPlanRoutes = require('./mitigationPlan.routes');
 const streakRoutes = require('./streak.routes');
 const emissionFactorsRoutes = require('./emissionFactors.routes');
+const adminRoutes = require('./admin.routes');
 const asyncHandler = require('../utils/asyncHandler');
 const { getDBStatus } = require('../config/db');
 
@@ -43,6 +44,7 @@ router.use('/carbon-mirror', carbonMirrorRoutes);
 router.use('/mitigation-plan', mitigationPlanRoutes);
 router.use('/streak', streakRoutes);
 router.use('/emission-factors', emissionFactorsRoutes);
+router.use('/admin', adminRoutes);
 
 /**
  * 501 Not Implemented Placeholder for PDF Export
