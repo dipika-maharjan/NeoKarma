@@ -66,12 +66,7 @@ export const AuthProvider = ({ children }) => {
       const { user: userData, token: authToken, role } = await authLogin(credentials);
       setUser(userData);
       setToken(authToken);
-      return {
-        success: true,
-        user: userData,
-        token: authToken,
-        role: role || userData?.role
-      };
+      return { success: true, user: userData, token: authToken };
     } catch (error) {
       return { success: false, error: error.message || 'Login failed' };
     }

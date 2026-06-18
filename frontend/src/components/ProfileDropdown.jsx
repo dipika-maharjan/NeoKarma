@@ -101,7 +101,7 @@ export default function ProfileDropdown() {
               onClick={() => {
                 setIsOpen(false);
                 logout();
-                router.replace('/');
+                router.push('/login');
               }}
               className="w-full text-left block px-4 py-2 text-sm text-rose-accent hover:bg-rose-50 transition-colors font-medium cursor-pointer"
             >

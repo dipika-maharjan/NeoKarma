@@ -3,16 +3,31 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 const LoginPage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { login: authLogin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const getHomeRoute = (user) => {
+    if (!user) return '/dashboard';
+    if (
+      user.role === 'school_admin' ||
+      user.role === 'admin' ||
+      user.isAdmin ||
+      user.admin
+    )
+      return '/admin/dashboard';
+    return '/dashboard';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,8 +36,10 @@ const LoginPage = () => {
 
     try {
       const result = await authLogin({ email, password });
-      if (result?.success || result?.token || result?.user) {
-        window.location.href = '/dashboard';
+      if (result?.success) {
+        const nextParam = searchParams.get('next');
+        const defaultRoute = getHomeRoute(result.user);
+        router.push(nextParam || defaultRoute);
       } else {
         setError(result?.error || 'Login failed');
       }
