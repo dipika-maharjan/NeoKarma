@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import profileImg from '../../public/profile.png';
 
 export default function ProfileDropdown() {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -99,7 +101,7 @@ export default function ProfileDropdown() {
               onClick={() => {
                 setIsOpen(false);
                 logout();
-                window.location.href = '/login';
+                router.push('/login');
               }}
               className="w-full text-left block px-4 py-2 text-sm text-rose-accent hover:bg-rose-50 transition-colors font-medium cursor-pointer"
             >

@@ -37,6 +37,12 @@ const RegisterPage = () => {
     }));
   };
 
+  const getHomeRoute = (user) => {
+    if (!user) return '/dashboard';
+    if (user.role === 'admin' || user.isAdmin || user.admin) return '/admin';
+    return '/dashboard';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -55,9 +61,10 @@ const RegisterPage = () => {
 
     try {
       const { confirmPassword, ...submitData } = formData;
-      await register(submitData);
-      const nextParam = searchParams.get('next') || '/dashboard';
-      router.push(nextParam);
+      const result = await register(submitData);
+      const nextParam = searchParams.get('next');
+      const defaultRoute = getHomeRoute(result.user);
+      router.push(nextParam || defaultRoute);
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {

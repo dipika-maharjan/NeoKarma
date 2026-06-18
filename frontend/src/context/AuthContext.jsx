@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
       const { user: userData, token: authToken } = await authLogin(credentials);
       setUser(userData);
       setToken(authToken);
-      return { success: true };
+      return { success: true, user: userData, token: authToken };
     } catch (error) {
       return { success: false, error: error.message || 'Login failed' };
     }

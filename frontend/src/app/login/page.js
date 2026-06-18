@@ -19,6 +19,12 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const getHomeRoute = (user) => {
+    if (!user) return '/dashboard';
+    if (user.role === 'admin' || user.isAdmin || user.admin) return '/admin';
+    return '/dashboard';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -26,9 +32,10 @@ const LoginPage = () => {
 
     try {
       const result = await authLogin({ email, password });
-      if (result?.success || result?.token || result?.user) {
-        const nextParam = searchParams.get('next') || '/dashboard';
-        router.push(nextParam);
+      if (result?.success) {
+        const nextParam = searchParams.get('next');
+        const defaultRoute = getHomeRoute(result.user);
+        router.push(nextParam || defaultRoute);
       } else {
         setError(result?.error || 'Login failed');
       }
