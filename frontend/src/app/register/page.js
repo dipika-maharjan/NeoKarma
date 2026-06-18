@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { register } from '@/lib/actions/authActions';
@@ -18,6 +19,8 @@ const RegisterPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const gradeOptions = Array.from({ length: 5 }, (_, i) => ({
     value: String(i + 8),
@@ -51,7 +54,8 @@ const RegisterPage = () => {
     try {
       const { confirmPassword, ...submitData } = formData;
       await register(submitData);
-      window.location.href = '/dashboard';
+      const nextParam = searchParams.get('next') || '/dashboard';
+      router.push(nextParam);
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -249,7 +253,10 @@ const RegisterPage = () => {
 
           <p className="mt-3 text-center text-[11px] font-medium text-[#68706d]">
             Already Have an Account?{' '}
-            <Link href="/login" className="font-extrabold text-[#0A3D25] no-underline hover:underline">
+            <Link
+              href={searchParams.get('next') ? `/login?next=${encodeURIComponent(searchParams.get('next'))}` : '/login'}
+              className="font-extrabold text-[#0A3D25] no-underline hover:underline"
+            >
               Login
             </Link>
           </p>

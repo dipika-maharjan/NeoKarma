@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -8,6 +9,8 @@ import { Loader2 } from 'lucide-react';
 
 const LoginPage = () => {
   const { login: authLogin } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -22,7 +25,8 @@ const LoginPage = () => {
     try {
       const result = await authLogin({ email, password });
       if (result?.success || result?.token || result?.user) {
-        window.location.href = '/dashboard';
+        const nextParam = searchParams.get('next') || '/dashboard';
+        router.push(nextParam);
       } else {
         setError(result?.error || 'Login failed');
       }
@@ -74,7 +78,7 @@ const LoginPage = () => {
 
           <div className="mb-6 grid grid-cols-2 rounded-md bg-[#e9eefb] p-1">
             <Link
-              href="/register"
+              href={searchParams.get('next') ? `/register?next=${encodeURIComponent(searchParams.get('next'))}` : '/register'}
               className="rounded-md py-2 text-center text-[11px] font-bold text-[#6c7370] no-underline transition hover:text-[#0A3D25]"
             >
               Sign Up
@@ -152,7 +156,10 @@ const LoginPage = () => {
 
           <p className="mt-4 text-center text-[11px] font-medium text-[#68706d]">
             Don&apos;t Have an Account?{' '}
-            <Link href="/register" className="font-extrabold text-[#0A3D25] no-underline hover:underline">
+            <Link
+              href={searchParams.get('next') ? `/register?next=${encodeURIComponent(searchParams.get('next'))}` : '/register'}
+              className="font-extrabold text-[#0A3D25] no-underline hover:underline"
+            >
               Sign Up
             </Link>
           </p>

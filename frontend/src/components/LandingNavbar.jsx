@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 
 const LandingNavbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +21,7 @@ const LandingNavbar = () => {
   const navLinks = [
     { label: 'How It Works', href: '#journey' },
     { label: 'About', href: '#features' },
+    // calculator href will be resolved based on current page
     { label: 'Calculator', href: '/calculator' },
   ];
 
@@ -38,15 +41,18 @@ const LandingNavbar = () => {
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-[14px] font-medium text-gray-500 no-underline transition-colors hover:text-[#0A3D25]"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const href = link.label === 'Calculator' && pathname === '/' ? '#preview' : link.href;
+            return (
+              <Link
+                key={link.label}
+                href={href}
+                className="text-[14px] font-medium text-gray-500 no-underline transition-colors hover:text-[#0A3D25]"
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="hidden items-center gap-6 md:flex">
@@ -75,16 +81,19 @@ const LandingNavbar = () => {
 
       {mobileOpen && (
         <div className="space-y-3 border-t border-gray-100 bg-white px-6 py-4 animate-[fadeIn_0.2s_ease-in] md:hidden">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className="block py-2 text-sm font-medium text-gray-600 no-underline transition-colors hover:text-[#0A3D25]"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const href = link.label === 'Calculator' && pathname === '/' ? '#preview' : link.href;
+            return (
+              <Link
+                key={link.label}
+                href={href}
+                onClick={() => setMobileOpen(false)}
+                className="block py-2 text-sm font-medium text-gray-600 no-underline transition-colors hover:text-[#0A3D25]"
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <hr className="border-gray-100" />
           <Link
             href="/login"
