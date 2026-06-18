@@ -199,6 +199,12 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // New two-tier states
+  const [planType, setPlanType] = useState(null);
+  const [logsCount, setLogsCount] = useState(0);
+  const [motivationalMessage, setMotivationalMessage] = useState('');
+  const [topContributors, setTopContributors] = useState([]);
+
   // Load planItems from localStorage unique to the logged-in user
   useEffect(() => {
     if (!user) return;
@@ -238,19 +244,47 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
       setError(null);
       try {
         let planData = await getActivePlan();
-        if (!planData || !planData.recommendations || planData.recommendations.length === 0) {
-          // If no active plan, trigger plan generation
+        
+        // Auto-generation fallback logic if planData is completely empty
+        if (!planData) {
           try {
             const newPlan = await generatePlan();
             planData = newPlan;
           } catch (genErr) {
-            console.warn('Could not generate plan automatically, using presets:', genErr);
+            console.warn('Could not generate plan automatically:', genErr);
           }
         }
 
-        if (planData && planData.recommendations && planData.recommendations.length > 0) {
-          const cards = planData.recommendations.map((rec, index) => mapBackendRecToCard(rec, index));
-          setRecommendations(cards);
+        if (planData) {
+          setPlanType(planData.type || null);
+          setLogsCount(planData.logsCount || 0);
+          setMotivationalMessage(planData.message || '');
+
+          if (planData.type === 'GENERAL_PLAN') {
+            const plan = planData.plan || {};
+            const flatRecs = [
+              ...(plan.transport || []),
+              ...(plan.energy || []),
+              ...(plan.diet || []),
+              ...(plan.waste || [])
+            ];
+            const cards = flatRecs.map((rec, index) => mapBackendRecToCard(rec, index));
+            setRecommendations(cards);
+          } else if (planData.type === 'MONTHLY_PLAN') {
+            const recs = planData.plan?.recommendations || [];
+            const cards = recs.map((rec, index) => mapBackendRecToCard(rec, index));
+            setRecommendations(cards);
+            setTopContributors(planData.plan?.topContributors || []);
+          } else {
+            // Fallback to old format if backend returns plain active plan
+            const recs = planData.recommendations || [];
+            if (recs.length > 0) {
+              const cards = recs.map((rec, index) => mapBackendRecToCard(rec, index));
+              setRecommendations(cards);
+            } else {
+              setRecommendations(PRESETS);
+            }
+          }
         } else {
           setRecommendations(PRESETS);
         }

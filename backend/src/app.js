@@ -1,6 +1,5 @@
 /**
  * Express App Configuration
- * Sets up middleware, database connection, and routes
  */
 const express = require('express');
 const cors = require('cors');
@@ -9,19 +8,21 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const { connectDB } = require('./config/db');
 const config = require('./config/env');
+
 const errorHandler = require('./middlewares/errorHandler.middleware');
 const apiRoutes = require('./routes');
 const AppError = require('./utils/AppError');
+const mongoose = require('mongoose');
 
 const app = express();
 
-// Trust proxy
+/* ---------------- TRUST PROXY ---------------- */
 app.set('trust proxy', 1);
 
-// Security Middleware
+/* ---------------- SECURITY ---------------- */
 app.use(helmet());
 
-// CORS Configuration
+/* ---------------- CORS ---------------- */
 app.use(
   cors({
     origin: config.FRONTEND_ORIGIN,
@@ -31,25 +32,32 @@ app.use(
   })
 );
 
-// Body Parser Middleware
+/* ---------------- BODY PARSER ---------------- */
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
-// Request Logging Middleware
+/* ---------------- LOGGING ---------------- */
 if (config.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 } else {
   app.use(morgan('combined'));
 }
 
-// Connect to MongoDB (async, but don't block app startup)
-connectDB().catch((err) => {
-  console.error('Failed to connect to MongoDB:', err.message);
-  process.exit(1);
+/* ---------------- DB CONNECTION ---------------- */
+connectDB().then((conn) => {
+  if (conn) console.log('DB ready');
 });
 
-// Root Route
+/* ---------------- HEALTH CHECK ---------------- */
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+/* ---------------- ROOT ---------------- */
 app.get('/', (req, res) => {
   res.json({
     message: 'नेओकर्म (Neoकर्म) - Carbon Footprint Tracking API',
@@ -58,15 +66,15 @@ app.get('/', (req, res) => {
   });
 });
 
-// API Routes
+/* ---------------- ROUTES ---------------- */
 app.use('/api', apiRoutes);
 
-// 404 Handler
+/* ---------------- 404 ---------------- */
 app.use((req, res, next) => {
   next(new AppError(`Route ${req.originalUrl} not found`, 404));
 });
 
-// Error Handler (must be last)
+/* ---------------- ERROR HANDLER ---------------- */
 app.use(errorHandler);
 
 module.exports = app;

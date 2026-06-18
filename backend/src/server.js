@@ -1,40 +1,40 @@
 /**
  * Server Entry Point
- * Starts the Express server
  */
 const app = require('./app');
 const config = require('./config/env');
 const mitigationPlanService = require('./services/mitigationPlan.service');
 
-const PORT = config.PORT;
+const PORT = config.PORT || 5000;
 
+/* ---------------- START SERVER ---------------- */
 const server = app.listen(PORT, () => {
-  console.log(`neokarma Backend Server Running on Port: ${PORT.toString().padEnd(48)}               
-  `);
-  
-  // Start the mitigation plan daily generation scheduler
-  mitigationPlanService.startCronScheduler();
+  console.log(`NeoKarma Backend Running on PORT: ${PORT}`);
+
+  // Delay cron to prevent startup blocking
+  setTimeout(() => {
+    try {
+      mitigationPlanService.startCronScheduler();
+      console.log('Cron scheduler started');
+    } catch (err) {
+      console.error('Cron scheduler error:', err.message);
+    }
+  }, 10000);
 });
 
-// Graceful shutdown
+/* ---------------- GRACEFUL SHUTDOWN ---------------- */
 process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
-    process.exit(0);
-  });
+  console.log('SIGTERM received');
+  server.close(() => process.exit(0));
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT signal received: closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
-    process.exit(0);
-  });
+  console.log('SIGINT received');
+  server.close(() => process.exit(0));
 });
 
-// Handle unhandled promise rejections
+/* ---------------- UNHANDLED ERRORS ---------------- */
 process.on('unhandledRejection', (err) => {
-  console.error(' Unhandled Rejection:', err);
-  process.exit(1);
+  console.error('Unhandled Rejection:', err);
+  // DO NOT kill server on Render (prevents downtime during demo)
 });
