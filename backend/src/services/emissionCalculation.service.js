@@ -7,17 +7,14 @@ const emissionFactorRepository = require('../repositories/emissionFactor.reposit
 const AppError = require('../utils/AppError');
 
 class EmissionCalculationService {
-  /**
-   * Calculate emissions for a single daily log
-   * Returns breakdown by category and total
-   */
   async calculateEmissions(inputs) {
     const {
       transportationMode,
       transportationDistanceKm,
       foodMealType,
       wasteAndPlasticCount,
-      energyUsageHours
+      energyUsageHours,
+      energyFirewoodKg
     } = inputs;
 
     let breakdown = {
@@ -52,14 +49,26 @@ class EmissionCalculationService {
       (wasteFactor.factorValue * wasteAndPlasticCount).toFixed(3)
     );
 
-    // Energy emissions
+    // Energy emissions (electricity)
     const energyFactor = await emissionFactorRepository.findActive('energy', 'electricity');
     if (!energyFactor) {
       throw new AppError('No emission factor found for energy', 500);
     }
-    breakdown.energyKg = parseFloat(
+    let energyKg = parseFloat(
       (energyFactor.factorValue * energyUsageHours).toFixed(3)
     );
+
+    // Energy emissions (firewood) - if applicable
+    if (energyFirewoodKg && energyFirewoodKg > 0) {
+      const firewoodFactor = await emissionFactorRepository.findActive('energy', 'firewood');
+      if (firewoodFactor) {
+        energyKg += parseFloat(
+          (firewoodFactor.factorValue * energyFirewoodKg).toFixed(3)
+        );
+      }
+    }
+
+    breakdown.energyKg = parseFloat(energyKg.toFixed(3));
 
     // Total
     const totalEmissionKg = parseFloat(

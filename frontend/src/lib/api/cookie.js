@@ -16,3 +16,10 @@ export const removeCookie = (name) => {
   if (typeof document === 'undefined') return;
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax${process.env.NODE_ENV === 'production' ? ';Secure' : ''}`;
 };
+
+// Helpers for locale cookie
+export const LOCALE_COOKIE = 'locale';
+
+export const setLocaleCookie = (locale, days = 365) => setCookie(LOCALE_COOKIE, locale, days);
+export const getLocaleCookie = () => getCookie(LOCALE_COOKIE);
+export const removeLocaleCookie = () => removeCookie(LOCALE_COOKIE);

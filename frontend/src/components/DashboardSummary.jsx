@@ -1,14 +1,18 @@
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
-const DashboardSummary = ({ onNavigateToCalculator, onNavigateToMirror }) => {
-  // Mock statistics matching your precise "Dashboard Summary" layout variables
+const DashboardSummary = ({
+  onNavigateToCalculator,
+  onNavigateToMirror,
+  summary = {}
+}) => {
   const studentData = {
-    name: "User",
-    dailyEmissionsKG: 2.4,
-    impactScore: 82,
-    scoreStatus: "Good/Bonus",
-    totalTreesEquivalentKG: 14.2,
-    treesTrendPercentage: "+4%"
+    name: summary.name || 'User',
+    dailyEmissionsKG: summary.dailyEmissionsKG ?? '--',
+    impactScore: summary.impactScore ?? '--',
+    scoreStatus: summary.scoreStatus || 'Loading...',
+    totalTreesEquivalentKG: summary.totalTreesEquivalentKG ?? '--',
+    treesTrendPercentage: summary.treesTrendPercentage || '--'
   };
 
   return (
@@ -19,17 +23,17 @@ const DashboardSummary = ({ onNavigateToCalculator, onNavigateToMirror }) => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-[#0A3D25] tracking-tight">
-              Good morning, {studentData.name}!
+              {useTranslations('Dashboard')('greeting', { name: studentData.name })}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
-              Here is your environmental impact tracking outline for today.
+              {useTranslations('Dashboard')('subtitle')}
             </p>
           </div>
           <button 
             onClick={onNavigateToCalculator}
             className="flex items-center gap-2 bg-[#0A3D25] hover:bg-[#0D5232] text-white text-sm font-medium py-2.5 px-5 rounded-full transition-all shadow-sm"
           >
-            <span>➕</span> Log Today's Carbon
+            <span>➕</span> {useTranslations('Dashboard')('logToday')}
           </button>
         </div>
 

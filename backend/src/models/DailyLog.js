@@ -71,6 +71,16 @@ const DailyLogSchema = new mongoose.Schema(
         type: Number,
         required: [true, 'Energy usage is required'],
         min: [0, 'Energy usage cannot be negative']
+      },
+      /**
+       * Firewood consumed for cooking or heating (kg)
+       * Primarily for rural students using biomass for energy
+       */
+      firewoodKg: {
+        type: Number,
+        required: false,
+        default: 0,
+        min: [0, 'Firewood consumption cannot be negative']
       }
     },
 

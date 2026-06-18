@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import LandingNavbar from '@/components/LandingNavbar';
 import Footer from '@/components/Footer';
@@ -16,11 +15,9 @@ import {
   ClipboardPen,
   FlaskConical,
   Footprints,
-  Globe2,
   GraduationCap,
   Leaf,
   Shield,
-  Sprout,
   Users,
 } from 'lucide-react';
 
@@ -118,9 +115,10 @@ export default function Home() {
     <>
       <LandingNavbar />
       <main className="min-h-screen bg-[#FAFAFA]">
-        <section className="mx-auto max-w-[94%] px-4 py-12 md:py-16 md:px-8">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
-            <div>
+        {/* HERO SECTION WITH DYNAMIC HEIGHT INCREASE */}
+        <section className="mx-auto flex min-h-[calc(100vh-70px)] max-w-[94%] items-center px-4 py-12 md:px-8 lg:py-0">
+          <div className="grid w-full items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
+            <div className="transform md:-translate-x-1 md:-translate-y-3">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#E8F5E9] px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider text-[#1B5E20]">
                 <GraduationCap size={16} />
                 Made for Nepalese Schools
@@ -130,7 +128,7 @@ export default function Home() {
                 Your actions today shape tomorrow. Track. Reflect. Reduce.
               </h1>
 
-              <p className="mb-8 max-w-[700px] text-[16px] md:text-[18px] leading-relaxed text-[#4A5550]">
+              <p className="mb-8 max-w-[700px] text-[16px] leading-relaxed text-[#4A5550] md:text-[18px]">
                 Neo Karma helps Nepalese students understand their carbon
                 footprint and take meaningful actions for a better, greener
                 future.
@@ -138,7 +136,7 @@ export default function Home() {
 
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/calculator"
+                  href="/login?next=/calculator"
                   className="inline-flex items-center gap-2 rounded-full bg-[#0A3D25] px-7 py-3 text-[15px] font-bold text-white no-underline shadow-sm transition hover:bg-[#072B1A]"
                 >
                   Try Carbon Calculator
@@ -154,25 +152,24 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-xl shadow-lg shadow-slate-200/50">
-                <Image
-                  src="/images/hero.png"
-                  alt="Students planting trees in Nepal"
-                  width={900}
-                  height={680}
-                  className="aspect-[1.22/1] w-full object-cover"
-                  priority
-                />
-              </div>
+            {/* CLEANED IMAGE CONTAINER - OUTER LAYER REMOVED */}
+            <div className="relative w-full">
+              <img
+                src="/images/hero.png"
+                alt="Students planting trees in Nepal"
+                width={900}
+                height={680}
+                className="block h-[460px] w-full rounded-[32px] object-cover shadow-[0_8px_18px_rgba(10,61,37,0.08)] md:h-[560px]"
+              />
             </div>
           </div>
         </section>
 
+        {/* CARBON PREVIEW SECTION */}
         <section id="preview" className="bg-[#F1F4F2] py-16">
           <div className="mx-auto max-w-[94%] px-4 md:px-8">
             <div className="mb-8 text-center">
-              <h2 className="mb-2 text-[26px] md:text-[28px] font-extrabold text-[#0A3D25]">
+              <h2 className="mb-2 text-[26px] font-extrabold text-[#0A3D25] md:text-[28px]">
                 Live Carbon Preview
               </h2>
               <p className="text-[15px] text-[#4A5550]">
@@ -181,7 +178,7 @@ export default function Home() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-              <div className="rounded-xl border border-[#E0E5E2] bg-white p-6 md:p-8 shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
+              <div className="rounded-xl border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)] md:p-8">
                 <p className="mb-4 text-[15px] font-bold text-[#17202A]">
                   Transport: How did you get to school today?
                 </p>
@@ -194,7 +191,7 @@ export default function Home() {
                       onClick={() => setTransport(opt.id)}
                       className={`flex h-[88px] flex-col items-center justify-center rounded-lg border text-[#17202A] transition-all ${
                         transport === opt.id
-                          ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25] font-semibold'
+                          ? 'border-[#0A3D25] bg-[#C7EEDC] font-semibold text-[#0A3D25]'
                           : 'border-[#BFCBC5] bg-white hover:border-[#0A3D25]'
                       }`}
                     >
@@ -256,14 +253,14 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={handleCalculate}
-                    className="h-11 w-full max-w-[260px] rounded-full bg-[#0A3D25] text-[14px] font-bold text-white shadow-sm hover:bg-[#072B1A] transition-colors"
+                    className="h-11 w-full max-w-[260px] rounded-full bg-[#0A3D25] text-[14px] font-bold text-white shadow-sm transition-colors hover:bg-[#072B1A]"
                   >
                     Calculate
                   </button>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-[#0A3D25] px-6 py-10 text-center text-white shadow-md flex flex-col justify-between h-full">
+              <div className="flex flex-col justify-between rounded-xl border border-white/5 bg-[#0A3D25] px-6 py-10 text-center text-white shadow-md lg:h-full">
                 <div>
                   <p className="mb-5 text-[13px] font-bold uppercase tracking-[0.15em] text-[#72B99C]">
                     Your Estimated Emission
@@ -279,7 +276,7 @@ export default function Home() {
                   <p className="mb-6 text-[14px] text-[#BCE5D1]">
                     ~ {(co2 * 0.05).toFixed(1)} trees needed to absorb this
                   </p>
-                  <div className="mb-8 h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div className="mb-8 h-2 overflow-hidden rounded-full bg-white/10">
                     <div
                       className="h-full rounded-full bg-[#72B99C] transition-all"
                       style={{ width: `${Math.min(100, co2 * 18)}%` }}
@@ -297,15 +294,19 @@ export default function Home() {
           </div>
         </section>
 
+        {/* JOURNEY SECTION */}
         <section id="journey" className="bg-[#FAFAFA] py-16">
           <div className="mx-auto max-w-[94%] px-4 md:px-8">
-            <h2 className="mb-12 text-center text-[26px] md:text-[28px] font-extrabold text-[#0A3D25]">
+            <h2 className="mb-12 text-center text-[26px] font-extrabold text-[#0A3D25] md:text-[28px]">
               The Neoकर्म Journey
             </h2>
 
             <div className="grid grid-cols-2 gap-8 md:grid-cols-5 md:gap-4">
               {journeySteps.map((step, index) => (
-                <div key={step.title} className="relative flex flex-col items-center text-center">
+                <div
+                  key={step.title}
+                  className="relative flex flex-col items-center transform transition-transform duration-200 hover:-translate-y-2 hover:shadow-lg text-center"
+                >
                   {index > 0 && (
                     <div className="absolute left-[-50%] top-8 hidden h-px w-full border-t border-dashed border-[#BFCBC5] md:block" />
                   )}
@@ -322,16 +323,17 @@ export default function Home() {
           </div>
         </section>
 
+        {/* FEATURES SECTION */}
         <section id="features" className="bg-[#0A3D25] px-4 py-16 md:px-8">
-          <div className="mx-auto max-w-[94%] grid gap-6 md:grid-cols-3">
+          <div className="mx-auto grid max-w-[94%] gap-6 md:grid-cols-3">
             {featureCards.map((card) => (
               <div
                 key={card.title}
-                className="rounded-xl border border-white/10 bg-[#07563F] p-8 text-white "
+                className="group transform rounded-xl border border-white/10 bg-[#07563F] p-8 text-white transition-transform duration-200 hover:-translate-y-2 hover:shadow-2xl"
               >
-                <div className="mb-5 text-white">{card.icon}</div>
-                <h3 className="mb-3 text-[18px] font-bold text-white">{card.title}</h3>
-                <p className="text-[14px] text-whiteleading-relaxed">
+                <div className="mb-5 text-white transition-transform duration-200 group-hover:translate-y-1">{card.icon}</div>
+                <h3 className="mb-3 text-[18px] font-bold" style={{ color: '#ffffff' }}>{card.title}</h3>
+                <p className="text-[14px] leading-relaxed" style={{ color: '#ffffff' }}>
                   {card.description}
                 </p>
               </div>

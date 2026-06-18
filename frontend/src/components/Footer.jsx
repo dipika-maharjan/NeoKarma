@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 const footerColumns = [
   {
@@ -59,6 +60,7 @@ const socialLinks = [
 ];
 
 const Footer = () => {
+  const t = useTranslations('Footer');
   return (
     <footer className="w-full border-t border-[#CFE2D5] bg-[linear-gradient(180deg,#EEF7F1_0%,#E1EFE6_100%)] px-4 py-7 text-[#1E3322] shadow-[0_-10px_24px_rgba(23,32,42,0.05)] md:px-8 md:py-8 font-sans">
       <div className="max-w-screen-2xl mx-auto">
@@ -121,7 +123,7 @@ const Footer = () => {
             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#5C8A72]" aria-hidden="true" />
             <span>
               Students cannot change what they cannot see.
-              <span className="block text-center font-semibold text-[#4E6256]">
+              <span className="block items-start font-semibold text-[#4E6256]">
                 <span className="font-bold text-[#0A3D25]">Neoकर्म</span> helps them see it.
               </span>
             </span>

@@ -11,11 +11,6 @@ const asyncHandler = require('../utils/asyncHandler');
 const { getTodayStr } = require('../utils/dateHelpers');
 
 class DailyLogController {
-  /**
-   * POST /api/daily-log
-   * Submit today's carbon footprint log
-   * Rejects if user already logged today
-   */
   submitLog = asyncHandler(async (req, res) => {
     const userId = req.user.userId;
     const {
@@ -24,6 +19,7 @@ class DailyLogController {
       foodMealType,
       wasteAndPlasticCount,
       energyUsageHours,
+      energyFirewoodKg,
       extraAnswer
     } = req.body;
 
@@ -52,7 +48,8 @@ class DailyLogController {
       transportationDistanceKm,
       foodMealType,
       wasteAndPlasticCount,
-      energyUsageHours
+      energyUsageHours,
+      energyFirewoodKg: energyFirewoodKg || 0
     });
 
     // Create log
@@ -62,14 +59,14 @@ class DailyLogController {
       transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
       food: { mealType: foodMealType },
       wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
-      energy: { usageHours: energyUsageHours },
+      energy: { usageHours: energyUsageHours, firewoodKg: energyFirewoodKg || 0 },
       extraAnswer: extraAnswer || null,
       breakdown: emissionResult.breakdown,
       totalEmissionKg: emissionResult.totalEmissionKg
     });
 
     // Update streak
-    await streakService.updateStreakAfterLogCreation(userId);
+    const updatedUser = await streakService.updateStreakAfterLogCreation(userId);
 
     // Update monthly snapshot
     await carbonMirrorService.updateSnapshotAfterLog(userId, today, emissionResult);
@@ -82,7 +79,8 @@ class DailyLogController {
       message: 'Daily log submitted successfully',
       data: {
         log: createdLog,
-        mirror
+        mirror,
+        updatedStreak: updatedUser.streak
       }
     });
   });
