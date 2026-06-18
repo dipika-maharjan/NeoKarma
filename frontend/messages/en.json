@@ -24,10 +24,19 @@
   },
   "Footer": {
     "explore": "Explore",
-    "resources": "Resources",
-    "legal": "Legal",
-    "stayConnected": "Stay Connected",
-    "join": "Join"
+    "support": "Support",
+    "connectWithUs": "Connect with Us",
+    "followJourney": "Follow our journey on social media and stay inspired by student-led sustainability stories.",
+    "description": "Helping students measure climate impact and turn awareness into practical school-wide action.",
+    "aboutUs": "About Us",
+    "curriculum": "Curriculum",
+    "sustainability": "Sustainability",
+    "contact": "Contact",
+    "helpCenter": "Help Center",
+    "termsOfService": "Terms of Service",
+    "copyright": "© 2026 Neo Karma. All rights reserved.",
+    "studentsCannot": "Students cannot change what they cannot see.",
+    "helpsSeeIt": "helps them see it."
   },
   "Auth": {
     "welcome": "Welcome to Neoकर्म",

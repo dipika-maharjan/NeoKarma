@@ -3,19 +3,19 @@ import { useTranslations } from 'next-intl';
 
 const footerColumns = [
   {
-    title: 'Explore',
+    titleKey: 'explore',
     links: [
-      { label: 'About Us', href: '#about' },
-      { label: 'Curriculum', href: '#curriculum' },
-      { label: 'Sustainability', href: '#sustainability' },
+      { labelKey: 'aboutUs', href: '#about' },
+      { labelKey: 'curriculum', href: '#curriculum' },
+      { labelKey: 'sustainability', href: '#sustainability' },
     ],
   },
   {
-    title: 'Support',
+    titleKey: 'support',
     links: [
-      { label: 'Contact', href: '#contact' },
-      { label: 'Help Center', href: '#support' },
-      { label: 'Terms of Service', href: '#terms' },
+      { labelKey: 'contact', href: '#contact' },
+      { labelKey: 'helpCenter', href: '#support' },
+      { labelKey: 'termsOfService', href: '#terms' },
     ],
   },
 ];
@@ -68,24 +68,24 @@ const Footer = () => {
           <div className="max-w-xl">
             <span className="text-2xl font-bold tracking-wide text-[#0A3D25]">Neoकर्म</span>
             <p className="mt-2.5 max-w-lg text-sm leading-6 text-[#4E6256]">
-              Helping students measure climate impact and turn awareness into practical school-wide action.
+              {t('description')}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-x-10 gap-y-6">
             {footerColumns.map((column) => (
-              <div key={column.title} className="flex flex-col gap-2.5">
+              <div key={column.titleKey} className="flex flex-col gap-2.5">
                 <span className="text-[11px] font-bold uppercase tracking-widest text-[#0A3D25]">
-                  {column.title}
+                  {t(column.titleKey)}
                 </span>
                 {column.links.map((link) => (
                   <a
-                    key={link.label}
+                    key={link.labelKey}
                     href={link.href}
                     className="group w-fit text-[13px] text-[#52665B] transition-all duration-200 hover:translate-x-1 hover:text-[#0A3D25]"
                   >
                     <span className="bg-gradient-to-r from-[#5C8A72] to-[#5C8A72] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-300 group-hover:bg-[length:100%_1px]">
-                      {link.label}
+                      {t(link.labelKey)}
                     </span>
                   </a>
                 ))}
@@ -95,10 +95,10 @@ const Footer = () => {
 
           <div className="max-w-sm lg:justify-self-end lg:border-l lg:border-[#C9D8CF] lg:pl-8">
             <span className="text-[11px] font-bold uppercase tracking-widest text-[#0A3D25]">
-              Connect with us
+              {t('connectWithUs')}
             </span>
             <p className="mt-2.5 text-sm leading-6 text-[#4E6256]">
-              Follow our journey on social media and stay inspired by student-led sustainability stories.
+              {t('followJourney')}
             </p>
             <div className="mt-4 flex gap-2.5">
               {socialLinks.map((link) => (
@@ -118,13 +118,13 @@ const Footer = () => {
         </div>
 
         <div className="mt-6 flex flex-col gap-3 border-t border-[#C9D8CF] pt-4 text-[12px] text-[#5D6F60] md:flex-row md:items-center md:justify-between">
-          <p>© 2026 Neo Karma. All rights reserved.</p>
+          <p>{t('copyright')}</p>
           <p className="flex max-w-xl items-start gap-2 text-[13px] font-medium leading-6 text-[#4E6256] md:justify-end md:text-right">
             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#5C8A72]" aria-hidden="true" />
             <span>
-              Students cannot change what they cannot see.
-              <span className="block items-start font-semibold text-[#4E6256]">
-                <span className="font-bold text-[#0A3D25]">Neoकर्म</span> helps them see it.
+              {t('studentsCannot')}
+              <span className="block text-center font-semibold text-[#4E6256]">
+                <span className="font-bold text-[#0A3D25]">Neoकर्म</span> {t('helpsSeeIt')}
               </span>
             </span>
           </p>
