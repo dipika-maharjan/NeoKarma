@@ -8,18 +8,20 @@ const AppError = require('../utils/AppError');
 
 const authMiddleware = (req, res, next) => {
   try {
-    // Get token from Authorization header
+    let token = null;
+
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.slice(7);
+    } else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+
+    if (!token) {
       throw new AppError('No authorization token provided', 401);
     }
 
-    const token = authHeader.slice(7); // Remove "Bearer " prefix
-
-    // Verify token
     const decoded = jwt.verify(token, config.JWT_SECRET);
-
-    // Attach user info to request
     req.user = decoded;
 
     next();
