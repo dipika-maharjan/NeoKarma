@@ -2,13 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCookie } from '../lib/api/cookie';
-import { login as authLogin, logout as authLogout, getProfile } from '../lib/actions/authActions';
+import { login as authLogin, logout as authLogout, getProfile, editProfile } from '../lib/actions/authActions';
 
 const defaultAuthValue = {
   user: null,
   token: null,
   loading: false,
   login: async () => ({ success: false, error: 'Auth provider is unavailable' }),
+  updateProfile: async () => ({ success: false, error: 'Auth provider is unavailable' }),
   logout: () => {},
   isAuthenticated: false
 };
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }) => {
           setLoading(false);
         });
     } else {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
     }
 
     return () => {
@@ -77,11 +78,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileUpdates) => {
+    try {
+      const updatedUser = await editProfile(profileUpdates);
+      setUser(updatedUser);
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      return { success: false, error: error.message || 'Profile update failed' };
+    }
+  };
+
   const value = {
     user,
     token,
     loading,
     login,
+    updateProfile,
     logout,
     isAuthenticated: !!token
   };

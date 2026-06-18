@@ -87,16 +87,25 @@ const Navbar = () => {
           {isAuthenticated && user ? (
             <>
               {/* Day Streak Pill Layout */}
-              <div className="flex items-center gap-1.5 bg-white/70 text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-[#CFE2D5] shadow-sm select-none">
-                {/* Streak Image Asset from public directory */}
-                <img 
-                  src={streakIcon.src || streakIcon} 
-                  alt="Streak" 
-                  className="w-4 h-4 object-contain"
-                />
-                <span className="text-xs font-semibold tracking-wide">
-                  {user.streak?.current || 0} Day Streak
-                </span>
+              <div className="relative group">
+                <div className="flex items-center gap-1.5 bg-white/70 text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-[#CFE2D5] shadow-sm select-none">
+                  {/* Streak Image Asset from public directory */}
+                  <img 
+                    src={streakIcon.src || streakIcon} 
+                    alt="Streak" 
+                    className="w-4 h-4 object-contain"
+                  />
+                  <span className="text-xs font-semibold tracking-wide">
+                    {user.streak?.current || 0} Day Streak
+                  </span>
+                </div>
+                <div className="pointer-events-none absolute left-1/2 top-full mt-3 hidden w-[240px] -translate-x-1/2 rounded-3xl border border-[#D8E8D6] bg-white/95 px-4 py-3 text-[12px] font-medium text-[#10261D] shadow-[0_18px_60px_-20px_rgba(15,23,42,0.35)] backdrop-blur-sm opacity-0 transition-all duration-200 ease-out group-hover:block group-hover:opacity-100 group-hover:translate-y-1">
+                  <div className="absolute left-1/2 -top-2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-sm bg-white border-l border-t border-[#D8E8D6]" />
+                  <p className="text-sm font-semibold text-[#0A3D25]">Streak Boost</p>
+                  <p className="mt-1 text-[11px] leading-5 text-[#4A5B51]">
+                    Log your school activity daily to keep the streak going and earn better progress insights.
+                  </p>
+                </div>
               </div>
 
               {/* Profile Dropdown */}

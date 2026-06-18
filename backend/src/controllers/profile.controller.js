@@ -31,12 +31,15 @@ class ProfileController {
    */
   updateProfile = asyncHandler(async (req, res) => {
     const userId = req.user.userId;
-    const { name, schoolName, extraProfile } = req.body;
+    const { name, email, grade, locationType, schoolName, extraProfile } = req.body;
 
     const updateData = {};
-    if (name) updateData.name = name;
-    if (schoolName) updateData.schoolName = schoolName;
-    if (extraProfile) updateData.extraProfile = extraProfile;
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (grade !== undefined) updateData.grade = grade;
+    if (locationType !== undefined) updateData.locationType = locationType;
+    if (schoolName !== undefined) updateData.schoolName = schoolName;
+    if (extraProfile !== undefined) updateData.extraProfile = extraProfile;
 
     const user = await userRepository.update(userId, updateData);
     if (!user) {
