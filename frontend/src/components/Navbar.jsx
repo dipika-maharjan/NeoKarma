@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -26,9 +26,15 @@ const Navbar = () => {
   const activeTab = getActiveTab();
 
   return (
-    <nav className="w-full bg-[#FAFAFA] border-b border-gray-100 py-3.5 px-4 md:px-8 font-sans sticky top-0 z-50">
+    <nav
+      className={`sticky top-0 z-50 w-full px-4 py-3.5 font-sans transition-all duration-300 md:px-8 ${
+        scrolled
+          ? 'border-b border-[#CFE2D5] bg-[#F4FBF5]/95 shadow-[0_10px_26px_rgba(10,61,37,0.10)] backdrop-blur-xl'
+          : 'border-b border-[#DCE9E0] bg-[#EEF7F1]'
+      }`}
+    >
       {/* Outer wrapper matches footer horizontal alignment precisely */}
-      <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
+      <div className={`mx-auto flex max-w-screen-2xl items-center justify-between transition-transform duration-300 ${scrolled ? 'translate-y-0' : 'translate-y-0.5'}`}>
         
         {/* Left: Branding Identity */}
         <Link href="/dashboard" className="flex items-center no-underline select-none">
@@ -51,10 +57,10 @@ const Navbar = () => {
               <Link
                 key={key}
                 href={path}
-                className={`text-[14px] font-medium transition-all relative py-1 px-0.5 cursor-pointer no-underline ${
+                className={`text-[14px] font-medium transition-all duration-200 relative py-1 px-0.5 cursor-pointer no-underline ${
                   isActive 
                     ? 'text-[#0A3D25] font-semibold' 
-                    : 'text-gray-500 hover:text-[#0A3D25]'
+                    : 'text-[#52665B] hover:-translate-y-0.5 hover:text-[#0A3D25]'
                 }`}
               >
                 {label}
@@ -73,7 +79,7 @@ const Navbar = () => {
           {isAuthenticated && user ? (
             <>
               {/* Day Streak Pill Layout */}
-              <div className="flex items-center gap-1.5 bg-[#F1F4F2] text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-gray-100/60 shadow-none select-none">
+              <div className="flex items-center gap-1.5 bg-white/70 text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-[#CFE2D5] shadow-sm select-none">
                 {/* Streak Image Asset from public directory */}
                 <img 
                   src={streakIcon.src || streakIcon} 

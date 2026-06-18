@@ -1,4 +1,4 @@
-import CarbonMirrorPage from '@/pages/CarbonMirrorPage';
+import CarbonMirrorPage from '@/views/CarbonMirrorPage';
 
 export const metadata = {
   title: 'Carbon Mirror - Neoकर्म',

@@ -30,11 +30,11 @@ const LandingNavbar = () => {
 
   return (
     <nav
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+      className={`sticky top-0 z-50 w-full px-4 py-3.5 font-sans transition-all duration-300 md:px-8 ${
         scrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100'
-          : 'bg-white border-b border-gray-100'
-      } py-3.5 px-4 md:px-8 font-sans`}
+          ? 'border-b border-[#D8DED2] bg-[#FFFFFA]/95 shadow-[0_10px_28px_rgba(33,53,44,0.10)] backdrop-blur-xl'
+          : 'border-b border-[#E1E6DC] bg-[#F6F7F1]'
+      }`}
     >
       <div className="max-w-[94%] mx-auto relative flex items-center justify-between">
         <Link href="/" className="no-underline select-none">
@@ -77,7 +77,7 @@ const LandingNavbar = () => {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="cursor-pointer p-2 text-gray-700 md:hidden"
+          className="cursor-pointer rounded-full p-2 text-[#0A3D25] transition-colors hover:bg-[#E9EDE4] md:hidden"
           aria-label="Toggle menu"
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
