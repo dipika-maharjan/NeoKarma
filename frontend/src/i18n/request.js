@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { cookies } from 'next/headers';
 
-export async function getI18nConfig() {
+export default async function getI18nConfig() {
   // Prefer cookie-based locale detection in App Router.
   let locale = undefined;
   try {
