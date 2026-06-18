@@ -13,6 +13,14 @@ const Navbar = () => {
   const pathname = usePathname();
   const { user, isAuthenticated } = useAuth();
   const t = useTranslations('Navbar');
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Determine active tab based on current pathname
   const getActiveTab = () => {

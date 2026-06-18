@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 const footerColumns = [
   {
@@ -122,7 +123,7 @@ const Footer = () => {
             <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#5C8A72]" aria-hidden="true" />
             <span>
               Students cannot change what they cannot see.
-              <span className="block text-center font-semibold text-[#4E6256]">
+              <span className="block items-start font-semibold text-[#4E6256]">
                 <span className="font-bold text-[#0A3D25]">Neoकर्म</span> helps them see it.
               </span>
             </span>
