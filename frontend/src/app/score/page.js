@@ -1,4 +1,4 @@
-import ScorePage from '@/pages/ScorePage';
+import ScorePage from '@/views/ScorePage';
 
 export const metadata = {
   title: 'Score & History - नेओकर्म',

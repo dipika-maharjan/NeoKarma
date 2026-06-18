@@ -1,4 +1,4 @@
-import PlanPage from '@/pages/PlanPage';
+import PlanPage from '@/views/PlanPage';
 
 export const metadata = {
   title: 'Action Plan - नेओकर्म',

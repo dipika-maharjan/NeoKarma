@@ -1,4 +1,4 @@
-import CalculatorPage from '@/pages/CalculatorPage';
+import CalculatorPage from '@/views/CalculatorPage';
 
 export const metadata = {
   title: 'Carbon Calculator - नेओकर्म',
