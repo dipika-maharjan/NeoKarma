@@ -30,7 +30,8 @@
     "morgan": "^1.10.0",
     "nanoid": "^5.1.11",
     "node-cron": "^3.0.2",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "cookie-parser": "^1.4.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
