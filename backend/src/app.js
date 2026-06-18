@@ -6,6 +6,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const { connectDB } = require('./config/db');
 const config = require('./config/env');
 const errorHandler = require('./middlewares/errorHandler.middleware');
@@ -33,6 +34,7 @@ app.use(
 // Body Parser Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(cookieParser());
 
 // Request Logging Middleware
 if (config.NODE_ENV === 'development') {
