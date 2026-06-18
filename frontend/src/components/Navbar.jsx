@@ -1,15 +1,26 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ProfileDropdown from './ProfileDropdown';
 import streakIcon from '../../public/streak.png'; 
+import LanguageToggle from './LanguageToggle';
+import { useTranslations } from 'next-intl';
 
 const Navbar = () => {
   const pathname = usePathname();
   const { user, isAuthenticated } = useAuth();
+  const t = useTranslations('Navbar');
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Determine active tab based on current pathname
   const getActiveTab = () => {
@@ -23,9 +34,15 @@ const Navbar = () => {
   const activeTab = getActiveTab();
 
   return (
-    <nav className="w-full bg-[#FAFAFA] border-b border-gray-100 py-3.5 px-4 md:px-8 font-sans sticky top-0 z-50">
+    <nav
+      className={`sticky top-0 z-50 w-full px-4 py-3.5 font-sans transition-all duration-300 md:px-8 ${
+        scrolled
+          ? 'border-b border-[#CFE2D5] bg-[#F4FBF5]/95 shadow-[0_10px_26px_rgba(10,61,37,0.10)] backdrop-blur-xl'
+          : 'border-b border-[#DCE9E0] bg-[#EEF7F1]'
+      }`}
+    >
       {/* Outer wrapper matches footer horizontal alignment precisely */}
-      <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
+      <div className={`mx-auto flex max-w-screen-2xl items-center justify-between transition-transform duration-300 ${scrolled ? 'translate-y-0' : 'translate-y-0.5'}`}>
         
         {/* Left: Branding Identity */}
         <Link href="/dashboard" className="flex items-center no-underline select-none">
@@ -36,25 +53,25 @@ const Navbar = () => {
 
         {/* Center: Main App Menu Links Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          {["Dashboard", "Calculator", "Mirror", "Plan", "Score"].map((tab) => {
-            const tabLower = tab.toLowerCase();
-            const isActive = activeTab === tabLower;
-            let path = `/${tabLower}`;
-            if (tabLower === 'mirror') {
-              path = '/carbon-mirror';
-            }
+          {[
+            { key: 'dashboard', label: t('dashboard'), path: '/dashboard' },
+            { key: 'calculator', label: t('calculator'), path: '/calculator' },
+            { key: 'mirror', label: t('mirror'), path: '/carbon-mirror' },
+            { key: 'plan', label: t('plan'), path: '/plan' },
+            { key: 'score', label: t('score'), path: '/score' }
+          ].map(({ key, label, path }) => {
+            const isActive = activeTab === key;
             return (
               <Link
-                key={tab}
+                key={key}
                 href={path}
-                className={`text-[14px] font-medium transition-all relative py-1 px-0.5 cursor-pointer no-underline ${
+                className={`text-[14px] font-medium transition-all duration-200 relative py-1 px-0.5 cursor-pointer no-underline ${
                   isActive 
                     ? 'text-[#0A3D25] font-semibold' 
-                    : 'text-gray-500 hover:text-[#0A3D25]'
+                    : 'text-[#52665B] hover:-translate-y-0.5 hover:text-[#0A3D25]'
                 }`}
               >
-                {tab}
-                {/* Clean matching underline indicator accent for active state */}
+                {label}
                 {isActive && (
                   <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#0A3D25] rounded-full" />
                 )}
@@ -65,11 +82,12 @@ const Navbar = () => {
 
         {/* Right: Streak Metrics Status & Profile Action Wrapper */}
         <div className="flex items-center gap-4">
+          <LanguageToggle />
           
           {isAuthenticated && user ? (
             <>
               {/* Day Streak Pill Layout */}
-              <div className="flex items-center gap-1.5 bg-[#F1F4F2] text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-gray-100/60 shadow-none select-none">
+              <div className="flex items-center gap-1.5 bg-white/70 text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-[#CFE2D5] shadow-sm select-none">
                 {/* Streak Image Asset from public directory */}
                 <img 
                   src={streakIcon.src || streakIcon} 
@@ -89,7 +107,7 @@ const Navbar = () => {
               href="/login"
               className="text-sm font-semibold text-[#0A3D25] hover:text-[#43A047] transition-colors no-underline"
             >
-              Sign In
+              {t('signIn')}
             </Link>
           )}
 

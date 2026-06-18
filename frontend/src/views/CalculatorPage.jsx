@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
 import { logDailyCarbon } from '@/lib/actions/calculatorActions';
+import { getEmissionFactors } from '@/lib/api/emissionFactors';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
@@ -24,6 +25,9 @@ const CalculatorPage = () => {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [emissionFactors, setEmissionFactors] = useState(null);
+  const [factorsError, setFactorsError] = useState(null);
+  const [loadingFactors, setLoadingFactors] = useState(true);
 
   const [formData, setFormData] = useState({
     transportationMode: 'walk',
@@ -32,8 +36,33 @@ const CalculatorPage = () => {
     usedSingleUsePlastic: false,
     wastedFood: false,
     energyUsageHours: 3,
+    energyFirewoodKg: 0,
     extraProfileAnswer: null
   });
+
+  // Persist draft to sessionStorage so toggling locale (which may re-render server components)
+  // does not lose the user's in-progress inputs.
+  useEffect(() => {
+    try {
+      const key = 'calculatorFormDraft';
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setFormData(prev => ({ ...prev, ...parsed }));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const key = 'calculatorFormDraft';
+      sessionStorage.setItem(key, JSON.stringify(formData));
+    } catch (e) {
+      // ignore
+    }
+  }, [formData]);
 
   const transportationOptions = [
     { value: 'walk', label: 'Walk', icon: <Footprints size={21} strokeWidth={2.5} /> },
@@ -43,16 +72,55 @@ const CalculatorPage = () => {
     { value: 'car', label: 'Car', icon: <Car size={21} strokeWidth={2.5} /> }
   ];
 
-  const foodOptions = [
-    { value: 'vegetarian', label: 'Vegetarian', estimate: '0.9 kg CO2' },
-    { value: 'mixed', label: 'Mixed', estimate: '1.5 kg CO2' },
-    { value: 'non-vegetarian', label: 'Non-Veg', estimate: '2.5 kg CO2' }
+  const foodOptionsBase = [
+    { value: 'vegan', label: 'Vegan', factorKey: 'food_vegan' },
+    { value: 'vegetarian', label: 'Vegetarian', factorKey: 'food_vegetarian' },
+    { value: 'mixed', label: 'Mixed', factorKey: 'food_mixed' },
+    { value: 'non-vegetarian', label: 'Non-Veg', factorKey: 'food_non-vegetarian' }
   ];
+
+  const foodOptions = foodOptionsBase.map((option) => {
+    const factor = emissionFactors?.[option.factorKey];
+    return {
+      ...option,
+      estimate: loadingFactors
+        ? 'Loading…'
+        : factor != null
+          ? `${factor.toFixed(1)} kg CO₂`
+          : ''
+    };
+  });
 
   const setField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '', submit: '' }));
   };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadFactors = async () => {
+      try {
+        const map = await getEmissionFactors();
+        if (mounted) {
+          setEmissionFactors(map);
+        }
+      } catch (err) {
+        if (mounted) {
+          setFactorsError('Unable to load emission factors');
+        }
+      } finally {
+        if (mounted) {
+          setLoadingFactors(false);
+        }
+      }
+    };
+
+    loadFactors();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const changeNumber = (field, amount, min, max) => {
     setFormData(prev => {
@@ -101,10 +169,13 @@ const CalculatorPage = () => {
         foodMealType: formData.foodMealType,
         wasteAndPlasticCount: wasteCount,
         energyUsageHours: formData.energyUsageHours,
+        energyFirewoodKg: formData.energyFirewoodKg,
         ...(formData.extraProfileAnswer !== null && { extraAnswer: formData.extraProfileAnswer })
       };
 
       await logDailyCarbon(payload);
+      // clear draft on successful submit
+      try { sessionStorage.removeItem('calculatorFormDraft'); } catch (e) {}
       router.push('/calculator/result');
     } catch (error) {
       console.error('Error logging carbon:', error);
@@ -266,7 +337,7 @@ const CalculatorPage = () => {
                 <h2 className="text-[24px] font-extrabold leading-none">2. Lunch</h2>
               </div>
               <p className="mb-[18px] text-[16px] text-[#4A5550]">What did you have for lunch?</p>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {foodOptions.map(option => {
                   const selected = formData.foodMealType === option.value;
                   return (
@@ -329,20 +400,42 @@ const CalculatorPage = () => {
                 <Zap size={23} className="text-[#0A3D25]" />
                 <h2 className="text-[24px] font-extrabold leading-none">4. Energy</h2>
               </div>
-              <p className="mb-[18px] text-[16px] text-[#4A5550]">
-                Approx. hours of electricity use (at school + home)
-              </p>
-              <Stepper
-                label=""
-                value={formData.energyUsageHours}
-                field="energyUsageHours"
-                unit="Hours"
-                max={24}
-                step={1}
-              />
-              {errors.energyUsageHours && (
-                <p className="mt-2 text-sm text-red-600">{errors.energyUsageHours}</p>
-              )}
+              
+              <div className="space-y-6">
+                <div>
+                  <p className="mb-[18px] text-[16px] text-[#4A5550]">
+                    Approx. hours of electricity use (at school + home)
+                  </p>
+                  <Stepper
+                    label=""
+                    value={formData.energyUsageHours}
+                    field="energyUsageHours"
+                    unit="Hours"
+                    max={24}
+                    step={1}
+                  />
+                  {errors.energyUsageHours && (
+                    <p className="mt-2 text-sm text-red-600">{errors.energyUsageHours}</p>
+                  )}
+                </div>
+
+                <div className="border-t border-[#E0E5E2] pt-6">
+                  <p className="mb-[18px] text-[16px] text-[#4A5550]">
+                    Firewood used for cooking or heating 
+                  </p>
+                  <Stepper
+                    label=""
+                    value={formData.energyFirewoodKg}
+                    field="energyFirewoodKg"
+                    unit="kg"
+                    max={20}
+                    step={0.5}
+                  />
+                  <p className="mt-2 text-[13px] text-[#4A5550]">
+                    Leave as 0 if not applicable
+                  </p>
+                </div>
+              </div>
             </section>
 
             <section className="relative overflow-hidden rounded-xl bg-[#E8F5E9] border border-[#BEE8D3] p-6 text-[#1B5E20]">

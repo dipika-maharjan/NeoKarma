@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
+import { useTranslations } from 'next-intl';
 
 // Unified recommendations list matching the Smart Recommendations view
 const PRESETS = [
@@ -187,6 +188,7 @@ const mapBackendRecToCard = (rec, index) => {
 
 const RecommendationsView = ({ onNavigateToDashboard }) => {
   const { user } = useAuth();
+  const t = useTranslations('Plan');
   const [activeTab, setActiveTab] = useState('recommendations'); // 'recommendations' or 'plan'
   const [addedIds, setAddedIds] = useState(new Set());
   const [planItems, setPlanItems] = useState([]);
@@ -327,10 +329,10 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <div>
                 <h1 className="text-[32px] font-extrabold tracking-tight text-[#0A3D25] md:text-[34px]">
-                  Smart Recommendations
+                  {t('smartRecommendations')}
                 </h1>
                 <p className="text-sm text-gray-500 mt-1.5 max-w-xl">
-                  Based on your data, we've identified the most impactful changes you can make today to lower your carbon footprint.
+                  {t('recommendationsSubtitle')}
                 </p>
               </div>
               <button
@@ -346,7 +348,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
               {loading ? (
                 <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-16 bg-white border border-gray-100/80 shadow-sm rounded-3xl">
                   <div className="w-12 h-12 border-4 border-[#0A3D25] border-t-transparent rounded-full animate-spin mb-4"></div>
-                  <p className="text-gray-500 font-medium">Loading smart recommendations...</p>
+                  <p className="text-gray-500 font-medium">{t('loadingRecommendations')}</p>
                 </div>
               ) : (
                 recommendations.map((rec) => {
@@ -375,7 +377,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                       <div className="mt-6 flex items-end justify-between">
                         <div>
                           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                            Impact Reduction
+                            {t('impactReduction')}
                           </p>
                           <p className="text-lg font-extrabold text-gray-800 mt-0.5">
                             {rec.reduction}
@@ -391,7 +393,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                                 : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232] cursor-pointer'
                             }`}
                           >
-                            {isAdded ? '✓ Added' : 'Add To Plan'}
+                            {isAdded ? t('added') : t('addToPlan')}
                           </button>
                         </div>
 
@@ -432,17 +434,17 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <div>
                 <h1 className="text-[32px] font-extrabold tracking-tight text-[#0A3D25] md:text-[34px]">
-                  Action Plan & Commitment
+                  {t('actionPlanTitle')}
                 </h1>
                 <p className="text-sm text-gray-500 mt-1.5">
-                  Review your current environmental goals and track your progress towards a net-zero future.
+                  {t('actionPlanSubtitle')}
                 </p>
               </div>
               <button
                 onClick={() => setActiveTab('recommendations')}
                 className="bg-white border border-gray-300 hover:border-[#0A3D25] text-gray-700 hover:text-[#0A3D25] text-sm font-semibold py-2.5 px-6 rounded-full transition-all cursor-pointer shadow-sm"
               >
-                ← Add More Recommendations
+                ← {t('addMore')}
               </button>
             </div>
 
@@ -477,7 +479,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
               {/* Right Box: Overall Progress Bar */}
               <div className="flex-[2] pl-0 md:pl-6 flex flex-col justify-center">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-[#A2CBA0]">Overall Plan Progress</span>
+                  <span className="text-xs font-bold text-[#A2CBA0]">{t('overallPlanProgress')}</span>
                   <span className="text-sm font-black text-white">{progressPercent}%</span>
                 </div>
                 <div className="w-full h-2 bg-[#155A39] rounded-full overflow-hidden">
@@ -487,19 +489,19 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   ></div>
                 </div>
                 <p className="text-[10px] text-[#A2CBA0] mt-2 font-medium">
-                  {completedCount} of {totalActions} actions completed this month. Keep it up!
+                  {t('completedSummary', { completed: completedCount, total: totalActions })}
                 </p>
               </div>
             </div>
 
             {/* Filter buttons block */}
             <div className="flex flex-wrap gap-2.5 mb-8">
-              {[
-                { filterKey: 'all', label: 'All Actions' },
-                { filterKey: 'transport', label: 'Transport' },
-                { filterKey: 'energy', label: 'Energy' },
-                { filterKey: 'waste', label: 'Waste' },
-                { filterKey: 'food', label: 'Food' }
+                {[
+                { filterKey: 'all', label: t('filterAll') },
+                { filterKey: 'transport', label: t('filterTransport') },
+                { filterKey: 'energy', label: t('filterEnergy') },
+                { filterKey: 'waste', label: t('filterWaste') },
+                { filterKey: 'food', label: t('filterFood') }
               ].map((btn) => {
                 const isActive = activeFilter === btn.filterKey;
                 return (
@@ -524,10 +526,10 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                 <div className="text-center py-12 bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
                   <span className="text-4xl">🌱</span>
                   <p className="text-gray-500 text-sm font-medium mt-3">
-                    No actions committed in this category.
+                    {t('noActions')}
                   </p>
                   <p className="text-gray-400 text-xs mt-1">
-                    Try adding items from the recommendations deck or change your filter.
+                    {t('tryAdding')}
                   </p>
                 </div>
               ) : (
@@ -556,7 +558,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                               ? 'text-green-600' 
                               : 'text-red-500'
                           }`}>
-                            {item.completed ? '✓ Completed' : '⏰ Pending'}
+                            {item.completed ? t('completed') : t('pending')}
                           </span>
                         </div>
 
@@ -578,7 +580,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                       {/* Saving */}
                       <div className="text-left sm:text-right">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                          Potential Saving
+                          {t('potentialSaving')}
                         </p>
                         <p className="text-xs font-black text-gray-800 mt-0.5">
                           {item.saving}kg CO2/mo
@@ -595,13 +597,13 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                               : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232]'
                           }`}
                         >
-                          {item.completed ? 'Completed' : 'Mark as Complete'}
+                          {item.completed ? t('completedBtn') : t('markComplete')}
                         </button>
                         
                         <button
                           onClick={() => deletePlanItem(item.id)}
                           className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
-                          title="Delete Action"
+                          title={t('deleteAction')}
                         >
                           🗑️
                         </button>
