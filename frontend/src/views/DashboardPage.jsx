@@ -16,6 +16,7 @@ const DashboardPage = () => {
   const router = useRouter();
   const t = useTranslations('Dashboard');
   const tStatus = useTranslations('Status');
+  const tCarbon = useTranslations('CarbonMirror');
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [streakData, setStreakData] = useState(null);
@@ -223,9 +224,9 @@ const DashboardPage = () => {
               }}
             >
               <div className="flex min-h-[360px] max-w-[420px] flex-col justify-center px-6 py-8 md:px-7">
-                <h2 className="text-[25px] font-extrabold text-[#17202A]">{useTranslations('CarbonMirror')('title')}</h2>
+                <h2 className="text-[25px] font-extrabold text-[#17202A]">{tCarbon('title')}</h2>
                 <p className="mt-3 text-[17px] leading-relaxed text-[#4A5550]">
-                  {useTranslations('CarbonMirror')('overview')}
+                  {tCarbon('overview')}
                 </p>
                 <span className="mt-8 inline-flex h-12 w-fit items-center justify-center rounded-full border-2 border-[#0A3D25] px-7 text-[15px] font-bold text-[#0A3D25] transition-colors hover:bg-[#E8F5E9]">
                   {t('openCarbonMirror')}

@@ -3,10 +3,13 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 const LoginPage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { login: authLogin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,7 +19,13 @@ const LoginPage = () => {
 
   const getHomeRoute = (user) => {
     if (!user) return '/dashboard';
-    if (user.role === 'admin' || user.isAdmin || user.admin) return '/admin';
+    if (
+      user.role === 'school_admin' ||
+      user.role === 'admin' ||
+      user.isAdmin ||
+      user.admin
+    )
+      return '/admin/dashboard';
     return '/dashboard';
   };
 

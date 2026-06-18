@@ -39,7 +39,13 @@ const RegisterPage = () => {
 
   const getHomeRoute = (user) => {
     if (!user) return '/dashboard';
-    if (user.role === 'admin' || user.isAdmin || user.admin) return '/admin';
+    if (
+      user.role === 'school_admin' ||
+      user.role === 'admin' ||
+      user.isAdmin ||
+      user.admin
+    )
+      return '/admin';
     return '/dashboard';
   };
 

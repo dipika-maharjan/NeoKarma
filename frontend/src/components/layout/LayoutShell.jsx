@@ -10,10 +10,11 @@ const LANDING_ROUTES = ['/', '/login', '/register'];
 const LayoutShell = ({ children }) => {
   const pathname = usePathname();
   
-  // Landing page, login, and register manage their own layout
+  // Landing page, login, register, and admin pages manage their own layout
   const isLandingRoute = LANDING_ROUTES.includes(pathname);
+  const isAdminRoute = pathname.startsWith('/admin');
 
-  if (isLandingRoute) {
+  if (isLandingRoute || isAdminRoute) {
     return <>{children}</>;
   }
 
