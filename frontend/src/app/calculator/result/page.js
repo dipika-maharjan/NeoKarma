@@ -1,4 +1,4 @@
-import ResultPage from '@/pages/ResultPage';
+import ResultPage from '@/views/ResultPage';
 
 export const metadata = {
   title: 'Your Carbon Footprint - नेओकर्म',
