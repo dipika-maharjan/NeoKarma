@@ -3,20 +3,32 @@ import { setCookie, removeCookie } from '../api/cookie';
 
 export const register = async (userData) => {
   const response = await registerUser(userData);
-  const { token, user } = response.data.data;
-  setCookie('neokarma_token', token);
-  return { user, token };
+  const { token, user, role } = response.data.data;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('token', token);
+  }
+  setCookie('token', token);
+  setCookie('role', role || user?.role || 'student');
+  return { user, token, role };
 };
 
 export const login = async (credentials) => {
   const response = await loginUser(credentials);
-  const { token, user } = response.data.data;
-  setCookie('neokarma_token', token);
-  return { user, token };
+  const { token, user, role } = response.data.data;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('token', token);
+  }
+  setCookie('token', token);
+  setCookie('role', role || user?.role || 'student');
+  return { user, token, role };
 };
 
 export const logout = () => {
-  removeCookie('neokarma_token');
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('token');
+  }
+  removeCookie('token');
+  removeCookie('role');
 };
 
 export const getProfile = async () => {

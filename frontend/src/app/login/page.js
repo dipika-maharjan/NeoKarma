@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 const LoginPage = () => {
+  const router = useRouter();
   const { login: authLogin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +24,8 @@ const LoginPage = () => {
     try {
       const result = await authLogin({ email, password });
       if (result?.success || result?.token || result?.user) {
-        window.location.href = '/dashboard';
+        const role = result?.role || result?.user?.role;
+        router.replace(role === 'school_admin' ? '/admin/dashboard' : '/dashboard');
       } else {
         setError(result?.error || 'Login failed');
       }
