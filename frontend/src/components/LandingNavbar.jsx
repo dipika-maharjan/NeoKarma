@@ -24,13 +24,15 @@ const LandingNavbar = () => {
 
   return (
     <nav
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+      className={`sticky top-0 z-50 w-full px-4 py-3.5 font-sans transition-all duration-300 md:px-8 ${
         scrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100'
-          : 'bg-white border-b border-gray-100'
-      } py-3.5 px-4 md:px-8 font-sans`}
+          ? 'border-b border-[#D8DED2] bg-[#FFFFFA]/95 shadow-[0_10px_28px_rgba(33,53,44,0.10)] backdrop-blur-xl'
+          : 'border-b border-[#E1E6DC] bg-[#F6F7F1]'
+      }`}
     >
-      <div className="max-w-[94%] mx-auto flex items-center justify-between">
+      <div
+        className={`mx-auto flex max-w-screen-2xl items-center justify-between transition-transform duration-300 ${scrolled ? 'translate-y-0' : 'translate-y-0.5'}`}
+      >
         <Link href="/" className="no-underline select-none">
           <span className="text-2xl font-bold text-[#0A3D25] tracking-wide cursor-pointer">
             Neoकर्म
@@ -42,7 +44,7 @@ const LandingNavbar = () => {
             <Link
               key={link.label}
               href={link.href}
-              className="text-[14px] font-medium text-gray-500 no-underline transition-colors hover:text-[#0A3D25]"
+              className="text-[14px] font-medium text-[#5A665E] no-underline transition-all duration-200 hover:-translate-y-0.5 hover:text-[#0A3D25]"
             >
               {link.label}
             </Link>
@@ -52,13 +54,13 @@ const LandingNavbar = () => {
         <div className="hidden items-center gap-6 md:flex">
           <Link
             href="/login"
-            className="text-[14px] font-medium text-gray-500 no-underline transition-colors hover:text-[#0A3D25]"
+            className="text-[14px] font-medium text-[#5A665E] no-underline transition-colors hover:text-[#0A3D25]"
           >
             Login
           </Link>
           <Link
             href="/register"
-            className="rounded-full bg-[#0A3D25] px-5 py-2 text-[14px] font-semibold text-white no-underline shadow-sm transition-all duration-200 hover:bg-[#072B1A]"
+            className="rounded-full bg-[#0A3D25] px-5 py-2 text-[14px] font-semibold text-white no-underline shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#072B1A] hover:shadow-[0_8px_18px_rgba(10,61,37,0.18)]"
           >
             Get Started
           </Link>
@@ -66,7 +68,7 @@ const LandingNavbar = () => {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="cursor-pointer p-2 text-gray-700 md:hidden"
+          className="cursor-pointer rounded-full p-2 text-[#0A3D25] transition-colors hover:bg-[#E9EDE4] md:hidden"
           aria-label="Toggle menu"
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -74,18 +76,18 @@ const LandingNavbar = () => {
       </div>
 
       {mobileOpen && (
-        <div className="space-y-3 border-t border-gray-100 bg-white px-6 py-4 animate-[fadeIn_0.2s_ease-in] md:hidden">
+        <div className="mt-3 space-y-3 border-t border-[#D8DED2] bg-[#FFFFFA]/95 px-2 py-4 animate-[fadeIn_0.2s_ease-in] md:hidden">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className="block py-2 text-sm font-medium text-gray-600 no-underline transition-colors hover:text-[#0A3D25]"
+              className="block py-2 text-sm font-medium text-[#5A665E] no-underline transition-colors hover:text-[#0A3D25]"
             >
               {link.label}
             </Link>
           ))}
-          <hr className="border-gray-100" />
+          <hr className="border-[#D8DED2]" />
           <Link
             href="/login"
             onClick={() => setMobileOpen(false)}
