@@ -9,6 +9,8 @@
     "login": "लगइन",
     "getStarted": "सुरु गर्नुहोस्",
     "dayStreak": "{count} लगातार दिन"
+    ,"streakBoostTitle": "स्ट्रीक बूस्ट"
+    ,"streakBoostCopy": "स्ट्रीक कायम राख्नका लागि दैनिक रुपमा विद्यालय गतिविधि लग गर्नुहोस् र राम्रो प्रगति सम्बन्धी अन्तर्दृष्टि कमाउनुहोस्।"
   },
   "Landing": {
     "madeFor": "नेपालेली विद्यालयहरूका लागि बनाइएको",
@@ -163,6 +165,13 @@
     "youDoingBetter": "आज तपाइँ राम्रो गर्दै हुनुहुन्छ। हरियो छनोट राख्नुहोस्!"
     ,"thisWeek":"यस हप्ता",
     "monthlyReduction":"मासिक कमी",
+    "monthlyReductionDetail":"यस हप्ताको औसत {weeklyAvg} विरुद्ध महिनाको औसत {monthlyAvg}।",
+    "monthlyReductionPositive":"यस हप्तामा कम",
+    "monthlyReductionNeutral":"यस हप्तामा स्थिर",
+    "monthlyReductionPlaceholder":"साप्ताहिक र मासिक उत्सर्जन तुलना गर्न बढी लगहरू थप्नुहोस्।",
+    "monthlyReductionPlaceholderLabel":"अझै प्रवृत्ति छैन",
+    "day":"दिन",
+    "emission":"उत्सर्जन",
     "greatProgress":"पछिल्लो महिनाको तुलनामा राम्रो प्रगति!",
     "impactScore":"प्रभाव स्कोर",
     "openCarbonMirror":"कार्बन मिरर खोल्नुहोस्",

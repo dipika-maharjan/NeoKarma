@@ -9,6 +9,8 @@
     "login": "Login",
     "getStarted": "Get Started",
     "dayStreak": "{count} Day Streak"
+    ,"streakBoostTitle": "Streak Boost"
+    ,"streakBoostCopy": "Log your school activity daily to keep the streak going and earn better progress insights."
   },
   "Landing": {
     "madeFor": "Made for Nepalese Schools",
@@ -163,6 +165,13 @@
     "youDoingBetter": "You're doing better today. Keep up the green choices!"
     ,"thisWeek":"This Week",
     "monthlyReduction":"Monthly Reduction",
+    "monthlyReductionDetail":"This week avg {weeklyAvg} vs month avg {monthlyAvg}.",
+    "monthlyReductionPositive":"Lower this week",
+    "monthlyReductionNeutral":"Stable this week",
+    "monthlyReductionPlaceholder":"Add more logs to compare weekly and monthly emissions.",
+    "monthlyReductionPlaceholderLabel":"No trend yet",
+    "day":"Day",
+    "emission":"Emission",
     "greatProgress":"Great progress compared to last month!",
     "impactScore":"Impact Score",
     "openCarbonMirror":"Open Carbon Mirror",

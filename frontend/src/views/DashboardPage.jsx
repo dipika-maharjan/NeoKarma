@@ -84,9 +84,20 @@ const DashboardPage = () => {
     : null;
   const weeklyAverage = dashboardData?.weekly?.averagePerDay ?? null;
   const monthlyAverage = dashboardData?.monthly?.averagePerDay ?? weeklyAverage ?? null;
-  const monthlyReduction = (monthlyAverage !== null && weeklyAverage !== null)
-    ? Math.max(0, Math.round(((monthlyAverage - weeklyAverage) / monthlyAverage) * 100))
+  const monthlyReduction = (monthlyAverage !== null && weeklyAverage !== null && monthlyAverage !== 0)
+    ? Math.round(((monthlyAverage - weeklyAverage) / monthlyAverage) * 100)
     : null;
+  const monthlyReductionMessage = monthlyReduction !== null && weeklyAverage !== null && monthlyAverage !== null
+    ? t('monthlyReductionDetail', {
+        weeklyAvg: formatNumber(weeklyAverage, { maximumFractionDigits: 1 }),
+        monthlyAvg: formatNumber(monthlyAverage, { maximumFractionDigits: 1 })
+      })
+    : t('monthlyReductionPlaceholder');
+  const monthlyReductionStatus = monthlyReduction !== null
+    ? monthlyReduction > 0
+      ? t('monthlyReductionPositive')
+      : t('monthlyReductionNeutral')
+    : '';
   const impactScore = Number.isFinite(streakData?.participationScore)
     ? Math.min(100, Math.max(0, Math.round(streakData.participationScore)))
     : null;
@@ -102,6 +113,13 @@ const DashboardPage = () => {
   const weeklyBars = Array.isArray(dashboardData?.weekly?.dailyValues)
     ? dashboardData.weekly.dailyValues.map(v => Number(v))
     : [];
+  const weeklyLabels = Array.isArray(dashboardData?.weekly?.dailyLabels)
+    ? dashboardData.weekly.dailyLabels
+    : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const weeklyRows = weeklyBars.map((value, index) => ({
+    label: weeklyLabels[index] ?? `Day ${index + 1}`,
+    value
+  }));
   const gasBubbles = (() => {
     const emission = todayEmission ?? 3.5;
     const count = Math.min(10, Math.max(4, Math.round(emission * 1.5)));
@@ -281,28 +299,63 @@ const DashboardPage = () => {
                       ))
                     )}
                   </div>
+
+                  {weeklyRows.length > 0 && (
+                    <div className="mt-4 overflow-hidden rounded-3xl border border-[#E7F1E9] bg-[#F7FBF7]">
+                      <table className="w-full border-collapse text-left text-[12px]">
+                        <thead>
+                          <tr className="bg-white/80">
+                            <th className="px-3 py-3 font-semibold uppercase tracking-[0.16em] text-[#4A5550]">{t('day')}</th>
+                            <th className="px-3 py-3 font-semibold uppercase tracking-[0.16em] text-[#4A5550]">{t('emission')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {weeklyRows.map((row, index) => (
+                            <tr key={index} className="border-t border-[#E0E5E2] even:bg-white/80">
+                              <td className="px-3 py-3 font-bold text-[#17202A]">{row.label}</td>
+                              <td className="px-3 py-3 text-[#4A6B5D]">{formatNumber(row.value, { maximumFractionDigits: 1 })} {t('kgCO2Unit')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </>
               )}
             </section>
 
-            <section className="rounded-[10px] border border-[#BEE8D3] bg-[#C7EEDC] p-5 card-float flex flex-col justify-center">
-              <p className="text-[14px] font-bold tracking-wide text-[#4A6B5D]">{t('monthlyReduction')}</p>
-              <div className="mt-2 flex items-center gap-8">
-                <div>
-                  <ArrowDown size={23} className="mb-1 text-[#4A6B5D]" />
-                  <p className="text-[24px] font-extrabold text-[#4A6B5D]">
-                    {monthlyReduction !== null ? `${monthlyReduction}%` : '--'}
+            {/* Redesigned Monthly Reduction Section — Heights strictly maintained */}
+            <section className="rounded-[10px] border border-[#BEE8D3] bg-[#D8F5E9] p-5 card-float flex flex-col justify-between shadow-[0_2px_8px_rgba(10,61,37,0.04)]">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[14px] font-bold tracking-wide text-[#3C4F44]">
+                    {t('monthlyReduction')}
+                  </p>
+                  {monthlyReduction !== null && (
+                    <span className="rounded-full border border-[#B4E5CE] bg-[#E9FBF3] px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#3C4F44]">
+                      {monthlyReductionStatus || t('monthlyReductionPlaceholderLabel')}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 mb-4">
+                  <ArrowDown size={23} className="text-[#3C4F44]" />
+                  <p className="text-[24px] font-extrabold leading-none text-[#3C4F44]">
+                    {monthlyReduction !== null ? `${Math.abs(monthlyReduction)}%` : '--'}
                   </p>
                 </div>
-                <p className="max-w-[220px] text-[14px] leading-relaxed text-[#6A7C73]">
-                  {t('greatProgress')}
+              </div>
+
+              <div className="border-t border-[#BFEAD5] pt-3">
+                <p className="max-w-[260px] text-[14px] leading-relaxed text-[#51685B]">
+                  {monthlyReductionMessage}
                 </p>
               </div>
             </section>
           </aside>
         </div>
 
-        {/* Updated Bottom Row Sections to Ensure Balanced Matching Heights */}
+        {/* Bottom Row Sections */}
         <div className="mt-9 grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[0.55fr_1.55fr]">
           <section className="flex h-full flex-col justify-center overflow-hidden rounded-[10px] border border-[#E0E5E2] bg-white px-6 py-7 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)]">
             <div className="flex h-full flex-col items-center justify-center text-center">
