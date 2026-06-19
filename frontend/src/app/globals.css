@@ -92,3 +92,228 @@ samp {
     animation: none;
   }
 }
+
+/* Floating card style for subtle lift and padding */
+.card-float {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15,23,42,0.04);
+  transition: transform 260ms cubic-bezier(.22,.9,.32,1), box-shadow 260ms ease;
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+.card-float:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12), 0 6px 12px rgba(15,23,42,0.06);
+}
+
+/* Gas rising animation in the green hero card */
+.gas-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.gas-bubble {
+  position: absolute;
+  bottom: -25%;
+  border-radius: 999px;
+  opacity: 0;
+  filter: blur(10px);
+  background: radial-gradient(circle at 30% 30%, rgba(188,229,209,0.16), rgba(162,203,160,0.06) 45%, rgba(162,203,160,0) 100%);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+.smoke-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.smoke-puff {
+  position: absolute;
+  bottom: 12%;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.2);
+  filter: blur(14px);
+  opacity: 0.12;
+  will-change: transform, opacity;
+  animation: smoke-rise 10s ease-in-out infinite;
+}
+
+.emission-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.emission-plume {
+  position: absolute;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 24% 48%, rgba(226, 240, 232, 0.32), rgba(175, 213, 190, 0.16) 38%, rgba(79, 117, 93, 0) 72%),
+    radial-gradient(circle at 72% 42%, rgba(201, 230, 214, 0.2), rgba(78, 126, 94, 0) 64%);
+  filter: blur(11px);
+  mix-blend-mode: screen;
+  transform-origin: center;
+  animation: emission-plume-drift 10s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.emission-plume::before,
+.emission-plume::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  background: inherit;
+  inset: 18% 10%;
+  filter: blur(8px);
+  opacity: 0.72;
+}
+
+.emission-plume::after {
+  inset: -12% 26% 14% -18%;
+  opacity: 0.42;
+}
+
+.emission-wisp {
+  position: absolute;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(183, 231, 206, 0), rgba(198, 241, 216, 0.32), rgba(134, 204, 162, 0.12), rgba(183, 231, 206, 0));
+  filter: blur(2.5px);
+  opacity: 0;
+  transform: rotate(-8deg);
+  animation: emission-wisp-flow 12s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes smoke-rise {
+  0% {
+    transform: translateY(0) scale(0.9);
+    opacity: 0.1;
+  }
+  25% {
+    transform: translateY(-18px) scale(1);
+    opacity: 0.14;
+  }
+  55% {
+    transform: translateY(-40px) scale(1.08);
+    opacity: 0.08;
+  }
+  100% {
+    transform: translateY(-88px) scale(1.16);
+    opacity: 0;
+  }
+}
+
+@keyframes emission-plume-drift {
+  0% {
+    transform: translate3d(0, 16px, 0) scale(0.72) rotate(-3deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.78;
+  }
+  52% {
+    transform: translate3d(-58px, -18px, 0) scale(1.08) rotate(2deg);
+    opacity: 0.56;
+  }
+  100% {
+    transform: translate3d(-138px, -54px, 0) scale(1.42) rotate(-6deg);
+    opacity: 0;
+  }
+}
+
+@keyframes emission-wisp-flow {
+  0% {
+    transform: translate3d(84px, 16px, 0) scaleX(0.45) rotate(-8deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.52;
+  }
+  58% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate3d(-180px, -32px, 0) scaleX(1.12) rotate(-13deg);
+    opacity: 0;
+  }
+}
+
+/* Default size helpers (can be overridden inline) */
+.gas-bubble.small { width: 28px; height: 28px; }
+.gas-bubble.mid { width: 52px; height: 52px; }
+.gas-bubble.large { width: 96px; height: 96px; }
+.gas-bubble.xlarge { width: 160px; height: 160px; }
+
+/* Organic rise + sway keyframes (four variations) */
+@keyframes rise-sway-1 {
+  0%   { transform: translateY(0)    translateX(0)    scale(0.9); opacity: 0; }
+  10%  { opacity: 0.06; }
+  35%  { transform: translateY(-32%) translateX(8px)  scale(1.02); opacity: 0.08; }
+  65%  { transform: translateY(-75%) translateX(-6px) scale(1.06); opacity: 0.05; }
+  100% { transform: translateY(-140%)translateX(0)    scale(1.12); opacity: 0; }
+}
+
+@keyframes rise-sway-2 {
+  0%   { transform: translateY(0)    translateX(0)     scale(0.92); opacity: 0; }
+  12%  { opacity: 0.05; }
+  38%  { transform: translateY(-36%) translateX(-12px) scale(1.04); opacity: 0.09; }
+  68%  { transform: translateY(-82%) translateX(14px)  scale(1.12); opacity: 0.04; }
+  100% { transform: translateY(-150%)translateX(0)     scale(1.25); opacity: 0; }
+}
+
+@keyframes rise-sway-3 {
+  0%   { transform: translateY(0)    translateX(0)     scale(0.9); opacity: 0; }
+  8%   { opacity: 0.04; }
+  36%  { transform: translateY(-40%) translateX(20px)  scale(1.08); opacity: 0.07; }
+  70%  { transform: translateY(-95%) translateX(-26px) scale(1.18); opacity: 0.03; }
+  100% { transform: translateY(-160%)translateX(0)     scale(1.35); opacity: 0; }
+}
+
+@keyframes rise-sway-4 {
+  0%   { transform: translateY(0)    translateX(0)     scale(0.88); opacity: 0; }
+  14%  { opacity: 0.05; }
+  44%  { transform: translateY(-48%) translateX(-28px) scale(1.10); opacity: 0.08; }
+  76%  { transform: translateY(-110%)translateX(22px)  scale(1.20); opacity: 0.02; }
+  100% { transform: translateY(-180%)translateX(0)     scale(1.5); opacity: 0; }
+}
+
+@media (max-width: 768px) {
+  /* let utilities control corner size on small screens */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gas-bubble,
+  .smoke-puff,
+  .emission-plume,
+  .emission-wisp {
+    animation: none;
+  }
+}
+
+/* Compact card variant to reduce visual bulk */
+.card-compact {
+  padding: 1rem !important; /* reduce internal padding */
+  transition: transform 220ms cubic-bezier(.22,.9,.32,1), box-shadow 220ms ease;
+}
+@media (min-width: 768px) {
+  .card-compact { padding: 1.1rem !important; }
+}
+
+/* Size modifiers for compact variant */
+.card-compact.hero { min-height: 120px !important; }
+.card-compact.large { min-height: 180px !important; }
+
+/* Slightly reduce the visual weight of very large typography inside compact cards */
+.card-compact .hero-number { font-size: 40px; }
+
