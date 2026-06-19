@@ -126,15 +126,19 @@ const DashboardPage = () => {
     });
   })();
   const emissionPlumes = [
-    { left: 78, bottom: 26, width: 150, height: 44, delay: -0.8, duration: 9.5, opacity: 0.22 },
-    { left: 84, bottom: 35, width: 120, height: 36, delay: -3.1, duration: 10.8, opacity: 0.18 },
-    { left: 70, bottom: 44, width: 180, height: 52, delay: -5.4, duration: 12.2, opacity: 0.15 },
-    { left: 88, bottom: 50, width: 94, height: 30, delay: -1.9, duration: 8.7, opacity: 0.2 }
+    { left: 18, bottom: 24, width: 170, height: 48, delay: -0.8, duration: 13.5, opacity: 0.15 },
+    { left: 33, bottom: 56, width: 210, height: 54, delay: -3.1, duration: 15.8, opacity: 0.13 },
+    { left: 49, bottom: 30, width: 230, height: 58, delay: -5.4, duration: 16.2, opacity: 0.14 },
+    { left: 64, bottom: 54, width: 190, height: 48, delay: -1.9, duration: 14.7, opacity: 0.12 },
+    { left: 78, bottom: 28, width: 180, height: 46, delay: -6.8, duration: 15.4, opacity: 0.13 },
+    { left: 86, bottom: 60, width: 130, height: 34, delay: -9.2, duration: 13.2, opacity: 0.1 }
   ];
   const emissionWisps = [
-    { left: 66, top: 42, width: 230, delay: -1.2, duration: 11 },
-    { left: 74, top: 55, width: 185, delay: -4.5, duration: 13 },
-    { left: 58, top: 65, width: 260, delay: -7.6, duration: 15 }
+    { left: 8, top: 34, width: 260, delay: -1.2, duration: 15 },
+    { left: 27, top: 62, width: 320, delay: -4.5, duration: 17 },
+    { left: 48, top: 42, width: 300, delay: -7.6, duration: 16 },
+    { left: 68, top: 68, width: 280, delay: -8.7, duration: 15.5 },
+    { left: 76, top: 28, width: 220, delay: -10.1, duration: 14 }
   ];
   // Cards are now static and vertically centered
 
