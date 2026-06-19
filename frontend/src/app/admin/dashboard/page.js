@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api/axios';
+import { useAuth } from '@/context/AuthContext';
 
 const formatNumber = (value) =>
   new Intl.NumberFormat('en-US', {
@@ -42,11 +44,18 @@ const feedStyle = {
 };
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/login');
+      return;
+    }
+
     const fetchDashboard = async () => {
       try {
         setLoading(true);
@@ -60,7 +69,7 @@ export default function AdminDashboardPage() {
     };
 
     fetchDashboard();
-  }, []);
+  }, [isAuthenticated, router]);
 
   if (loading) {
     return (
@@ -100,41 +109,51 @@ export default function AdminDashboardPage() {
 
   if (!data) return null;
 
-  const { stats, schoolPerformance, topStudents, liveActivity, systemImpact } = data;
+  const {
+    stats,
+    schoolPerformance,
+    studentStreaks,
+    liveActivity,
+    systemImpact,
+    schoolName,
+    adminName,
+    studentsEnrolled
+  } = data;
 
   const statCards = [
     {
-      label: 'Total Schools',
-      value: formatInt(stats.totalSchools),
-      icon: '🏫'
-    },
-    {
       label: 'Total Students',
       value: formatInt(stats.totalStudents),
-      icon: '👥'
+      icon: '👥',
+      accent: '#dff7ea'
     },
     {
       label: 'Avg Emission',
       value: `${formatNumber(stats.avgEmissionKg)}kg`,
-      icon: '🌿'
+      icon: '🌿',
+      accent: '#e8f5ef'
     },
     {
       label: 'Reports',
       value: formatInt(stats.totalReports),
-      icon: '📄'
+      icon: '📄',
+      accent: '#eef4ff'
     },
     {
       label: 'Certificates',
       value: formatInt(stats.totalCertificates),
-      icon: '🏅'
+      icon: '🏅',
+      accent: '#fff7dd'
     }
   ];
+
+  const activeStreaks = studentStreaks || [];
 
   return (
     <main
       style={{
         minHeight: '100vh',
-        background: '#f5f7f6',
+        background: 'linear-gradient(180deg, #f5f7f3 0%, #eef5f0 100%)',
         padding: 24,
         fontFamily: 'Inter, sans-serif'
       }}
@@ -142,29 +161,35 @@ export default function AdminDashboardPage() {
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
         <section
           style={{
-            background: 'linear-gradient(90deg, #0A3D25 0%, #165d35 100%)',
+            background: 'linear-gradient(90deg, #0f5d3b 0%, #1a7a4a 100%)',
             color: '#fff',
-            borderRadius: 18,
-            padding: '22px 24px',
+            borderRadius: 22,
+            padding: '28px 26px',
             marginBottom: 18,
-            boxShadow: '0 10px 30px rgba(10,61,37,0.12)'
+            boxShadow: '0 18px 40px rgba(10,61,37,0.15)'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <div>
-              <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>Admin dashboard</p>
-              <h1 style={{ margin: '6px 0 0', fontSize: 28, fontWeight: 800 }}>Neoकर्म</h1>
+              <p style={{ margin: 0, fontSize: 13, color: 'rgba(255, 255, 255, 0.72)' }}>Admin dashboard</p>
+              <h1 style={{ margin: '6px 0 0', fontSize: 30, fontWeight: 800, color: '#fff' }}>
+                {schoolName || 'Admin Dashboard'}
+              </h1>
+              <p style={{ margin: '8px 0 0', fontSize: 14, color: 'rgba(255, 255, 255, 0.82)' }}>
+                Welcome back, {adminName || 'Admin'}
+              </p>
             </div>
             <div
               style={{
-                background: 'rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.1)',
                 padding: '10px 14px',
                 borderRadius: 999,
                 fontSize: 13,
-                fontWeight: 600
+                fontWeight: 700,
+                color: '#fff'
               }}
             >
-              {formatInt(stats.totalStudents)} students enrolled
+              {formatInt(studentsEnrolled ?? stats.totalStudents)} students enrolled
             </div>
           </div>
         </section>
@@ -172,7 +197,7 @@ export default function AdminDashboardPage() {
         <section
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
             gap: 16,
             marginBottom: 18
           }}
@@ -183,13 +208,27 @@ export default function AdminDashboardPage() {
               style={{
                 background: '#fff',
                 border: '1px solid #e8ece7',
-                borderRadius: 14,
-                padding: '18px 16px'
+                borderRadius: 16,
+                padding: '18px 16px',
+                boxShadow: '0 8px 18px rgba(15, 23, 42, 0.04)'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 13, color: '#6b7280' }}>{card.label}</span>
-                <span style={{ fontSize: 18 }}>{card.icon}</span>
+                <span
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: card.accent,
+                    fontSize: 18
+                  }}
+                >
+                  {card.icon}
+                </span>
               </div>
               <h2 style={{ margin: '10px 0 0', fontSize: 28, fontWeight: 800, color: '#0A3D25' }}>
                 {card.value}
@@ -198,12 +237,12 @@ export default function AdminDashboardPage() {
           ))}
         </section>
 
-        <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16, marginBottom: 18 }}>
-          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e8ece7', padding: 16 }}>
+        <section style={{ display: 'grid', gridTemplateColumns: '1.45fr 1fr', gap: 16, marginBottom: 18 }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8ece7', padding: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div>
                 <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>School performance</p>
-                <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Top schools</h3>
+                <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Class performance</h3>
               </div>
             </div>
             <div style={{ overflowX: 'auto' }}>
@@ -211,7 +250,7 @@ export default function AdminDashboardPage() {
                 <thead>
                   <tr style={{ borderBottom: '1px solid #eef2ee' }}>
                     <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>Rank</th>
-                    <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>School</th>
+                    <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>Class</th>
                     <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>Students</th>
                     <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>Avg Emission</th>
                     <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>Avg Score</th>
@@ -221,7 +260,7 @@ export default function AdminDashboardPage() {
                   {schoolPerformance.map((school) => (
                     <tr key={school.rank} style={{ borderBottom: '1px solid #f5f7f6' }}>
                       <td style={{ padding: '12px 8px', fontWeight: 700 }}>#{school.rank}</td>
-                      <td style={{ padding: '12px 8px', fontWeight: 600 }}>{school.schoolName}</td>
+                      <td style={{ padding: '12px 8px', fontWeight: 600 }}>{school.className || school.schoolName}</td>
                       <td style={{ padding: '12px 8px' }}>{formatInt(school.studentCount)}</td>
                       <td style={{ padding: '12px 8px' }}>{formatNumber(school.avgEmissionKg)} kg CO₂</td>
                       <td style={{ padding: '12px 8px' }}>
@@ -244,7 +283,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e8ece7', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8ece7', padding: 16 }}>
             <div style={{ marginBottom: 14 }}>
               <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>System impact</p>
               <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Target met</h3>
@@ -286,8 +325,8 @@ export default function AdminDashboardPage() {
           </div>
         </section>
 
-        <section style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 16 }}>
-          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e8ece7', padding: 16 }}>
+        <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.95fr', gap: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8ece7', padding: 16 }}>
             <div style={{ marginBottom: 14 }}>
               <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>Live activity</p>
               <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Activity feed</h3>
@@ -315,24 +354,27 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e8ece7', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8ece7', padding: 16 }}>
             <div style={{ marginBottom: 14 }}>
-              <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>Top students</p>
-              <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Leaderboard</h3>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>Student streaks</p>
+              <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Top streaks</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {topStudents.map((student, index) => (
-                <div key={`${student.name}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {activeStreaks.map((student) => (
+                <div key={student.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
                   <div style={{ width: 42, height: 42, borderRadius: 999, background: '#eef5ef', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#0A3D25' }}>
                     {initials(student.name)}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, color: '#111827' }}>{student.name}</div>
                     <div style={{ fontSize: 12, color: '#6b7280' }}>
-                      {student.school} · {student.grade}{student.section}
+                      {student.grade}{student.section ? ` • ${student.section}` : ''}
                     </div>
                   </div>
-                  <div style={{ fontWeight: 800, color: '#0A3D25' }}>{student.score}</div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 800, color: '#0A3D25' }}>{student.currentStreak} day streak</div>
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>{student.score} score</div>
+                  </div>
                 </div>
               ))}
             </div>

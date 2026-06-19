@@ -1,28 +1,24 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import nextIntl from 'next-intl/plugin';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const withNextIntl = createNextIntlPlugin();
 
 /** @type {import('next').NextConfig} */
-const nextConfig = nextIntl({
-  requestConfig: './src/i18n/request.js'
-})({
-    rewrites: async () => {
-      return {
-        beforeFiles: [
-          {
-            source: '/api/:path*',
-            destination: 'http://localhost:5000/api/:path*'
-          }
-        ]
-      };
-    },
-    turbopack: {
-      root: __dirname
-    }
+const nextConfig = {
+  rewrites: async () => ({
+    beforeFiles: [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:5000/api/:path*'
+      }
+    ]
+  }),
+  turbopack: {
+    root: __dirname
   }
-);
+};
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

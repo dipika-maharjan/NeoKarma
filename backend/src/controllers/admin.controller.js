@@ -18,6 +18,24 @@ class AdminController {
       schoolId
     }).select('_id name grade section streak practicalMarks');
 
+    const studentStreaks = students
+      .slice()
+      .sort((a, b) => {
+        const streakDiff = (b.streak?.current || 0) - (a.streak?.current || 0);
+        if (streakDiff !== 0) return streakDiff;
+        return (b.streak?.longest || 0) - (a.streak?.longest || 0);
+      })
+      .slice(0, 5)
+      .map((student) => ({
+        name: student.name,
+        grade: student.grade,
+        section: student.section,
+        currentStreak: student.streak?.current || 0,
+        longestStreak: student.streak?.longest || 0,
+        lastLogDate: student.streak?.lastLogDate || null,
+        score: student.practicalMarks?.marksAwarded || 0
+      }));
+
     const studentIds = students.map((student) => student._id);
 
     const [
@@ -45,66 +63,38 @@ class AdminController {
         }
       ]),
       User.aggregate([
-        { $match: { role: 'school_admin' } },
         {
-          $lookup: {
-            from: 'users',
-            localField: '_id',
-            foreignField: 'schoolId',
-            as: 'students'
+          $match: {
+            role: 'student',
+            schoolId: new mongoose.Types.ObjectId(req.user.schoolId || req.user._id)
           }
         },
         {
-          $addFields: {
-            studentIds: {
-              $map: {
-                input: '$students',
-                as: 'student',
-                in: '$$student._id'
-              }
-            }
+          $group: {
+            _id: { grade: '$grade', section: '$section' },
+            studentCount: { $sum: 1 },
+            avgEmissionKg: { $avg: '$totalEmissionKg' },
+            avgScore: { $avg: '$practicalMarks.marksAwarded' }
           }
         },
-        {
-          $lookup: {
-            from: 'dailylogs',
-            localField: 'studentIds',
-            foreignField: 'userId',
-            as: 'logs'
-          }
-        },
+        { $sort: { avgScore: -1 } },
+        { $limit: 10 },
         {
           $project: {
-            schoolName: 1,
-            studentCount: { $size: '$students' },
-            avgEmissionKg: {
-              $round: [
-                {
-                  $cond: [
-                    { $gt: [{ $size: '$logs' }, 0] },
-                    { $avg: '$logs.totalEmissionKg' },
-                    0
-                  ]
-                },
-                1
+            _id: 0,
+            className: {
+              $concat: [
+                'Grade ',
+                { $toString: '$_id.grade' },
+                ' - ',
+                '$_id.section'
               ]
             },
-            avgScore: {
-              $round: [
-                {
-                  $cond: [
-                    { $gt: [{ $size: '$students' }, 0] },
-                    { $avg: '$students.practicalMarks.marksAwarded' },
-                    0
-                  ]
-                },
-                0
-              ]
-            }
+            studentCount: 1,
+            avgEmissionKg: { $round: ['$avgEmissionKg', 1] },
+            avgScore: { $round: ['$avgScore', 0] }
           }
-        },
-        { $sort: { avgScore: -1, studentCount: -1 } },
-        { $limit: 10 }
+        }
       ]),
       User.find(
         { role: 'student', schoolId },
@@ -194,6 +184,9 @@ class AdminController {
     );
 
     res.status(200).json({
+      schoolName: req.user.schoolName || '',
+      adminName: req.user.name || req.user.schoolName || 'Admin',
+      studentsEnrolled: totalStudents,
       stats: {
         totalSchools,
         totalStudents,
@@ -209,6 +202,7 @@ class AdminController {
         section: student.section,
         score: student.practicalMarks?.marksAwarded || 0
       })),
+      studentStreaks,
       liveActivity: liveActivity.map((entry) => ({
         type: entry.type,
         description: entry.description,
