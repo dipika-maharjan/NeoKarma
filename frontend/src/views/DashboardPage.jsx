@@ -33,7 +33,6 @@ const DashboardPage = () => {
       }
 
       try {
-        // Check for cached streak first (updated immediately after log submission)
         const cachedStreak = getCachedStreak();
         
         const [dashData, today, config] = await Promise.all([
@@ -42,7 +41,6 @@ const DashboardPage = () => {
           getScoreConfig()
         ]);
         
-        // Use cached streak if available, otherwise fetch fresh
         let streakInfo = cachedStreak;
         if (!streakInfo) {
           streakInfo = await getStreak();
@@ -141,7 +139,6 @@ const DashboardPage = () => {
     { left: 68, top: 68, width: 280, delay: -8.7, duration: 15.5 },
     { left: 76, top: 28, width: 220, delay: -10.1, duration: 14 }
   ];
-  // Cards are now static and vertically centered
 
   return (
     <div className="min-h-[calc(100vh-76px)] bg-[#FAFAFA] px-4 py-8 md:px-8 lg:px-12 xl:px-16">
@@ -185,7 +182,7 @@ const DashboardPage = () => {
                     {t('todayEmission')}
                   </p>
                   <div className="mt-1 flex items-end gap-2">
-                      <span className="text-[32px] hero-number font-extrabold leading-none">
+                    <span className="text-[32px] hero-number font-extrabold leading-none">
                       {todayEmission !== null ? formatNumber(todayEmission, { maximumFractionDigits: 1 }) : '--'}
                     </span>
                     <span className="pb-1 text-[16px] font-bold text-[#BCE5D1]">{t('kgCO2Unit')}</span>
@@ -304,8 +301,9 @@ const DashboardPage = () => {
           </aside>
         </div>
 
-        <div className="mt-9 grid grid-cols-1 gap-5 lg:grid-cols-[0.55fr_1.55fr]">
-          <section className="min-h-[230px] overflow-hidden rounded-[10px] border border-[#E0E5E2] bg-white px-6 py-7 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)]">
+        {/* Updated Bottom Row Sections to Ensure Balanced Matching Heights */}
+        <div className="mt-9 grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[0.55fr_1.55fr]">
+          <section className="flex h-full flex-col justify-center overflow-hidden rounded-[10px] border border-[#E0E5E2] bg-white px-6 py-7 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)]">
             <div className="flex h-full flex-col items-center justify-center text-center">
               <p className="mb-3 text-[12px] font-bold tracking-wide text-[#4A5550]">{t('impactScore')}</p>
               <div
@@ -315,7 +313,7 @@ const DashboardPage = () => {
                 }}
               >
                 <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
-                    <span className="text-[28px] font-extrabold text-[#17202A]">
+                  <span className="text-[28px] font-extrabold text-[#17202A]">
                     {impactScore !== null ? formatNumber(impactScore, { maximumFractionDigits: 0 }) : '--'}
                   </span>
                 </div>
@@ -327,9 +325,9 @@ const DashboardPage = () => {
             </div>
           </section>
 
-          <Link href="/carbon-mirror" className="block">
-            <section className="group relative min-h-[230px] overflow-hidden rounded-[10px] border border-[#E0E5E2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)]">
-              <div className="grid min-h-[230px] grid-cols-1 md:grid-cols-[0.9fr_1.1fr]">
+          <Link href="/carbon-mirror" className="block h-full">
+            <section className="group relative h-full overflow-hidden rounded-[10px] border border-[#E0E5E2] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)]">
+              <div className="grid h-full grid-cols-1 md:grid-cols-[0.9fr_1.1fr]">
                 <div className="relative z-10 flex flex-col justify-center px-6 py-7 md:px-8">
                   <h2 className="text-[22px] font-extrabold leading-tight text-[#17202A] md:text-[24px]">
                     {t('carbonMirrorTitle')}
@@ -341,7 +339,7 @@ const DashboardPage = () => {
                     {t('openCarbonMirror')}
                   </span>
                 </div>
-                <div className="relative min-h-[210px] overflow-hidden bg-[#F8FBF7]">
+                <div className="relative h-full min-h-[210px] overflow-hidden bg-[#F8FBF7]">
                   <div className="absolute inset-0 bg-[url('/forest-visualization-preview.png')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-[linear-gradient(90deg,#FFFFFF_0%,rgba(255,255,255,0.9)_18%,rgba(255,255,255,0.48)_46%,rgba(255,255,255,0)_74%)]" />
                   <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white to-transparent" />
