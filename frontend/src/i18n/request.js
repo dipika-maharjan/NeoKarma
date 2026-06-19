@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
-export async function getI18nConfig() {
+export default async function getI18nConfig() {
   // Prefer cookie-based locale detection in App Router.
   let locale = undefined;
   try {

@@ -18,6 +18,7 @@ const DashboardPage = () => {
   const t = useTranslations('Dashboard');
   const tStatus = useTranslations('Status');
   const formatNumber = useNumberFormatter();
+  const carbonMirrorT = useTranslations('CarbonMirror');
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [streakData, setStreakData] = useState(null);
@@ -330,10 +331,10 @@ const DashboardPage = () => {
               <div className="grid h-full grid-cols-1 md:grid-cols-[0.9fr_1.1fr]">
                 <div className="relative z-10 flex flex-col justify-center px-6 py-7 md:px-8">
                   <h2 className="text-[22px] font-extrabold leading-tight text-[#17202A] md:text-[24px]">
-                    {t('carbonMirrorTitle')}
+                    {carbonMirrorT ? carbonMirrorT('title') : t('carbonMirrorTitle')}
                   </h2>
                   <p className="mt-3 max-w-[410px] text-[13px] leading-relaxed text-[#4A5550]">
-                    {t('carbonMirrorDescription')}
+                    {carbonMirrorT ? carbonMirrorT('overview') : t('carbonMirrorDescription')}
                   </p>
                   <span className="mt-5 inline-flex h-10 w-fit items-center justify-center rounded-full border-2 border-[#0A3D25] bg-white px-6 text-[12px] font-bold text-[#0A3D25] transition-colors group-hover:bg-[#E8F5E9]">
                     {t('openCarbonMirror')}
