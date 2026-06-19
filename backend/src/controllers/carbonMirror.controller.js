@@ -51,15 +51,52 @@ class CarbonMirrorController {
           prevSnapshot.totalEmissionKg,
           locale
         );
+      } else {
+        const prevMonthAggregate = await carbonMirrorService.getMonthlyAggregate(userId, prevMonthStr);
+        if (prevMonthAggregate) {
+          previousMonthComparison = carbonMirrorService.generateMonthComparison(
+            snapshot.totalEmissionKg,
+            prevMonthAggregate.totalEmissionKg,
+            locale
+          );
+        }
+      }
+    } else {
+      monthlyMirror = await carbonMirrorService.generateMirrorFromLogs(userId, monthStr, locale);
+      if (monthlyMirror) {
+        const previousMonth = new Date(today);
+        previousMonth.setMonth(previousMonth.getMonth() - 1);
+        const prevMonthStr = previousMonth.toISOString().slice(0, 7);
+
+        const prevSnapshot = await monthlySnapshotRepository.findByUserAndMonth(userId, prevMonthStr);
+        if (prevSnapshot) {
+          previousMonthComparison = carbonMirrorService.generateMonthComparison(
+            monthlyMirror.totalEmissionKg,
+            prevSnapshot.totalEmissionKg,
+            locale
+          );
+        } else {
+          const prevMonthAggregate = await carbonMirrorService.getMonthlyAggregate(userId, prevMonthStr);
+          if (prevMonthAggregate) {
+            previousMonthComparison = carbonMirrorService.generateMonthComparison(
+              monthlyMirror.totalEmissionKg,
+              prevMonthAggregate.totalEmissionKg,
+              locale
+            );
+          }
+        }
       }
     }
+
+    const monthlyHistory = await carbonMirrorService.getMonthlyHistory(userId, monthStr, 6);
 
     res.status(200).json({
       success: true,
       data: {
         today: currentMirror,
         thisMonth: monthlyMirror,
-        monthComparison: previousMonthComparison
+        monthComparison: previousMonthComparison,
+        history: monthlyHistory
       }
     });
   });

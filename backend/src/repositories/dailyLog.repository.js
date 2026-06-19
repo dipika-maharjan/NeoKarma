@@ -2,6 +2,7 @@
  * DailyLog Repository
  * All database operations related to DailyLog model
  */
+const mongoose = require('mongoose');
 const DailyLog = require('../models/DailyLog');
 
 class DailyLogRepository {
@@ -57,7 +58,7 @@ class DailyLogRepository {
     return await DailyLog.aggregate([
       {
         $match: {
-          userId: require('mongoose').Types.ObjectId(userId),
+          userId: new mongoose.Types.ObjectId(userId),
           date: { $gte: startDate, $lte: endDate }
         }
       },

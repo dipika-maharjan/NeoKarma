@@ -297,6 +297,69 @@ Respond with ONLY the story text, no explanations.`;
       newMirror: hypotheticalMirror
     };
   }
+
+  async getMonthlyAggregate(userId, monthStr) {
+    const [year, month] = monthStr.split('-').map(Number);
+    const startDate = `${monthStr}-01`;
+    const endDate = `${monthStr}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`;
+    const aggregationResult = await dailyLogRepository.getAggregateEmissions(userId, startDate, endDate);
+    const aggregate = Array.isArray(aggregationResult) && aggregationResult.length > 0 ? aggregationResult[0] : null;
+
+    if (!aggregate || aggregate.totalEmissionKg === 0) {
+      return null;
+    }
+
+    return {
+      totalEmissionKg: parseFloat(aggregate.totalEmissionKg.toFixed(3)),
+      logCount: aggregate.logCount,
+      breakdown: {
+        transportKg: parseFloat((aggregate.transportKg || 0).toFixed(3)),
+        foodKg: parseFloat((aggregate.foodKg || 0).toFixed(3)),
+        wasteKg: parseFloat((aggregate.wasteKg || 0).toFixed(3)),
+        energyKg: parseFloat((aggregate.energyKg || 0).toFixed(3))
+      }
+    };
+  }
+
+  async generateMirrorFromLogs(userId, monthStr, locale = 'en') {
+    const monthlyAggregate = await this.getMonthlyAggregate(userId, monthStr);
+    if (!monthlyAggregate) {
+      return null;
+    }
+
+    const mirror = await this.generateMirror(monthlyAggregate.totalEmissionKg, locale);
+    return {
+      ...mirror,
+      totalEmissionKg: monthlyAggregate.totalEmissionKg,
+      logsCount: monthlyAggregate.logCount,
+      breakdown: monthlyAggregate.breakdown
+    };
+  }
+
+  async getMonthlyHistory(userId, monthStr, months = 6) {
+    const rawSnapshots = await monthlySnapshotRepository.findByUser(userId);
+    const history = rawSnapshots.slice(0, months).map((snapshot) => ({
+      month: snapshot.month,
+      totalEmissionKg: snapshot.totalEmissionKg,
+      treesEquivalent: snapshot.treeEquivalentKg,
+      hasSnapshot: true
+    }));
+
+    const hasCurrentMonth = history.some((entry) => entry.month === monthStr);
+    if (!hasCurrentMonth) {
+      const currentAggregate = await this.getMonthlyAggregate(userId, monthStr);
+      if (currentAggregate) {
+        history.unshift({
+          month: monthStr,
+          totalEmissionKg: currentAggregate.totalEmissionKg,
+          treesEquivalent: parseFloat((currentAggregate.totalEmissionKg / (config.KG_CO2_PER_TREE_PER_YEAR / 12)).toFixed(1)),
+          hasSnapshot: false
+        });
+      }
+    }
+
+    return history.slice(0, months).reverse();
+  }
 }
 
 module.exports = new CarbonMirrorService();
