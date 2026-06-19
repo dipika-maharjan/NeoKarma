@@ -13,7 +13,18 @@ import {
   Skull,
   Sparkles,
 } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid
+} from 'recharts';
 import { getCarbonMirror } from '@/lib/actions/mirrorActions';
+import { getDailyLogHistory } from '@/lib/actions/calculatorActions';
 import { getAppConfig } from '@/lib/actions/configActions';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslations, useLocale } from 'next-intl';
@@ -31,6 +42,7 @@ const CarbonMirrorPage = () => {
   const locale = useLocale();
   const [loading, setLoading] = useState(true);
   const [mirrorData, setMirrorData] = useState(null);
+  const [dailyHistory, setDailyHistory] = useState([]);
   const [appConfig, setAppConfig] = useState(null);
   const t = useTranslations('CarbonMirror');
   const tImg = useTranslations('Images');
@@ -45,9 +57,18 @@ const CarbonMirrorPage = () => {
       }
 
       try {
-        const data = await getCarbonMirror(locale);
-        if (data) {
-          setMirrorData(data);
+        const [mirrorResponse, logHistoryResponse] = await Promise.all([
+          getCarbonMirror(locale),
+          getDailyLogHistory()
+        ]);
+
+        if (mirrorResponse) {
+          setMirrorData(mirrorResponse);
+        }
+
+        if (Array.isArray(logHistoryResponse?.data)) {
+          const sortedDaily = [...logHistoryResponse.data].sort((a, b) => a.date.localeCompare(b.date));
+          setDailyHistory(sortedDaily);
         }
       } catch (err) {
         console.error('Error loading mirror data:', err);
@@ -274,9 +295,22 @@ const CarbonMirrorPage = () => {
           <div className={`${CARD_CLASS} border-[#E0E5E2] p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]`}>
             <h3 className={`mb-6 ${EYEBROW_CLASS}`}>{t('monthlyTrend')}</h3>
             <div className="min-h-[88px] rounded-xl border border-dashed border-[#E1E8E5] bg-[#F7FCF8] p-6 text-[14px] leading-relaxed text-[#4A5550]">
-              {monthlyMirror.kgCO2
-                ? t('trendPlaceholder')
-                : t('addMoreLogs')}
+              {dailyHistory.length > 0 ? (
+                <div className="h-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dailyHistory} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                      <CartesianGrid stroke="#E5F2E8" vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(value) => value.slice(5)} />
+                      <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} width={40} />
+                      <Tooltip formatter={(value) => `${formatNumber(value, { maximumFractionDigits: 1 })} kg`} />
+                      <Area type="monotone" dataKey="totalEmissionKg" stroke="#0A3D25" fill="#D0E8D7" fillOpacity={0.7} strokeWidth={2} />
+                      <Line type="monotone" dataKey="totalEmissionKg" stroke="#0A3D25" strokeWidth={3} dot={{ r: 2 }} activeDot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                t('addMoreLogs')
+              )}
             </div>
           </div>
 
