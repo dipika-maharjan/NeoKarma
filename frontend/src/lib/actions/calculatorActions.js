@@ -2,6 +2,7 @@ import { submitDailyLog, fetchTodayLog, fetchDailyLogHistory } from '../api/calc
 
 const STREAK_CACHE_KEY = 'neokarma_streak_cache';
 const STREAK_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+export const STREAK_UPDATED_EVENT = 'neokarma-streak-updated';
 
 // Helper to cache streak data
 const cacheStreakData = (streak) => {
@@ -13,6 +14,7 @@ const cacheStreakData = (streak) => {
         timestamp: Date.now()
       })
     );
+    window.dispatchEvent(new CustomEvent(STREAK_UPDATED_EVENT, { detail: streak }));
   }
 };
 

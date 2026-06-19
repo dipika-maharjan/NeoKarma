@@ -19,10 +19,12 @@ import {
   Trash2,
   Zap
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const CalculatorPage = () => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const t = useTranslations('Calculator');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [emissionFactors, setEmissionFactors] = useState(null);
@@ -65,18 +67,18 @@ const CalculatorPage = () => {
   }, [formData]);
 
   const transportationOptions = [
-    { value: 'walk', label: 'Walk', icon: <Footprints size={21} strokeWidth={2.5} /> },
-    { value: 'bicycle', label: 'Bicycle', icon: <Bike size={21} strokeWidth={2.5} /> },
-    { value: 'bus', label: 'Bus', icon: <Bus size={21} strokeWidth={2.5} /> },
-    { value: 'motorbike', label: 'Motorbike', icon: <Bike size={21} strokeWidth={2.5} /> },
-    { value: 'car', label: 'Car', icon: <Car size={21} strokeWidth={2.5} /> }
+    { value: 'walk', label: t('walk'), icon: <Footprints size={21} strokeWidth={2.5} /> },
+    { value: 'bicycle', label: t('bicycle'), icon: <Bike size={21} strokeWidth={2.5} /> },
+    { value: 'bus', label: t('bus'), icon: <Bus size={21} strokeWidth={2.5} /> },
+    { value: 'motorbike', label: t('motorbike'), icon: <Bike size={21} strokeWidth={2.5} /> },
+    { value: 'car', label: t('car'), icon: <Car size={21} strokeWidth={2.5} /> }
   ];
 
   const foodOptionsBase = [
-    { value: 'vegan', label: 'Vegan', factorKey: 'food_vegan' },
-    { value: 'vegetarian', label: 'Vegetarian', factorKey: 'food_vegetarian' },
-    { value: 'mixed', label: 'Mixed', factorKey: 'food_mixed' },
-    { value: 'non-vegetarian', label: 'Non-Veg', factorKey: 'food_non-vegetarian' }
+    { value: 'vegan', label: t('vegan'), factorKey: 'food_vegan' },
+    { value: 'vegetarian', label: t('vegetarian'), factorKey: 'food_vegetarian' },
+    { value: 'mixed', label: t('mixed'), factorKey: 'food_mixed' },
+    { value: 'non-vegetarian', label: t('nonVeg'), factorKey: 'food_non-vegetarian' }
   ];
 
   const foodOptions = foodOptionsBase.map((option) => {
@@ -84,9 +86,9 @@ const CalculatorPage = () => {
     return {
       ...option,
       estimate: loadingFactors
-        ? 'Loading…'
+        ? t('loading')
         : factor != null
-          ? `${factor.toFixed(1)} kg CO₂`
+          ? t('kgCO2', { value: factor.toFixed(1) })
           : ''
     };
   });
@@ -107,7 +109,7 @@ const CalculatorPage = () => {
         }
       } catch (err) {
         if (mounted) {
-          setFactorsError('Unable to load emission factors');
+          setFactorsError(t('unableToLoadFactors'));
         }
       } finally {
         if (mounted) {
@@ -120,7 +122,7 @@ const CalculatorPage = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [t]);
 
   const changeNumber = (field, amount, min, max) => {
     setFormData(prev => {
@@ -140,16 +142,16 @@ const CalculatorPage = () => {
   const validateForm = () => {
     const newErrors = {};
     if (formData.transportationDistanceKm < 0) {
-      newErrors.transportationDistanceKm = 'Distance must be positive';
+      newErrors.transportationDistanceKm = t('distancePositive');
     }
     if (formData.energyUsageHours < 0) {
-      newErrors.energyUsageHours = 'Hours must be positive';
+      newErrors.energyUsageHours = t('hoursPositive');
     }
     if (formData.usedSingleUsePlastic === null) {
-      newErrors.usedSingleUsePlastic = 'Please select an option';
+      newErrors.usedSingleUsePlastic = t('selectOption');
     }
     if (formData.wastedFood === null) {
-      newErrors.wastedFood = 'Please select an option';
+      newErrors.wastedFood = t('selectOption');
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -181,7 +183,7 @@ const CalculatorPage = () => {
       console.error('Error logging carbon:', error);
       setErrors(prev => ({
         ...prev,
-        submit: error.message || 'Failed to submit. Please try again.'
+        submit: error.message || t('submitFailed')
       }));
     } finally {
       setSubmitting(false);
@@ -199,7 +201,7 @@ const CalculatorPage = () => {
           onClick={() => changeNumber(field, -step, 0, max)}
           disabled={value <= 0}
           className="h-10 w-10 rounded-lg border border-[#BFCBC5] bg-[#EEF3FE] text-[#1B2733] disabled:text-gray-300 disabled:bg-white flex items-center justify-center"
-          aria-label={`Decrease ${label}`}
+          aria-label={t('decrease', { label })}
         >
           <Minus size={15} />
         </button>
@@ -217,7 +219,7 @@ const CalculatorPage = () => {
           onClick={() => changeNumber(field, step, 0, max)}
           disabled={value >= max}
           className="h-10 w-10 rounded-lg border border-[#BFCBC5] bg-[#EEF3FE] text-[#1B2733] disabled:text-gray-300 disabled:bg-white flex items-center justify-center"
-          aria-label={`Increase ${label}`}
+          aria-label={t('increase', { label })}
         >
           <Plus size={15} />
         </button>
@@ -243,7 +245,7 @@ const CalculatorPage = () => {
                   : 'text-[#17202A] hover:text-[#004332]'
               }`}
             >
-              {option ? 'Yes' : 'No'}
+              {option ? t('yes') : t('no')}
             </button>
           );
         })}
@@ -256,7 +258,7 @@ const CalculatorPage = () => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center bg-[#FAFAFA]">
         <div className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-sm">
-          <p className="text-center text-gray-600">Please log in to access the calculator</p>
+          <p className="text-center text-gray-600">{t('pleaseLogin')}</p>
         </div>
       </div>
     );
@@ -268,10 +270,10 @@ const CalculatorPage = () => {
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div>
             <h1 className="text-[32px] font-extrabold leading-tight text-[#0A3D25] md:text-[34px]">
-              Log Today&apos;s Carbon
+              {t('title')}
             </h1>
             <p className="mt-1 text-[16px] text-[#4A5550]">
-              Fill in the details below to understand your environmental footprint. All fields are optional.
+              {t('subtitle')}
             </p>
           </div>
           <Link href="/calculator/result" className="block w-full md:w-auto">
@@ -279,7 +281,7 @@ const CalculatorPage = () => {
               variant="primary"
               className="h-12 px-8 rounded-full bg-[#0A3D25] text-[15px] font-bold text-white hover:bg-[#072B1A] transition-colors shadow-none w-full md:w-auto flex items-center justify-center"
             >
-              Today&apos;s Carbon Footprint
+              {t('logToday')}
             </Button>
           </Link>
         </div>
@@ -296,9 +298,9 @@ const CalculatorPage = () => {
             <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
                 <Bus size={22} className="text-[#0A3D25]" />
-                <h2 className="text-[24px] font-extrabold leading-none">1. Transport</h2>
+                <h2 className="text-[24px] font-extrabold leading-none">{t('transportTitle')}</h2>
               </div>
-              <p className="mb-[18px] text-[16px] text-[#4A5550]">How did you travel to school today?</p>
+              <p className="mb-[18px] text-[16px] text-[#4A5550]">{t('transportQuestion')}</p>
               <div className="mb-6 grid grid-cols-5 gap-2">
                 {transportationOptions.map(option => {
                   const selected = formData.transportationMode === option.value;
@@ -320,7 +322,7 @@ const CalculatorPage = () => {
                 })}
               </div>
               <Stepper
-                label="Distance (km)"
+                label={t('distance')}
                 value={formData.transportationDistanceKm}
                 field="transportationDistanceKm"
                 max={200}
@@ -334,9 +336,9 @@ const CalculatorPage = () => {
             <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
                 <ForkKnife size={22} className="text-[#0A3D25]" />
-                <h2 className="text-[24px] font-extrabold leading-none">2. Lunch</h2>
+                <h2 className="text-[24px] font-extrabold leading-none">{t('lunchTitle')}</h2>
               </div>
-              <p className="mb-[18px] text-[16px] text-[#4A5550]">What did you have for lunch?</p>
+              <p className="mb-[18px] text-[16px] text-[#4A5550]">{t('lunchQuestion')}</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {foodOptions.map(option => {
                   const selected = formData.foodMealType === option.value;
@@ -368,7 +370,7 @@ const CalculatorPage = () => {
                 disabled={submitting}
                 className="mx-auto h-12 w-full max-w-[320px] rounded-full bg-[#0A3D25] text-[15px] font-bold text-white hover:bg-[#072B1A] transition-colors"
               >
-                Calculate my emission →
+                {t('calculateEmission')}
               </Button>
             </div>
           </div>
@@ -377,17 +379,17 @@ const CalculatorPage = () => {
             <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
                 <Trash2 size={21} className="text-[#0A3D25]" />
-                <h2 className="text-[24px] font-extrabold leading-none">3. Waste &amp; Plastic</h2>
+                <h2 className="text-[24px] font-extrabold leading-none">{t('wasteTitle')}</h2>
               </div>
               <div className="space-y-[26px]">
                 <YesNo
-                  label="Did you use single-use plastic today?"
+                  label={t('plasticQuestion')}
                   value={formData.usedSingleUsePlastic}
                   onChange={(value) => setField('usedSingleUsePlastic', value)}
                   error={errors.usedSingleUsePlastic}
                 />
                 <YesNo
-                  label="Did you waste food today?"
+                  label={t('foodWasteQuestion')}
                   value={formData.wastedFood}
                   onChange={(value) => setField('wastedFood', value)}
                   error={errors.wastedFood}
@@ -398,19 +400,19 @@ const CalculatorPage = () => {
             <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
                 <Zap size={23} className="text-[#0A3D25]" />
-                <h2 className="text-[24px] font-extrabold leading-none">4. Energy</h2>
+                <h2 className="text-[24px] font-extrabold leading-none">{t('energyTitle')}</h2>
               </div>
               
               <div className="space-y-6">
                 <div>
                   <p className="mb-[18px] text-[16px] text-[#4A5550]">
-                    Approx. hours of electricity use (at school + home)
+                    {t('electricityQuestion')}
                   </p>
                   <Stepper
                     label=""
                     value={formData.energyUsageHours}
                     field="energyUsageHours"
-                    unit="Hours"
+                    unit={t('hours')}
                     max={24}
                     step={1}
                   />
@@ -421,7 +423,7 @@ const CalculatorPage = () => {
 
                 <div className="border-t border-[#E0E5E2] pt-6">
                   <p className="mb-[18px] text-[16px] text-[#4A5550]">
-                    Firewood used for cooking or heating 
+                    {t('firewoodQuestion')}
                   </p>
                   <Stepper
                     label=""
@@ -432,7 +434,7 @@ const CalculatorPage = () => {
                     step={0.5}
                   />
                   <p className="mt-2 text-[13px] text-[#4A5550]">
-                    Leave as 0 if not applicable
+                    {t('leaveZero')}
                   </p>
                 </div>
               </div>
@@ -444,10 +446,10 @@ const CalculatorPage = () => {
                 <span className="text-2xl">🔥</span>
                 <div>
                   <p className="text-[16px] font-extrabold text-[#1B5E20]">
-                    Keep logging to maintain your streak!
+                    {t('streakTitle')}
                   </p>
                   <p className="text-[13px] text-[#1B5E20]/80 mt-1">
-                    Every consecutive log increases your multiplier.
+                    {t('streakSubtitle')}
                   </p>
                 </div>
               </div>

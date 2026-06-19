@@ -95,7 +95,7 @@ const Navbar = () => {
                   className="w-4 h-4 object-contain"
                 />
                 <span className="text-xs font-semibold tracking-wide">
-                  {user.streak?.current || 0} Day Streak
+                  {t('dayStreak', { count: user.streak?.current || 0 })}
                 </span>
               </div>
 

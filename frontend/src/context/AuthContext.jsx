@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCookie } from '../lib/api/cookie';
 import { login as authLogin, logout as authLogout, getProfile } from '../lib/actions/authActions';
+import { STREAK_UPDATED_EVENT } from '../lib/actions/calculatorActions';
 
 const defaultAuthValue = {
   user: null,
@@ -30,9 +31,22 @@ export const AuthProvider = ({ children }) => {
     const handleUnauthorized = () => {
       logout();
     };
+    const handleStreakUpdated = (event) => {
+      setUser((currentUser) => {
+        if (!currentUser || !event.detail) return currentUser;
+        return {
+          ...currentUser,
+          streak: {
+            ...(currentUser.streak || {}),
+            ...event.detail
+          }
+        };
+      });
+    };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('auth-unauthorized', handleUnauthorized);
+      window.addEventListener(STREAK_UPDATED_EVENT, handleStreakUpdated);
     }
 
     const savedToken = getCookie('token') || localStorage.getItem('token');
@@ -57,6 +71,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('auth-unauthorized', handleUnauthorized);
+        window.removeEventListener(STREAK_UPDATED_EVENT, handleStreakUpdated);
       }
     };
   }, [logout]);
