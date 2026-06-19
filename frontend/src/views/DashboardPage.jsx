@@ -10,13 +10,14 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowDown, ArrowUpRight, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const DashboardPage = () => {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const t = useTranslations('Dashboard');
   const tStatus = useTranslations('Status');
-  const tCarbon = useTranslations('CarbonMirror');
+  const formatNumber = useNumberFormatter();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [streakData, setStreakData] = useState(null);
@@ -55,7 +56,7 @@ const DashboardPage = () => {
         }
       } catch (err) {
         console.error('Error loading dashboard:', err);
-        setError('Failed to load dashboard');
+        setError(t('failedToLoadDashboard'));
       } finally {
         setLoading(false);
       }
@@ -74,7 +75,7 @@ const DashboardPage = () => {
     dashboardData?.student?.name?.split(' ')[0] ||
     user?.firstName ||
     user?.name?.split(' ')[0] ||
-    'User';
+    t('userFallback');
 
   const todayEmission = typeof todayLog?.totalEmissionKg === 'number'
     ? Number(todayLog.totalEmissionKg)
@@ -97,8 +98,8 @@ const DashboardPage = () => {
     : tStatus('none');
   const scorePercent = impactScore !== null ? Math.min(100, Math.max(0, impactScore)) : 0;
   const nextMilestone = impactScore !== null
-    ? impactScore >= silverThreshold ? 'Gold' : 'Silver'
-    : 'Silver';
+    ? impactScore >= silverThreshold ? t('goldLabel') : t('silverLabel')
+    : t('silverLabel');
   const weeklyBars = Array.isArray(dashboardData?.weekly?.dailyValues)
     ? dashboardData.weekly.dailyValues.map(v => Number(v))
     : [];
@@ -184,10 +185,10 @@ const DashboardPage = () => {
                     {t('todayEmission')}
                   </p>
                   <div className="mt-1 flex items-end gap-2">
-                    <span className="text-[32px] hero-number font-extrabold leading-none">
-                      {todayEmission !== null ? todayEmission.toFixed(1) : '--'}
+                      <span className="text-[32px] hero-number font-extrabold leading-none">
+                      {todayEmission !== null ? formatNumber(todayEmission, { maximumFractionDigits: 1 }) : '--'}
                     </span>
-                    <span className="pb-1 text-[16px] font-bold text-[#BCE5D1]">kg CO2</span>
+                    <span className="pb-1 text-[16px] font-bold text-[#BCE5D1]">{t('kgCO2Unit')}</span>
                   </div>
                   <p className="mt-1 text-[12px] text-[#BCE5D1]">{t('youDoingBetter')}</p>
                 </div>
@@ -269,7 +270,7 @@ const DashboardPage = () => {
               ) : (
                 <>
                   <p className="mb-0.5 text-[15px] font-extrabold text-[#17202A]">
-                    {weeklyTotal !== null ? weeklyTotal.toFixed(1) : '--'} kg CO2
+                    {weeklyTotal !== null ? `${formatNumber(weeklyTotal, { maximumFractionDigits: 1 })} ${t('kgCO2Unit')}` : '--'}
                   </p>
                   <div className="flex h-4 items-end gap-1">
                     {weeklyBars.length > 0 && (
@@ -314,14 +315,14 @@ const DashboardPage = () => {
                 }}
               >
                 <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
-                  <span className="text-[28px] font-extrabold text-[#17202A]">
-                    {impactScore !== null ? impactScore : '--'}
+                    <span className="text-[28px] font-extrabold text-[#17202A]">
+                    {impactScore !== null ? formatNumber(impactScore, { maximumFractionDigits: 0 }) : '--'}
                   </span>
                 </div>
               </div>
               <p className="mt-4 text-[16px] font-extrabold text-[#17202A]">{scoreStatus}</p>
               <p className="mt-0.5 text-[12px] font-medium text-[#6A756F]">
-                Toward {nextMilestone} status
+                {t('towardStatus', { status: nextMilestone })}
               </p>
             </div>
           </section>
@@ -331,13 +332,13 @@ const DashboardPage = () => {
               <div className="grid min-h-[230px] grid-cols-1 md:grid-cols-[0.9fr_1.1fr]">
                 <div className="relative z-10 flex flex-col justify-center px-6 py-7 md:px-8">
                   <h2 className="text-[22px] font-extrabold leading-tight text-[#17202A] md:text-[24px]">
-                    The Carbon Mirror
+                    {t('carbonMirrorTitle')}
                   </h2>
                   <p className="mt-3 max-w-[410px] text-[13px] leading-relaxed text-[#4A5550]">
-                    The Carbon Mirror tracks your carbon footprint and provides actionable insights. Your impact is a reflection of your daily choices. Let&apos;s make them count.
+                    {t('carbonMirrorDescription')}
                   </p>
                   <span className="mt-5 inline-flex h-10 w-fit items-center justify-center rounded-full border-2 border-[#0A3D25] bg-white px-6 text-[12px] font-bold text-[#0A3D25] transition-colors group-hover:bg-[#E8F5E9]">
-                    Open Carbon Mirror
+                    {t('openCarbonMirror')}
                   </span>
                 </div>
                 <div className="relative min-h-[210px] overflow-hidden bg-[#F8FBF7]">

@@ -8,7 +8,7 @@
     "signIn": "साइन इन",
     "login": "लगइन",
     "getStarted": "सुरु गर्नुहोस्",
-    "dayStreak": "{count} दिने स्ट्रीक"
+    "dayStreak": "{count} लगातार दिन"
   },
   "Landing": {
     "madeFor": "नेपालेली विद्यालयहरूका लागि बनाइएको",
@@ -130,7 +130,7 @@
     "electricityQuestion": "बिजुली प्रयोग गरेको अनुमानित समय (विद्यालय + घर)",
     "firewoodQuestion": "खाना पकाउन वा तताउन प्रयोग भएको दाउरा",
     "leaveZero": "लागू हुँदैन भने ० राख्नुहोस्",
-    "streakTitle": "स्ट्रीक कायम राख्न लग गरिरहनुहोस्!",
+    "streakTitle": "लगातार दिन कायम राख्न लग गरिरहनुहोस्!",
     "streakSubtitle": "लगातार प्रत्येक लगले तपाईंको गुणक बढाउँछ।",
     "calculateEmission": "मेरो उत्सर्जन हिसाब गर्नुहोस् →",
     "loading": "लोड हुँदैछ...",
@@ -156,7 +156,7 @@
     "nonVeg": "मांसाहारी"
   },
   "Dashboard": {
-    "greeting": "शुभप्रभात, {name}!",
+    "greeting": "स्वागत छ, {name}!",
     "logToday": "आजको कार्बन लग गर्नुहोस्",
     "subtitle": "आजको लागि तपाइँको वातावरणीय प्रभाव ट्र्याकिङ रूपरेखा यहाँ छ।",
     "todayEmission": "आजको उत्सर्जन",
@@ -166,7 +166,13 @@
     "greatProgress":"पछिल्लो महिनाको तुलनामा राम्रो प्रगति!",
     "impactScore":"प्रभाव स्कोर",
     "openCarbonMirror":"कार्बन मिरर खोल्नुहोस्",
-    "weeklyDataUnavailable":"साप्ताहिक डेटा उपलब्ध छैन"
+    "weeklyDataUnavailable":"साप्ताहिक डेटा उपलब्ध छैन",
+    "goldLabel":"गोल्ड",
+    "silverLabel":"सिल्वर",
+    "towardStatus":"अर्को लक्ष्य: {status}",
+    "carbonMirrorTitle":"तपाइँको कार्बन मिरर",
+    "carbonMirrorDescription":"तपाईंका दैनिक क्रियाकलापहरूले विद्यालय र वातावरणमा पार्ने समष्टिगत प्रभाव यहाँ देख्नुहोस्।",
+    "kgCO2Unit":"किग्रा CO₂"
   },
   "Score": {
     "title": "तपाइँको प्रभाव स्कोर",
@@ -182,7 +188,8 @@
     "emission": "उत्सर्जन",
     "scoreEarned": "प्राप्त स्कोर",
     "previous": "< अघिल्लो",
-    "next": "अर्को >"
+    "next": "अर्को >",
+    "unitKgCO2": "किग्रा CO₂"
   },
   "Status": {
     "gold":"गोल्ड स्तिथि",
@@ -211,8 +218,11 @@
     "monthlyTrend":"मासिक प्रवृत्ति",
     "trendPlaceholder":"प्रवृत्ति चार्टहरू पर्याप्त ऐतिहासिक मासिक डेटा हुँदा देखा पर्नेछ।",
     "addMoreLogs":"आफ्नो मासिक प्रवृत्ति निर्माण गर्न र मौसमी प्रगति तुलना गर्न थप दैनिक लगहरू थप्नुहोस्।",
+    "trackProgressDefault":"महिना दर महिना आफ्नो प्रगति ट्र्याक गर्नुहोस्।",
     "nextMilestone":"अर्को लक्ष्य",
     "keepImproving":"उत्सर्जन घटाउन र रूख प्रभाव बढाउन आफ्नो निरन्तरता सुधार गर्नुहोस्।",
+    "treesEquivalentToday":"{count} रूख आज",
+    "treesEquivalentThisMonth":"{count} रूख यो महिनामा",
     "currentLabel":"वर्तमान:",
     "goalLabel":"लक्ष्य:",
     "shareTitle":"मेरो कार्बन मिरर",
@@ -228,6 +238,8 @@
     "failedToLoadResults":"नतिजा लोड गर्न असफल भयो",
     "dailyTotal":"दैनिक कुल",
     "unitKgCO2":"किग्रा CO₂",
+    "treesEquivalent":"{count} रूख",
+    "milesEquivalent":"{count} माइल",
     "greatResult":"शानदार नतिजा! तपाईंको औसतभन्दा {percentage}% कम।",
     "dailyResultAvailable":"दैनिक नतिजा उपलब्ध छ।",
     "equivalentTo":"बराबर",
@@ -271,16 +283,17 @@
     "potentialSaving": "संभावित बचत",
     "completedBtn": "पूरा भयो",
     "markComplete": "पुरा रूपमा मार्क गर्नुहोस्",
-    "deleteAction": "एक्शन हटाउनुहोस्"
+    "deleteAction": "एक्शन हटाउनुहोस्",
+    "unitKgCO2": "किग्रा CO₂"
   },
   "Share": {
     "loading": "उपलब्धि लोड हुँदैछ...",
     "oops": "ओहो!",
     "backHome": "घर फर्कनुहोस्",
     "climateChampion": "जलवायु क्रिया च्याम्पियन",
-    "currentStreak": "वर्तमान स्ट्रिक",
+    "currentStreak": "वर्तमान लगातार दिन",
     "daysInRow": "दिन लगातार",
-    "longestStreak": "सबैभन्दा लामो स्ट्रिक",
+    "longestStreak": "सबैभन्दा लामो लगातार दिन",
     "logsSubmitted": "सबमिट गरिएको लगहरू",
     "treesTracked": "वृक्ष बराबर CO₂ ट्र्याक गरिएको",
     "kgCO2Avoided": "किग्रा CO₂ बचत",

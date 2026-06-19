@@ -156,7 +156,7 @@
     "nonVeg": "Non-Veg"
   },
   "Dashboard": {
-    "greeting": "Good morning, {name}!",
+    "greeting": "Welcome, {name}!",
     "logToday": "Log Today's Carbon",
     "subtitle": "Here is your environmental impact tracking outline for today.",
     "todayEmission": "Today's Emission",
@@ -166,7 +166,13 @@
     "greatProgress":"Great progress compared to last month!",
     "impactScore":"Impact Score",
     "openCarbonMirror":"Open Carbon Mirror",
-    "weeklyDataUnavailable":"Weekly data unavailable"
+    "weeklyDataUnavailable":"Weekly data unavailable",
+    "goldLabel":"Gold",
+    "silverLabel":"Silver",
+    "towardStatus":"Next milestone: {status}",
+    "carbonMirrorTitle":"Your Carbon Mirror",
+    "carbonMirrorDescription":"See the collective impact of your daily actions on your school and the environment.",
+    "kgCO2Unit":"kg CO₂"
   },
   "Score": {
     "title": "Your Impact Score",
@@ -182,7 +188,8 @@
     "emission": "Emission",
     "scoreEarned": "Score Earned",
     "previous": "< Previous",
-    "next": "Next >"
+    "next": "Next >",
+    "unitKgCO2": "kg CO₂"
   },
   "Status": {
     "gold":"Gold Status",
@@ -210,9 +217,10 @@
     "simulationsNote":"Simulations are based on your actual emission factors.",
     "monthlyTrend":"Monthly Trend",
     "trendPlaceholder":"Trend charts will appear once we have enough historical monthly data.",
-    "addMoreLogs":"Add more daily logs to build your monthly trend and compare your seasonal progress.",
-    "nextMilestone":"Next Milestone",
+    "addMoreLogs":"Add more daily logs to build your monthly trend and compare your seasonal progress.",    "trackProgressDefault": "Track your progress month over month.",    "nextMilestone":"Next Milestone",
     "keepImproving":"Keep improving your consistency to lower emissions and grow your forest impact.",
+    "treesEquivalentToday":"{count} trees today",
+    "treesEquivalentThisMonth":"{count} trees this month",
     "currentLabel":"Current:",
     "goalLabel":"Goal:",
     "shareTitle":"My Carbon Mirror",
@@ -228,6 +236,8 @@
     "failedToLoadResults":"Failed to load results",
     "dailyTotal":"Daily Total",
     "unitKgCO2":"kg CO₂",
+    "treesEquivalent":"{count} trees",
+    "milesEquivalent":"{count} miles",
     "greatResult":"Great result! {percentage}% lower than your average.",
     "dailyResultAvailable":"Daily result available.",
     "equivalentTo":"Equivalent to",
@@ -271,7 +281,8 @@
     "potentialSaving": "Potential Saving",
     "completedBtn": "Completed",
     "markComplete": "Mark as Complete",
-    "deleteAction": "Delete Action"
+    "deleteAction": "Delete Action",
+    "unitKgCO2": "kg CO₂"
   },
   "Share": {
     "loading": "Loading achievement...",

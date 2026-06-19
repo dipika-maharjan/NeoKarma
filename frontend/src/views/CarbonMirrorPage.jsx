@@ -16,7 +16,8 @@ import {
 import { getCarbonMirror } from '@/lib/actions/mirrorActions';
 import { getAppConfig } from '@/lib/actions/configActions';
 import { useAuth } from '@/context/AuthContext';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const CARD_CLASS = 'rounded-[10px] border border-[#E0E5E2] bg-white';
 const CARD_PADDING = 'p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]';
@@ -27,11 +28,14 @@ const CARD_TITLE_CLASS = 'text-[18px] font-bold leading-tight';
 const CarbonMirrorPage = () => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const [loading, setLoading] = useState(true);
   const [mirrorData, setMirrorData] = useState(null);
   const [appConfig, setAppConfig] = useState(null);
   const t = useTranslations('CarbonMirror');
   const tImg = useTranslations('Images');
+  const tResult = useTranslations('Result');
+  const formatNumber = useNumberFormatter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,7 +45,7 @@ const CarbonMirrorPage = () => {
       }
 
       try {
-        const data = await getCarbonMirror();
+        const data = await getCarbonMirror(locale);
         if (data) {
           setMirrorData(data);
         }
@@ -96,10 +100,12 @@ const CarbonMirrorPage = () => {
   const scoreGoalText = scoreGoal ?? 'Loading…';
   const progressPercent = currentScore !== null && scoreGoal ? Math.min(100, (currentScore / scoreGoal) * 100) : 0;
   const mirrorStatus = todayMirror.status || monthlyMirror.status || 'balanced';
-  const summaryMessage = comparison?.message || 'Track your progress month over month.';
+  const summaryMessage = comparison?.message || t('trackProgressDefault');
 
   const shareInsight = () => {
-    const shareText = `I emitted ${totalEmitted.toFixed(1)} kg CO2 this month${improvement !== null ? ` and improved ${improvement}% from last month` : ''}.`;
+    const kg = formatNumber(totalEmitted, { maximumFractionDigits: 1 });
+    const improvementPart = improvement !== null ? ` and improved ${formatNumber(improvement, { maximumFractionDigits: 0 })}% from last month` : '';
+    const shareText = t('shareText', { kg, improvementPart });
 
     if (navigator.share) {
       navigator.share({
@@ -142,7 +148,7 @@ const CarbonMirrorPage = () => {
             <div>
               <p className={`mb-1 ${EYEBROW_CLASS}`}>{t('youEmitted')}</p>
               <p className="text-[20px] font-extrabold leading-none text-[#0A3D25]">
-                {totalEmitted.toFixed(1)} <span className="text-[14px]">kg CO₂</span>
+                {formatNumber(totalEmitted, { maximumFractionDigits: 1 })} <span className="text-[14px]">{tResult('unitKgCO2')}</span>
               </p>
               <p className="mt-1.5 text-[13px] font-bold text-[#1B5E20]">
                 {improvement !== null ? t('improvementText', { improvement }) : ''}
@@ -157,7 +163,7 @@ const CarbonMirrorPage = () => {
               className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#072B1A]"
             >
               <Share2 size={16} />
-              Share insight
+              {t('shareInsight')}
             </button>
           </div>
         </section>
@@ -182,7 +188,7 @@ const CarbonMirrorPage = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 text-white">
                 <p className="text-[18px] font-extrabold leading-tight !text-white">
-                  {todayMirror.treesEquivalent ? `${todayMirror.treesEquivalent} trees today` : t('currentTreeEquivalence')}
+                  {todayMirror.treesEquivalent ? t('treesEquivalentToday', { count: formatNumber(todayMirror.treesEquivalent, {}) }) : t('currentTreeEquivalence')}
                 </p>
                 <p className="text-[14px] font-normal !text-white/85">
                   {todayMirror.story || t('latestDaily')}
@@ -221,7 +227,7 @@ const CarbonMirrorPage = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 text-white">
                 <p className="text-[18px] font-extrabold leading-tight !text-white">
-                  {monthlyMirror.treesEquivalent ? `${monthlyMirror.treesEquivalent} trees this month` : t('monthlyMirrorSummary')}
+                  {monthlyMirror.treesEquivalent ? t('treesEquivalentThisMonth', { count: formatNumber(monthlyMirror.treesEquivalent, {}) }) : t('monthlyMirrorSummary')}
                 </p>
                 <p className="text-[14px] font-normal !text-white/85">
                   {summaryMessage}
@@ -276,13 +282,13 @@ const CarbonMirrorPage = () => {
 
           <div className="relative overflow-hidden rounded-[10px] bg-[#0A3D25] p-5 md:p-6 text-white shadow-sm">
             <div className="absolute -bottom-7 -right-8 h-24 w-24 rounded-full border-[11px] border-white/10" />
-            <h3 className={`${CARD_TITLE_CLASS} mb-2 !text-white`}>Next Milestone</h3>
+            <h3 className={`${CARD_TITLE_CLASS} mb-2 !text-white`}>{t('nextMilestone')}</h3>
             <p className="mb-6 text-[14px] leading-relaxed !text-white/80">
-              Keep improving your consistency to lower emissions and grow your forest impact.
+              {t('keepImproving')}
             </p>
             <div className="mb-2 flex items-center justify-between text-[13px] font-semibold text-[#CBE3D8]">
-              <span>Current: {currentScore !== null ? `${currentScore}/100` : '--'}</span>
-              <span>Goal: {scoreGoalText}</span>
+              <span>{t('currentLabel')} {currentScore !== null ? `${formatNumber(currentScore, {})}/100` : '--'}</span>
+              <span>{t('goalLabel')} {scoreGoalText}</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-white/20">
               <div

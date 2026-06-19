@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations } from 'next-intl';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 // Unified recommendations list matching the Smart Recommendations view
 const PRESETS = [
@@ -189,6 +190,7 @@ const mapBackendRecToCard = (rec, index) => {
 const RecommendationsView = ({ onNavigateToDashboard }) => {
   const { user } = useAuth();
   const t = useTranslations('Plan');
+  const formatNumber = useNumberFormatter();
   const [activeTab, setActiveTab] = useState('recommendations'); // 'recommendations' or 'plan'
   const [addedIds, setAddedIds] = useState(new Set());
   const [planItems, setPlanItems] = useState([]);
@@ -307,7 +309,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   const completedCount = completedActions.length;
 
   // Calculate CO2 saved (sum of completed items)
-  const totalCO2Saved = completedActions.reduce((sum, item) => sum + item.saving, 0).toFixed(1);
+  const totalCO2Saved = completedActions.reduce((sum, item) => sum + (item.saving || 0), 0);
 
   // Progress percentage
   const progressPercent = totalActions > 0 ? Math.round((completedCount / totalActions) * 100) : 0;
@@ -380,9 +382,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                             {t('impactReduction')}
                           </p>
                           <p className="text-lg font-extrabold text-gray-800 mt-0.5">
-                            {rec.reduction}
+                            {formatNumber(rec.personalSaving, { maximumFractionDigits: 1 })}
                             <span className="text-xs font-semibold text-gray-400">
-                              {rec.reductionUnit}
+                              {t('unitKgCO2')}{rec.reductionUnit}
                             </span>
                           </p>
                           <button
@@ -469,9 +471,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   Total CO2 Saved
                 </p>
                 <p className="text-3xl font-black mt-2 flex items-baseline gap-1">
-                  {totalCO2Saved}
+                  {formatNumber(totalCO2Saved, { maximumFractionDigits: 1 })}
                   <span className="text-xs font-semibold text-[#A2CBA0] normal-case tracking-normal">
-                    kg / mo
+                    {t('unitKgCO2')} / mo
                   </span>
                 </p>
               </div>
@@ -583,7 +585,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                           {t('potentialSaving')}
                         </p>
                         <p className="text-xs font-black text-gray-800 mt-0.5">
-                          {item.saving}kg CO2/mo
+                          {formatNumber(item.saving || 0, { maximumFractionDigits: 1 })} {t('unitKgCO2')} / mo
                         </p>
                       </div>
 

@@ -18,6 +18,7 @@ import { getAppConfig } from '@/lib/actions/configActions';
 import { useAuth } from '@/context/AuthContext';
 import { getTodayLog } from '@/lib/actions/calculatorActions';
 import { useTranslations } from 'next-intl';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const getEmissionValue = (log) => Number(
   log?.totalEmissionKg
@@ -48,6 +49,7 @@ const ResultPage = () => {
   const [configError, setConfigError] = useState(null);
   const [distanceEquivalent, setDistanceEquivalent] = useState(null);
   const t = useTranslations('Result');
+  const formatNumber = useNumberFormatter();
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -105,8 +107,8 @@ const ResultPage = () => {
         const emissionKgValue = getEmissionValue(todayLog);
         const factor = map['transportation_car'] ?? map['transportation_bus'] ?? map['transportation_motorbike'];
         if (factor && emissionKgValue) {
-          const val = Math.max(0.1, emissionKgValue / factor).toFixed(0);
-          if (mounted) setDistanceEquivalent(val);
+          const val = Math.max(0.1, emissionKgValue / factor);
+          if (mounted) setDistanceEquivalent(Math.round(val));
         } else if (mounted) {
           setDistanceEquivalent('--');
         }
@@ -159,8 +161,8 @@ const ResultPage = () => {
   const percentageBelow = averageEmission ? Math.max(0, Math.round(((averageEmission - emissionKg) / averageEmission) * 100)) : null;
   const dailyTreeAbsorptionKg = appConfig?.dailyTreeAbsorptionKg ?? null;
   const treesEquivalent = emissionKg && dailyTreeAbsorptionKg
-    ? Math.max(0.1, emissionKg / dailyTreeAbsorptionKg).toFixed(2)
-    : '0.00';
+    ? Math.max(0.1, emissionKg / dailyTreeAbsorptionKg)
+    : null;
   const emissionProgress = averageEmission ? Math.min(100, (emissionKg / averageEmission) * 100) : 0;
 
   return (
@@ -184,7 +186,7 @@ const ResultPage = () => {
                 </p>
                 <div className="flex items-end gap-2 text-[#0A3D25]">
                   <span className="text-[58px] font-extrabold leading-none md:text-[66px]">
-                    {emissionKg.toFixed(1)}
+                    {formatNumber(emissionKg, { maximumFractionDigits: 1 })}
                   </span>
                   <span className="pb-2 text-[19px] font-extrabold text-[#A2CBA0]">
                     {t('unitKgCO2')}
@@ -200,8 +202,8 @@ const ResultPage = () => {
                 <div className="min-h-[126px] rounded-lg border border-[#E0E5E2] bg-[#FAFAFA] p-4">
                   <TreePine className="mb-2 text-[#0A3D25]" size={22} fill="currentColor" />
                   <p className="text-[13px] text-[#4A5550]">{t('equivalentTo')}</p>
-                  <p className="text-[19px] font-bold leading-tight text-[#0A3D25]">
-                    {treesEquivalent} trees
+                    <p className="text-[19px] font-bold leading-tight text-[#0A3D25]">
+                    {treesEquivalent ? t('treesEquivalent', { count: formatNumber(Number(treesEquivalent), {}) }) : '--'}
                   </p>
                   <p className="mt-1 max-w-[180px] text-[12px] leading-snug text-gray-500">
                     {t('neededToAbsorb')}
@@ -211,7 +213,7 @@ const ResultPage = () => {
                   <Car className="mb-2 text-[#0A3D25]" size={22} fill="currentColor" />
                   <p className="text-[13px] text-[#4A5550]">{t('equivalentTo')}</p>
                   <p className="text-[19px] font-bold leading-tight text-[#0A3D25]">
-                    {distanceEquivalent ?? '--'} miles
+                    {distanceEquivalent && distanceEquivalent !== '--' ? t('milesEquivalent', { count: formatNumber(Number(distanceEquivalent), {}) }) : '--'}
                   </p>
                   <p className="mt-1 max-w-[180px] text-[12px] leading-snug text-gray-500">
                     {t('drivenInCar')}
@@ -227,7 +229,7 @@ const ResultPage = () => {
                 <div>
                   <div className="mb-3 flex items-center justify-between gap-4">
                     <span className="text-[15px] text-[#CBE3D8]">{t('yourEmission')}</span>
-                    <span className="text-[19px] font-bold">{emissionKg.toFixed(1)} kg</span>
+                    <span className="text-[19px] font-bold">{formatNumber(emissionKg, { maximumFractionDigits: 1 })} {t('unitKgCO2')}</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                     <div
@@ -240,7 +242,7 @@ const ResultPage = () => {
                 <div>
                   <div className="mb-3 flex items-center justify-between gap-4">
                     <span className="text-[15px] text-[#CBE3D8]">{t('yourAverage')}</span>
-                    <span className="text-[19px] font-bold">{averageEmission ? averageEmission.toFixed(1) : '--'} kg</span>
+                    <span className="text-[19px] font-bold">{averageEmission ? formatNumber(averageEmission, { maximumFractionDigits: 1 }) : '--'} {t('unitKgCO2')}</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                     <div className="h-full w-[85%] rounded-full bg-[#72B99C]" />
@@ -296,11 +298,11 @@ const ResultPage = () => {
                   {t('viewImpactScore')}
                 </div>
               </Link>
-              <div className="mt-7 grid grid-cols-2 gap-3 text-[13px] text-[#65716D]">
-                <span>{t('transport')}: {(breakdown.transportKg || 0).toFixed(2)} kg</span>
-                <span>{t('food')}: {(breakdown.foodKg || 0).toFixed(2)} kg</span>
-                <span>{t('waste')}: {(breakdown.wasteKg || 0).toFixed(2)} kg</span>
-                <span>{t('energy')}: {(breakdown.energyKg || 0).toFixed(2)} kg</span>
+                <div className="mt-7 grid grid-cols-2 gap-3 text-[13px] text-[#65716D]">
+                <span>{t('transport')}: {formatNumber(breakdown.transportKg || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('unitKgCO2')}</span>
+                <span>{t('food')}: {formatNumber(breakdown.foodKg || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('unitKgCO2')}</span>
+                <span>{t('waste')}: {formatNumber(breakdown.wasteKg || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('unitKgCO2')}</span>
+                <span>{t('energy')}: {formatNumber(breakdown.energyKg || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t('unitKgCO2')}</span>
               </div>
             </div>
           </section>

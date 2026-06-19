@@ -2,16 +2,15 @@
 
 import React from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { setLocaleCookie, getLocaleCookie } from '@/lib/api/cookie';
-import { useTranslations } from 'next-intl';
+import { setLocaleCookie } from '@/lib/api/cookie';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function LanguageToggle() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const t = useTranslations('Language');
-
-  const current = typeof window !== 'undefined' ? getLocaleCookie() || 'en' : 'en';
+  const current = useLocale();
 
   const switchLocale = (locale) => {
     setLocaleCookie(locale, 365);
@@ -52,7 +51,7 @@ export default function LanguageToggle() {
             current === 'en' ? 'text-white' : 'text-[#0A3D25]'
           }`}
         >
-          EN
+          Eng
         </button>
       </div>
     </div>

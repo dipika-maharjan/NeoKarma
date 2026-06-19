@@ -8,12 +8,16 @@ import ProfileDropdown from './ProfileDropdown';
 import streakIcon from '../../public/streak.png'; 
 import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
+import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const Navbar = () => {
   const pathname = usePathname();
   const { user, isAuthenticated } = useAuth();
   const t = useTranslations('Navbar');
   const [scrolled, setScrolled] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(user?.streak?.current || 0);
+  const formatNumber = useNumberFormatter();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -21,6 +25,33 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    setCurrentStreak(user?.streak?.current || 0);
+  }, [user?.streak?.current]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    const applyStreak = (streak) => {
+      if (Number.isFinite(streak?.current)) {
+        setCurrentStreak(streak.current);
+      }
+    };
+    const syncCachedStreak = () => applyStreak(getCachedStreak());
+    const handleStreakUpdated = (event) => applyStreak(event.detail);
+
+    syncCachedStreak();
+    window.addEventListener(STREAK_UPDATED_EVENT, handleStreakUpdated);
+    window.addEventListener('storage', syncCachedStreak);
+    const intervalId = window.setInterval(syncCachedStreak, 2000);
+
+    return () => {
+      window.removeEventListener(STREAK_UPDATED_EVENT, handleStreakUpdated);
+      window.removeEventListener('storage', syncCachedStreak);
+      window.clearInterval(intervalId);
+    };
+  }, [isAuthenticated]);
 
   // Determine active tab based on current pathname
   const getActiveTab = () => {
@@ -95,7 +126,7 @@ const Navbar = () => {
                   className="w-4 h-4 object-contain"
                 />
                 <span className="text-xs font-semibold tracking-wide">
-                  {t('dayStreak', { count: user.streak?.current || 0 })}
+                  {t('dayStreak', { count: formatNumber(currentStreak, {}) })}
                 </span>
               </div>
 

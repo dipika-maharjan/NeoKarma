@@ -20,11 +20,13 @@ import {
   Zap
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const CalculatorPage = () => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const t = useTranslations('Calculator');
+  const formatNumber = useNumberFormatter();
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [emissionFactors, setEmissionFactors] = useState(null);
@@ -88,7 +90,7 @@ const CalculatorPage = () => {
       estimate: loadingFactors
         ? t('loading')
         : factor != null
-          ? t('kgCO2', { value: factor.toFixed(1) })
+          ? t('kgCO2', { value: formatNumber(factor, { maximumFractionDigits: 1 }) })
           : ''
     };
   });

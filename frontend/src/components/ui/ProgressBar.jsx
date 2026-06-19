@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 /**
  * ProgressBar - Horizontal progress indicator with optional comparison
@@ -23,6 +24,7 @@ const ProgressBar = ({
   secondaryCurrent = null,
   className = ''
 }) => {
+  const formatNumber = useNumberFormatter();
   const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
 
   const colorClasses = {
@@ -43,7 +45,7 @@ const ProgressBar = ({
             <span className="text-sm font-semibold text-gray-900">{label}</span>
             {showValue && (
               <span className="text-sm font-medium text-gray-600">
-                {current.toFixed(1)}{unit}
+                {formatNumber(current, { maximumFractionDigits: 1 })}{unit}
               </span>
             )}
           </div>
@@ -61,7 +63,7 @@ const ProgressBar = ({
             <span className="text-sm font-semibold text-gray-900">{secondaryLabel}</span>
             {showValue && (
               <span className="text-sm font-medium text-gray-600">
-                {secondaryCurrent.toFixed(1)}{unit}
+                {formatNumber(secondaryCurrent, { maximumFractionDigits: 1 })}{unit}
               </span>
             )}
           </div>
@@ -88,7 +90,7 @@ const ProgressBar = ({
           )}
           {showValue && (
             <span className="text-sm font-medium text-gray-600">
-              {current.toFixed(1)}/{total.toFixed(1)}{unit}
+              {formatNumber(current, { maximumFractionDigits: 1 })}/{formatNumber(total, { maximumFractionDigits: 1 })}{unit}
             </span>
           )}
         </div>
