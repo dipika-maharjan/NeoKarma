@@ -183,8 +183,9 @@ const DashboardPage = () => {
         )}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2.05fr_1fr]">
+          {/* Hero Card Banner - Restyled with premium typography parameters matching image_3a8016.jpg */}
           <section
-            className="relative min-h-[100px] overflow-hidden rounded-xl p-4 text-white card-float card-compact hero md:min-h-[110px] md:p-5"
+            className="relative min-h-[140px] overflow-hidden rounded-xl p-6 text-white card-float card-compact hero md:min-h-[160px] md:p-8 lg:p-10 flex flex-col justify-center"
             style={{
               backgroundImage: 'linear-gradient(180deg, rgba(10,61,37,0.28), rgba(10,61,37,0.16)), url("/dashboard.png")',
               backgroundSize: 'cover',
@@ -196,17 +197,21 @@ const DashboardPage = () => {
               <div className="h-full animate-pulse rounded-xl bg-white/10" />
             ) : (
               <>
-                <div className="relative z-10">
-                  <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-[#A2CBA0]">
+                <div className="relative z-10 max-w-[60%]">
+                  <p className="text-[13px] md:text-[14px] font-bold uppercase tracking-[0.25em] text-[#A2CBA0] opacity-90">
                     {t('todayEmission')}
                   </p>
-                  <div className="mt-1 flex items-end gap-2">
-                    <span className="text-[32px] hero-number font-extrabold leading-none">
+                  <div className="mt-2 mb-2 flex items-baseline gap-2.5">
+                    <span className="text-[44px] md:text-[52px] lg:text-[58px] hero-number font-black leading-none tracking-tight drop-shadow-sm">
                       {todayEmission !== null ? formatNumber(todayEmission, { maximumFractionDigits: 1 }) : '--'}
                     </span>
-                    <span className="pb-1 text-[16px] font-bold text-[#BCE5D1]">{t('kgCO2Unit')}</span>
+                    <span className="text-[18px] md:text-[22px] font-extrabold text-[#BCE5D1] tracking-wide">
+                      {t('kgCO2Unit')}
+                    </span>
                   </div>
-                  <p className="mt-1 text-[12px] text-[#BCE5D1]">{t('youDoingBetter')}</p>
+                  <p className="text-[13px] md:text-[14px] font-medium text-[#D1F2E2] leading-relaxed max-w-md">
+                    {t('youDoingBetter')}
+                  </p>
                 </div>
 
                 <div className="gas-wrap z-0" aria-hidden>
@@ -324,7 +329,6 @@ const DashboardPage = () => {
               )}
             </section>
 
-            {/* Redesigned Monthly Reduction Section — Heights strictly maintained */}
             <section className="rounded-[10px] border border-[#BEE8D3] bg-[#D8F5E9] p-5 card-float flex flex-col justify-between shadow-[0_2px_8px_rgba(10,61,37,0.04)]">
               <div>
                 <div className="flex items-center justify-between mb-4">
