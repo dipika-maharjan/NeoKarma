@@ -1,6 +1,5 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import nextIntl from 'next-intl/plugin';
 import withPWA from 'next-pwa';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -61,8 +60,6 @@ const pwaConfig = withPWA({
   ],
 })(baseConfig);
 
-const nextConfig = nextIntl({
-  requestConfig: './src/i18n/request.js'
-})(pwaConfig);
+const nextConfig = pwaConfig;
 
 export default nextConfig;

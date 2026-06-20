@@ -1,8 +1,18 @@
-/** @type {import('next-intl').NextIntlConfig} */
-export default function getConfig(params) {
-  // Return a simple runtime config with a locale. For now we return a
-  // safe default; later this can read params.requestLocale or cookies.
+import { getRequestConfig } from 'next-intl/server';
+import { routing } from '@/i18n/routing';
+
+export default getRequestConfig(async ({ requestLocale }) => {
+  // This is typically used to determine the locale, but we already
+  // have it from the middleware, so this returns it as-is
+  let locale = requestLocale;
+
+  // Validate that the requested locale is supported
+  if (!locale || !routing.locales.includes(locale)) {
+    locale = routing.defaultLocale;
+  }
+
   return {
-    locale: 'en'
+    locale,
+    messages: (await import(`@/messages/${locale}.json`)).default,
   };
-}
+});
