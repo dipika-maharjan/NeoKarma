@@ -95,7 +95,8 @@ class AdminController {
       schoolPerformance,
       topStudents,
       impactAgg,
-      sourceAgg
+      sourceAgg,
+      ecoActionsAgg
     ] = await Promise.all([
       User.countDocuments({ role: 'school_admin' }),
       DailyLog.countDocuments({ userId: { $in: studentIds } }),
@@ -258,6 +259,66 @@ class AdminController {
             avgEnergy: { $round: [{ $ifNull: ['$avgEnergy', 0] }, 2] }
           }
         }
+      ]),
+      DailyLog.aggregate([
+        { $match: { userId: { $in: studentIds } } },
+        {
+          $group: {
+            _id: null,
+            totalLogs: { $sum: 1 },
+            walkedOrCycled: {
+              $sum: {
+                $cond: [
+                  { $in: ['$transportation.mode', ['walk', 'bicycle']] },
+                  1,
+                  0
+                ]
+              }
+            },
+            vegLunch: {
+              $sum: {
+                $cond: [
+                  { $in: ['$food.mealType', ['vegan', 'vegetarian']] },
+                  1,
+                  0
+                ]
+              }
+            },
+            noPlastic: {
+              $sum: {
+                $cond: [
+                  {
+                    $or: [
+                      { $eq: ['$wasteAndPlastic.plasticItemCount', 0] },
+                      { $eq: ['$wasteAndPlastic.plasticItemCount', null] }
+                    ]
+                  },
+                  1,
+                  0
+                ]
+              }
+            },
+            noFoodWaste: {
+              $sum: {
+                $cond: [
+                  { $lte: ['$food.foodWasteGrams', 0] },
+                  1,
+                  0
+                ]
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            totalLogs: 1,
+            walkedOrCycled: 1,
+            vegLunch: 1,
+            noPlastic: 1,
+            noFoodWaste: 1
+          }
+        }
       ])
     ]);
 
@@ -368,12 +429,39 @@ class AdminController {
       avgEnergy: 0
     };
 
+    const ecoActionRow = ecoActionsAgg[0] || {
+      totalLogs: 0,
+      walkedOrCycled: 0,
+      vegLunch: 0,
+      noPlastic: 0,
+      noFoodWaste: 0
+    };
+
     const emissionSources = [
       { category: 'Transport', value: sourceRow.avgTransport, color: '#f59e0b' },
       { category: 'Lunch', value: sourceRow.avgFood, color: '#1a7a4a' },
       { category: 'Waste', value: sourceRow.avgWaste, color: '#c0392b' },
       { category: 'Energy', value: sourceRow.avgEnergy, color: '#3b82f6' }
     ];
+
+    const ecoActions = {
+      walkedOrCycledPct:
+        ecoActionRow.totalLogs > 0
+          ? Math.round((ecoActionRow.walkedOrCycled / ecoActionRow.totalLogs) * 100)
+          : 0,
+      vegLunchPct:
+        ecoActionRow.totalLogs > 0
+          ? Math.round((ecoActionRow.vegLunch / ecoActionRow.totalLogs) * 100)
+          : 0,
+      noPlasticPct:
+        ecoActionRow.totalLogs > 0
+          ? Math.round((ecoActionRow.noPlastic / ecoActionRow.totalLogs) * 100)
+          : 0,
+      noFoodWastePct:
+        ecoActionRow.totalLogs > 0
+          ? Math.round((ecoActionRow.noFoodWaste / ecoActionRow.totalLogs) * 100)
+          : 0
+    };
 
     const impactRow = impactAgg[0] || {
       totalLogs: 0,
@@ -421,6 +509,7 @@ class AdminController {
         logs: w.logCount,
         avgEmission: w.avgEmission || 0
       })),
+      ecoActions,
       studentStreaks,
       liveActivity,
       emissionSources,

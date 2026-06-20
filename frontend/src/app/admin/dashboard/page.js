@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeChart, setActiveChart] = useState('grades');
+  const [activeChart, setActiveChart] = useState('grades'); // 'grades' | 'sources' | 'eco'
   const [streaksVisible, setStreaksVisible] = useState(4);
   const [activityVisible, setActivityVisible] = useState(4);
 
@@ -157,6 +157,33 @@ export default function AdminDashboardPage() {
     value: Number(entry.value || 0),
     color: entry.color || '#1a7a4a'
   }));
+
+  const ecoData = [
+    {
+      action: 'Walked or Cycled',
+      pct: Number(data.ecoActions?.walkedOrCycledPct || 0),
+      color: '#1a7a4a',
+      icon: '🚶'
+    },
+    {
+      action: 'Veg Lunch',
+      pct: Number(data.ecoActions?.vegLunchPct || 0),
+      color: '#4ecf96',
+      icon: '🥗'
+    },
+    {
+      action: 'No Plastic',
+      pct: Number(data.ecoActions?.noPlasticPct || 0),
+      color: '#3b82f6',
+      icon: '♻'
+    },
+    {
+      action: 'No Food Waste',
+      pct: Number(data.ecoActions?.noFoodWastePct || 0),
+      color: '#f59e0b',
+      icon: '🍱'
+    }
+  ];
 
   const impact = systemImpact || {};
   const remainingPct = Math.max(0, 100 - (impact.targetMetPct || 0));
@@ -318,7 +345,7 @@ export default function AdminDashboardPage() {
               {[
                 { key: 'grades', label: 'Emissions by Grade' },
                 { key: 'sources', label: 'Emission Sources' },
-                { key: 'activity', label: 'Weekly Activity' }
+                { key: 'eco', label: 'Eco Actions' }
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -357,85 +384,129 @@ export default function AdminDashboardPage() {
                   No emission data yet. Students need to submit logs.
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, height: '100%', minHeight: 320, minWidth: 0 }}>
-                  <div style={{ width: '100%', minWidth: 0, minHeight: 320 }}>
-                    <div style={{ marginBottom: 8, fontSize: 12, color: '#6b7280' }}>
-                      Avg Emission by Grade
-                    </div>
-                    <div style={{ width: '100%', height: 280, minWidth: 0 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={data.gradeDistribution || []}
-                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                        barCategoryGap="25%"
+                <div>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: '#888',
+                      marginBottom: 12
+                    }}
+                  >
+                    Average CO₂ emission per grade (kg). Lower is better.
+                  </p>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart
+                      data={data.gradeDistribution || []}
+                      margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+                      barCategoryGap="40%"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                      <XAxis
+                        dataKey="grade"
+                        tickFormatter={(value) => `Grade ${value}`}
+                        tick={{ fontSize: 12, fill: '#888' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tickFormatter={(value) => `${value} kg`}
+                        tick={{ fontSize: 12, fill: '#888' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          borderRadius: 10,
+                          border: '1px solid #eef0ee',
+                          fontSize: 12
+                        }}
+                        formatter={(value) => [`${value} kg CO₂`, 'Avg Emission']}
+                        labelFormatter={(label) => `Grade ${label}`}
+                      />
+                      <Bar
+                        dataKey="avgEmission"
+                        radius={[6, 6, 0, 0]}
+                        name="Avg Emission"
                       >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                        <XAxis
-                          dataKey="grade"
-                          tickFormatter={(value) => `Grade ${value}`}
-                          tick={{ fontSize: 12, fill: '#888' }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 12, fill: '#888' }}
-                          axisLine={false}
-                          tickLine={false}
-                          width={48}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: 10,
-                            border: '1px solid #eef0ee',
-                            fontSize: 12,
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
-                          }}
-                          formatter={(value) => [`${Number(value || 0).toFixed(2)} kg CO₂`, 'Avg Emission']}
-                          labelFormatter={(label) => `Grade ${label}`}
-                        />
-                        <Bar dataKey="avgEmission" fill="#1a7a4a" radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                        {(data.gradeDistribution || []).map((entry, index) => (
+                          <Cell
+                            key={index}
+                            fill={
+                              entry.avgEmission <= 2
+                                ? '#1a7a4a'
+                                : entry.avgEmission <= 3.5
+                                  ? '#f59e0b'
+                                  : '#c0392b'
+                            }
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 20,
+                      justifyContent: 'center',
+                      marginTop: 12
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 12,
+                        color: '#555'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          background: '#1a7a4a'
+                        }}
+                      />
+                      Good (under 2kg)
                     </div>
-                  </div>
-                  <div style={{ width: '100%', minWidth: 0, minHeight: 320 }}>
-                    <div style={{ marginBottom: 8, fontSize: 12, color: '#6b7280' }}>
-                      Meat-free Days by Grade
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 12,
+                        color: '#555'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          background: '#f59e0b'
+                        }}
+                      />
+                      Moderate (2–3.5kg)
                     </div>
-                    <div style={{ width: '100%', height: 280, minWidth: 0 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={data.gradeDistribution || []}
-                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                        barCategoryGap="25%"
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                        <XAxis
-                          dataKey="grade"
-                          tickFormatter={(value) => `Grade ${value}`}
-                          tick={{ fontSize: 12, fill: '#888' }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 12, fill: '#888' }}
-                          axisLine={false}
-                          tickLine={false}
-                          width={48}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: 10,
-                            border: '1px solid #eef0ee',
-                            fontSize: 12,
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
-                          }}
-                          formatter={(value) => [`${Number(value || 0)} days`, 'Meat-free Days']}
-                          labelFormatter={(label) => `Grade ${label}`}
-                        />
-                        <Bar dataKey="meatFreeDays" fill="#4ecf96" radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 12,
+                        color: '#555'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          background: '#c0392b'
+                        }}
+                      />
+                      High (above 3.5kg)
                     </div>
                   </div>
                 </div>
@@ -488,84 +559,67 @@ export default function AdminDashboardPage() {
                 </ResponsiveContainer>
               )
             )}
-            {activeChart === 'activity' && (
-              (data.weeklyActivity || []).length === 0 ? (
-                <div
+            {activeChart === 'eco' && (
+              <div style={{ padding: '8px 0' }}>
+                <p
                   style={{
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    fontSize: 12,
                     color: '#888',
-                    fontSize: 13
+                    marginBottom: 16
                   }}
                 >
-                  No log activity in the last 7 days.
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={data.weeklyActivity || []}
-                    margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={(value) =>
-                        new Date(value).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric'
-                        })
-                      }
-                      tick={{ fontSize: 12, fill: '#888' }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 10,
-                        border: '1px solid #eef0ee',
-                        fontSize: 12
+                  % of all log entries where students chose eco-friendly options
+                </p>
+                {ecoData.map((item, i) => (
+                  <div key={i} style={{ marginBottom: 18 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginBottom: 6
                       }}
-                      labelFormatter={(value) =>
-                        new Date(value).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          month: 'short',
-                          day: 'numeric'
-                        })
-                      }
-                      formatter={(value, name) => [
-                        value,
-                        name === 'logs' ? 'Logs submitted' : 'Avg Emission (kg)'
-                      ]}
-                    />
-                    <Legend
-                      formatter={(value) =>
-                        value === 'logs' ? 'Logs submitted' : 'Avg Emission (kg)'
-                      }
-                      wrapperStyle={{ fontSize: 12 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="logs"
-                      stroke="#1a7a4a"
-                      strokeWidth={2.5}
-                      dot={{ fill: '#1a7a4a', r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avgEmission"
-                      stroke="#f59e0b"
-                      strokeWidth={2.5}
-                      dot={{ fill: '#f59e0b', r: 4 }}
-                      activeDot={{ r: 6 }}
-                      strokeDasharray="5 5"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )
+                    >
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: '#111'
+                        }}
+                      >
+                        {item.icon} {item.action}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: item.color
+                        }}
+                      >
+                        {item.pct}%
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        width: '100%',
+                        height: 10,
+                        background: '#f0f0f0',
+                        borderRadius: 5,
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${item.pct}%`,
+                          height: '100%',
+                          background: item.color,
+                          borderRadius: 5,
+                          transition: 'width 0.6s ease'
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </section>
