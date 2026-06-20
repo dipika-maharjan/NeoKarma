@@ -14,6 +14,7 @@ const emissionFactorsRoutes = require('./emissionFactors.routes');
 const configRoutes = require('./config.routes');
 const scoreConfigRoutes = require('./scoreConfig.routes');
 const shareRoutes = require('./share.routes');
+const adminRoutes = require('./admin.routes');
 const asyncHandler = require('../utils/asyncHandler');
 const { getDBStatus } = require('../config/db');
 
@@ -42,6 +43,7 @@ router.use('/auth', authRoutes);
 router.use('/profile', profileRoutes);
 router.use('/daily-log', dailyLogRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/admin', adminRoutes);
 router.use('/carbon-mirror', carbonMirrorRoutes);
 router.use('/mitigation-plan', mitigationPlanRoutes);
 router.use('/streak', streakRoutes);

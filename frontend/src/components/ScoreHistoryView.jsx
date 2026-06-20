@@ -20,6 +20,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getStreak } from '@/lib/actions/streakActions';
 import { getDailyLogHistory } from '@/lib/actions/calculatorActions';
 import { getScoreConfig } from '@/lib/actions/scoreConfigActions';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const formatDateString = (dateStr) => {
   if (!dateStr) return '';
@@ -41,6 +42,7 @@ const sortOptions = [
 const ScoreHistoryView = () => {
   const t = useTranslations('Score');
   const { user } = useAuth();
+  const formatNumber = useNumberFormatter();
   const [currentPage, setCurrentPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -254,10 +256,13 @@ const ScoreHistoryView = () => {
           currentY += 7;
           doc.setTextColor(30, 51, 34);
           doc.text(formatDateString(row.date), 20, currentY);
+          // Use number formatter when available, otherwise fallback to fixed string
+          const emissionText = formatNumber
+            ? `${formatNumber(row.totalEmissionKg, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('unitKgCO2')}`
+            : `${(row.totalEmissionKg || 0).toFixed(2)} kg CO2`;
           doc.setTextColor(74, 85, 80);
-          doc.text(`${row.totalEmissionKg.toFixed(2)} kg CO2`, 80, currentY);
+          doc.text(emissionText, 80, currentY);
           doc.setTextColor(10, 61, 37);
-          doc.setFont('helvetica', 'bold');
           doc.text(`+${pdfPointsPerLog} pts`, 150, currentY);
           doc.setFont('helvetica', 'normal');
           currentY += 3;
@@ -507,7 +512,7 @@ const ScoreHistoryView = () => {
                   {currentRows.map((row, index) => (
                     <tr key={row._id || index} className="score-row border-b border-gray-50 last:border-0 hover:bg-[#F6FAF8] transition-colors">
                       <td className="py-4 text-xs font-bold text-[#1E3322]">{formatDateString(row.date)}</td>
-                      <td className="py-4 text-xs font-bold text-gray-500">{row.totalEmissionKg.toFixed(2)} kg CO2e</td>
+                      <td className="py-4 text-xs font-bold text-gray-500">{formatNumber ? `${formatNumber(row.totalEmissionKg, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('unitKgCO2')}` : `${(row.totalEmissionKg || 0).toFixed(2)} kg CO2`}</td>
                       <td className="py-4 text-xs font-extrabold text-[#0A3D25]">+{pdfPointsPerLog} pts</td>
                     </tr>
                   ))}

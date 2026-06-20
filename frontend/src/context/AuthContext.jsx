@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCookie } from '../lib/api/cookie';
 import { login as authLogin, logout as authLogout, getProfile, editProfile } from '../lib/actions/authActions';
+import { STREAK_UPDATED_EVENT } from '../lib/actions/calculatorActions';
 
 const defaultAuthValue = {
   user: null,
@@ -31,9 +32,22 @@ export const AuthProvider = ({ children }) => {
     const handleUnauthorized = () => {
       logout();
     };
+    const handleStreakUpdated = (event) => {
+      setUser((currentUser) => {
+        if (!currentUser || !event.detail) return currentUser;
+        return {
+          ...currentUser,
+          streak: {
+            ...(currentUser.streak || {}),
+            ...event.detail
+          }
+        };
+      });
+    };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('auth-unauthorized', handleUnauthorized);
+      window.addEventListener(STREAK_UPDATED_EVENT, handleStreakUpdated);
     }
 
     const savedToken = getCookie('token') || localStorage.getItem('token');
@@ -63,6 +77,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('auth-unauthorized', handleUnauthorized);
+        window.removeEventListener(STREAK_UPDATED_EVENT, handleStreakUpdated);
       }
     };
   }, [logout]);
@@ -72,12 +87,7 @@ export const AuthProvider = ({ children }) => {
       const { user: userData, token: authToken, role } = await authLogin(credentials);
       setUser(userData);
       setToken(authToken);
-      return {
-        success: true,
-        user: userData,
-        token: authToken,
-        role: role || userData?.role
-      };
+      return { success: true, user: userData, token: authToken };
     } catch (error) {
       return { success: false, error: error.message || 'Login failed' };
     }

@@ -1,5 +1,6 @@
 import React from 'react';
 import Card from './Card';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const MetricCard = ({ 
   label, 
@@ -11,6 +12,7 @@ const MetricCard = ({
   className = '',
   ...props 
 }) => {
+  const formatNumber = useNumberFormatter();
   const trendColors = {
     improved: 'text-green-600 bg-green-50',
     worsened: 'text-red-600 bg-red-50',
@@ -26,7 +28,7 @@ const MetricCard = ({
           </p>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-bold text-gray-900">
-              {typeof value === 'number' ? value.toFixed(2) : value}
+              {typeof value === 'number' ? formatNumber(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
             </span>
             {unit && <span className="text-lg text-gray-500">{unit}</span>}
           </div>

@@ -3,35 +3,49 @@
  */
 
 /**
- * Get today's date in YYYY-MM-DD format (local timezone)
+ * Get today's date in YYYY-MM-DD format for Nepal timezone (UTC+5:45)
  */
-const getTodayStr = () => {
-  const localDate = new Date();
-  const offset = localDate.getTimezoneOffset();
-  const targetDate = new Date(localDate.getTime() - offset * 60 * 1000);
-  return targetDate.toISOString().split('T')[0];
+const NEPAL_OFFSET_MINUTES = 5 * 60 + 45;
+
+const dateToNepalYYYYMMDD = (date) => {
+  const utc = Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds(),
+    date.getUTCMilliseconds()
+  );
+  const nepalMs = utc + NEPAL_OFFSET_MINUTES * 60 * 1000;
+  return new Date(nepalMs).toISOString().split('T')[0];
 };
+
+/**
+ * Get today's date in YYYY-MM-DD format (Nepal local)
+ */
+const getTodayStr = () => dateToNepalYYYYMMDD(new Date());
 
 /**
  * Get yesterday's date in YYYY-MM-DD format
  */
 const getYesterdayStr = () => {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const offset = yesterday.getTimezoneOffset();
-  const targetDate = new Date(yesterday.getTime() - offset * 60 * 1000);
-  return targetDate.toISOString().split('T')[0];
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - 1);
+  return dateToNepalYYYYMMDD(d);
 };
 
 /**
  * Check if two dates are exactly 1 day apart (today vs yesterday)
  */
 const isConsecutiveDays = (dateStr1, dateStr2) => {
-  const date1 = new Date(dateStr1);
-  const date2 = new Date(dateStr2);
-  const diffTime = Math.abs(date2 - date1);
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  return diffDays === 1;
+  // Parse YYYY-MM-DD into UTC midnight then compare day difference
+  const parseUTCDate = (s) => {
+    const [y, m, d] = s.split('-').map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  const diffMs = parseUTCDate(dateStr2) - parseUTCDate(dateStr1);
+  return diffMs === 24 * 60 * 60 * 1000;
 };
 
 /**
@@ -39,10 +53,8 @@ const isConsecutiveDays = (dateStr1, dateStr2) => {
  */
 const getDateNDaysAgo = (n) => {
   const d = new Date();
-  d.setDate(d.getDate() - n);
-  const offset = d.getTimezoneOffset();
-  const targetDate = new Date(d.getTime() - offset * 60 * 1000);
-  return targetDate.toISOString().split('T')[0];
+  d.setUTCDate(d.getUTCDate() - n);
+  return dateToNepalYYYYMMDD(d);
 };
 
 /**

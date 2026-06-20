@@ -2,6 +2,8 @@ import { Newsreader, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import LayoutShell from "@/components/layout/LayoutShell";
+import OfflineSyncProvider from '@/components/OfflineSyncProvider';
+import OfflineBanner from '@/components/OfflineBanner';
 import { NextIntlClientProvider } from 'next-intl';
 import getI18nConfig from '@/i18n/request';
 
@@ -29,12 +31,18 @@ export default async function RootLayout({ children }) {
       lang={locale}
       className={`${newsreader.variable} ${inter.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body className="min-h-full flex flex-col bg-[#FAFAFA]">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AuthProvider>
-            <LayoutShell>
-              {children}
-            </LayoutShell>
+            <OfflineSyncProvider>
+              <LayoutShell>
+                <OfflineBanner />
+                {children}
+              </LayoutShell>
+            </OfflineSyncProvider>
           </AuthProvider>
         </NextIntlClientProvider>
       </body>

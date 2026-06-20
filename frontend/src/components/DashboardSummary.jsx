@@ -1,17 +1,21 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const DashboardSummary = ({
   onNavigateToCalculator,
   onNavigateToMirror,
   summary = {}
 }) => {
+  const t = useTranslations('Dashboard');
+  const formatNumber = useNumberFormatter();
+
   const studentData = {
     name: summary.name || 'User',
-    dailyEmissionsKG: summary.dailyEmissionsKG ?? '--',
-    impactScore: summary.impactScore ?? '--',
-    scoreStatus: summary.scoreStatus || 'Loading...',
-    totalTreesEquivalentKG: summary.totalTreesEquivalentKG ?? '--',
+    dailyEmissionsKG: summary.dailyEmissionsKG ?? null,
+    impactScore: summary.impactScore ?? null,
+    scoreStatus: summary.scoreStatus || t('impactScore'),
+    totalTreesEquivalentKG: summary.totalTreesEquivalentKG ?? null,
     treesTrendPercentage: summary.treesTrendPercentage || '--'
   };
 
@@ -49,21 +53,21 @@ const DashboardSummary = ({
 
             <div>
               <p className="text-xs font-semibold tracking-wider text-[#A2CBA0] uppercase">
-                Today's Footprint
+                {t('todayEmission')}
               </p>
               <div className="flex items-baseline gap-2 mt-4">
                 <span className="text-5xl font-black tracking-tight">
-                  {studentData.dailyEmissionsKG}
+                  {studentData.dailyEmissionsKG !== null ? formatNumber(studentData.dailyEmissionsKG, { maximumFractionDigits: 1 }) : '--'}
                 </span>
                 <span className="text-xl font-medium text-[#A2CBA0]">
-                  kg CO₂e
+                  {t('unitKgCO2')}
                 </span>
               </div>
             </div>
 
             <div className="mt-6 border-t border-[#155A39] pt-4 z-10">
               <p className="text-sm text-[#E2F0D9] flex items-center gap-2">
-                <span>🌱</span> "You're doing better today! Keep up the green choices."
+                <span>🌱</span> {t('youDoingBetter')}
               </p>
             </div>
           </div>
@@ -87,10 +91,10 @@ const DashboardSummary = ({
             <div className="my-4">
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl font-extrabold text-gray-800">
-                  {studentData.totalTreesEquivalentKG}
+                  {studentData.totalTreesEquivalentKG !== null ? formatNumber(studentData.totalTreesEquivalentKG, { maximumFractionDigits: 1 }) : '--'}
                 </span>
                 <span className="text-sm font-semibold text-gray-500">
-                  kg CO₂
+                  {t('unitKgCO2')}
                 </span>
               </div>
               <p className="text-xs text-gray-400 mt-1">Cumulative offset metrics</p>
@@ -134,7 +138,7 @@ const DashboardSummary = ({
               </svg>
               <div className="absolute flex flex-col items-center justify-center">
                 <span className="text-3xl font-black text-gray-800">
-                  {studentData.impactScore}
+                  {studentData.impactScore !== null ? formatNumber(studentData.impactScore, { maximumFractionDigits: 0 }) : '--'}
                 </span>
               </div>
             </div>

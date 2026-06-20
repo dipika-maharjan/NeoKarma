@@ -19,7 +19,7 @@ class DailyLogController {
       foodMealType,
       wasteAndPlasticCount,
       energyUsageHours,
-      energyFirewoodKg,
+      energyUsageKg,
       extraAnswer
     } = req.body;
 
@@ -34,61 +34,55 @@ class DailyLogController {
       throw new AppError('Missing required fields for daily log', 400);
     }
 
-    const today = getTodayStr();
+    const date = req.body.date || getTodayStr();
 
-    // Check if user has already logged today
-    const existingLog = await dailyLogRepository.findByUserAndDate(userId, today);
-    if (existingLog) {
-      throw new AppError("You have already logged today's emissions", 400);
-    }
-
-    // Calculate emissions using service
     const emissionResult = await emissionCalculationService.calculateEmissions({
       transportationMode,
       transportationDistanceKm,
       foodMealType,
       wasteAndPlasticCount,
       energyUsageHours,
-      energyFirewoodKg: energyFirewoodKg || 0
+      energyUsageKg: energyUsageKg || 0
     });
 
-    // Create log
-    let createdLog;
-    try {
-      createdLog = await dailyLogRepository.create({
-        userId,
-        date: today,
-        transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
-        food: { mealType: foodMealType },
-        wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
-        energy: { usageHours: energyUsageHours, firewoodKg: energyFirewoodKg || 0 },
-        extraAnswer: extraAnswer || null,
-        breakdown: emissionResult.breakdown,
-        totalEmissionKg: emissionResult.totalEmissionKg
-      });
-    } catch (error) {
-      if (error?.code === 11000) {
-        throw new AppError("You have already logged today's emissions", 400);
-      }
-      throw error;
+    const logPayload = {
+      userId,
+      date,
+      transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
+      food: { mealType: foodMealType },
+      wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
+      energy: { usageHours: energyUsageHours, firewoodKg: energyUsageKg || 0 },
+      extraAnswer: extraAnswer || null,
+      breakdown: emissionResult.breakdown,
+      totalEmissionKg: emissionResult.totalEmissionKg
+    };
+
+    const upsertResult = await dailyLogRepository.upsertByUserAndDate(userId, date, logPayload);
+    // Mongoose rawResult can vary by driver/version; ensure we have the created/updated doc
+    let createdLog = upsertResult?.value;
+    if (!createdLog) {
+      createdLog = await dailyLogRepository.findByUserAndDate(userId, date);
+    }
+    const isExistingLog = upsertResult.lastErrorObject?.updatedExisting === true;
+    let updatedStreak = null;
+
+    if (!isExistingLog) {
+      const updatedUser = await streakService.updateStreakAfterLogCreation(userId);
+      updatedStreak = updatedUser?.streak || null;
     }
 
-    // Update streak
-    const updatedUser = await streakService.updateStreakAfterLogCreation(userId);
+    await carbonMirrorService.updateSnapshotAfterLog(userId, date, emissionResult);
 
-    // Update monthly snapshot
-    await carbonMirrorService.updateSnapshotAfterLog(userId, today, emissionResult);
-
-    // Generate Carbon Mirror
     const mirror = await carbonMirrorService.generateMirror(createdLog.totalEmissionKg);
+    const statusCode = isExistingLog ? 200 : 201;
 
-    res.status(201).json({
+    res.status(statusCode).json({
       success: true,
-      message: 'Daily log submitted successfully',
+      message: isExistingLog ? 'Daily log updated successfully' : 'Daily log submitted successfully',
       data: {
         log: createdLog,
         mirror,
-        updatedStreak: updatedUser.streak
+        updatedStreak
       }
     });
   });
@@ -118,7 +112,6 @@ class DailyLogController {
     const userId = req.user.userId;
     const { from, to } = req.query;
 
-    // Default: last 30 days
     let logs;
     if (from && to) {
       logs = await dailyLogRepository.getLogsByDateRange(userId, from, to);

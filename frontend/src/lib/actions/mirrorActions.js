@@ -1,7 +1,7 @@
 import { fetchCarbonMirror, calculateWhatIf } from '../api/mirrorApi';
 
-export const getCarbonMirror = async () => {
-  const response = await fetchCarbonMirror();
+export const getCarbonMirror = async (locale = 'en') => {
+  const response = await fetchCarbonMirror(locale);
   return response.data;
 };
 

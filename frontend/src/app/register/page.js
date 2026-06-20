@@ -23,6 +23,7 @@ const RegisterPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations('Auth');
+  const imgT = useTranslations('Images');
 
   const gradeOptions = Array.from({ length: 5 }, (_, i) => ({
     value: String(i + 8),
@@ -35,6 +36,18 @@ const RegisterPage = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const getHomeRoute = (user) => {
+    if (!user) return '/dashboard';
+    if (
+      user.role === 'school_admin' ||
+      user.role === 'admin' ||
+      user.isAdmin ||
+      user.admin
+    )
+      return '/admin';
+    return '/dashboard';
   };
 
   const handleSubmit = async (e) => {
@@ -55,9 +68,10 @@ const RegisterPage = () => {
 
     try {
       const { confirmPassword, ...submitData } = formData;
-      await register(submitData);
-      const nextParam = searchParams.get('next') || '/dashboard';
-      router.push(nextParam);
+      const result = await register(submitData);
+      const nextParam = searchParams.get('next');
+      const defaultRoute = getHomeRoute(result.user);
+      router.push(nextParam || defaultRoute);
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -70,7 +84,7 @@ const RegisterPage = () => {
       <section className="relative hidden w-[52%] overflow-hidden bg-[#0A3D25] lg:block">
         <Image
           src="/Himalayan Mountains.png"
-          alt={useTranslations('Images')('himalayanAlt')}
+          alt={imgT('himalayanAlt')}
           fill
           className="object-cover opacity-80"
           priority
@@ -111,7 +125,7 @@ const RegisterPage = () => {
               href="/login"
               className="rounded-md py-2 text-center text-[11px] font-bold text-[#6c7370] no-underline transition hover:text-[#0A3D25]"
             >
-              Login
+              {t('login')}
             </Link>
           </div>
 
