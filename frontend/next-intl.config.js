@@ -1,27 +1,25 @@
 import { getRequestConfig } from 'next-intl/server';
-import { routing } from './src/i18n/routing';
+
+// Statically import messages to ensure they're bundled
+import en from './messages/en.json' assert { type: 'json' };
+import ne from './messages/ne.json' assert { type: 'json' };
+
+const messages = {
+  en,
+  ne,
+};
 
 export default getRequestConfig(async ({ locale: requestLocale }) => {
+  const supportedLocales = ['en', 'ne'];
   let locale = requestLocale;
 
   // Validate that the requested locale is supported
-  if (!locale || !routing.locales.includes(locale)) {
-    locale = routing.defaultLocale;
+  if (!locale || !supportedLocales.includes(locale)) {
+    locale = 'en';
   }
 
-  // Use dynamic import to load messages
-  try {
-    const messages = (await import(`./messages/${locale}.json`)).default;
-    return {
-      locale,
-      messages,
-    };
-  } catch (error) {
-    console.warn(`Failed to load messages for locale: ${locale}`, error);
-    // Return empty messages object as fallback
-    return {
-      locale,
-      messages: {},
-    };
-  }
+  return {
+    locale,
+    messages: messages[locale] || messages['en'],
+  };
 });

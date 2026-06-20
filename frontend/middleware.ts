@@ -5,82 +5,51 @@ import { routing } from '@/i18n/routing';
 
 const PUBLIC = ['/', '/login', '/register'];
 
-// Create i18n middleware from next-intl
-const handleI18nRouting = createMiddleware(routing);
+// Create i18n middleware from next-intl - let it handle locale detection
+const handleI18n = createMiddleware(routing);
 
 export function middleware(req: NextRequest) {
-  // Apply i18n middleware first
-  const i18nResponse = handleI18nRouting(req);
-  
-  // Extract locale from pathname or accept-language header
-  let locale = 'en';
   const pathname = req.nextUrl.pathname;
-  
-  // Check if pathname starts with a locale
-  for (const loc of routing.locales) {
-    if (pathname.startsWith(`/${loc}/`) || pathname === `/${loc}`) {
-      locale = loc;
-      break;
-    }
-  }
-  
-  // If no locale in path, try accept-language header
-  if (locale === 'en') {
-    const acceptLanguage = req.headers.get('accept-language');
-    if (acceptLanguage?.startsWith('ne')) {
-      locale = 'ne';
-    }
-  }
+
+  // Let next-intl handle the response first
+  const response = handleI18n(req);
 
   const token = req.cookies.get('token')?.value;
   const role = req.cookies.get('role')?.value;
-  const path = req.nextUrl.pathname;
 
-  // Create response from i18n middleware
-  const response = i18nResponse ? i18nResponse : NextResponse.next();
-  
-  // Set locale cookie for server components to use
-  response.cookies.set('locale', locale, {
-    maxAge: 60 * 60 * 24 * 365, // 1 year
-    path: '/',
-  });
+  // Detect locale from cookie, headers, or default to 'en'
+  let locale = 'en';
+  const localeCookie = req.cookies.get('locale');
+  if (localeCookie?.value) {
+    locale = localeCookie.value;
+  } else if (req.headers.get('accept-language')?.startsWith('ne')) {
+    locale = 'ne';
+  }
+
+  // Set locale cookie so server components can read it
+  if (!localeCookie || localeCookie.value !== locale) {
+    response.cookies.set('locale', locale, {
+      maxAge: 60 * 60 * 24 * 365,
+      path: '/',
+    });
+  }
 
   // Handle auth redirects
-  if (!token && !PUBLIC.includes(path)) {
-    const redirectResponse = NextResponse.redirect(new URL('/', req.url));
-    redirectResponse.cookies.set('locale', locale, {
-      maxAge: 60 * 60 * 24 * 365,
-      path: '/',
-    });
-    return redirectResponse;
+  if (!token && !PUBLIC.includes(pathname)) {
+    return NextResponse.redirect(new URL('/', req.url));
   }
 
-  if (token && (path === '/login' || path === '/')) {
+  if (token && (pathname === '/login' || pathname === '/')) {
     const dest = role === 'school_admin' ? '/admin/dashboard' : '/dashboard';
-    const redirectResponse = NextResponse.redirect(new URL(dest, req.url));
-    redirectResponse.cookies.set('locale', locale, {
-      maxAge: 60 * 60 * 24 * 365,
-      path: '/',
-    });
-    return redirectResponse;
+    return NextResponse.redirect(new URL(dest, req.url));
   }
 
-  if (path.startsWith('/admin') && role !== 'school_admin') {
-    const redirectResponse = NextResponse.redirect(new URL('/dashboard', req.url));
-    redirectResponse.cookies.set('locale', locale, {
-      maxAge: 60 * 60 * 24 * 365,
-      path: '/',
-    });
-    return redirectResponse;
+  if (pathname.startsWith('/admin') && role !== 'school_admin') {
+    return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
-  if (path.startsWith('/dashboard') && role === 'school_admin') {
-    const redirectResponse = NextResponse.redirect(new URL('/admin/dashboard', req.url));
-    redirectResponse.cookies.set('locale', locale, {
-      maxAge: 60 * 60 * 24 * 365,
-      path: '/',
-    });
-    return redirectResponse;
+  if (pathname.startsWith('/dashboard') && role === 'school_admin') {
+    return NextResponse.redirect(new URL('/admin/dashboard', req.url));
   }
 
   return response;
@@ -88,11 +57,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all request paths except for the ones starting with:
-    // - api (API routes)
-    // - _next/static (static files)
-    // - _next/image (image optimization files)
-    // - favicon.ico (favicon file)
+    // Match all request paths except static files and API
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
