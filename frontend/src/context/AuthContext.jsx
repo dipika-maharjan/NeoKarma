@@ -45,8 +45,13 @@ export const AuthProvider = ({ children }) => {
           setUser(profileData);
         })
         .catch((err) => {
-          console.error('Failed to fetch user profile:', err);
-          logout();
+          if (err?.status === 401) {
+            logout();
+            return;
+          }
+
+          console.warn('Could not refresh user profile. Keeping the current session token.', err);
+          setToken(savedToken);
         })
         .finally(() => {
           setLoading(false);

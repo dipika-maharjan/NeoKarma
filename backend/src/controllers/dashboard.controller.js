@@ -31,6 +31,15 @@ class DashboardController {
     const monthlyLogs = await dailyLogRepository.getRecentLogs(userId, 30);
     const monthlyTotal = monthlyLogs.reduce((sum, log) => sum + log.totalEmissionKg, 0);
     const monthlyAverage = monthlyLogs.length > 0 ? monthlyTotal / monthlyLogs.length : 0;
+    const totalLogsCount = await dailyLogRepository.countByUser(userId);
+    const isPersonalized = totalLogsCount >= 30;
+    const daysUntilPersonalized = Math.max(0, 30 - totalLogsCount);
+
+    if (isPersonalized && !user.personalizedUnlockedAt) {
+      const unlockedAt = new Date();
+      await userRepository.update(userId, { personalizedUnlockedAt: unlockedAt });
+      user.personalizedUnlockedAt = unlockedAt;
+    }
 
     // Get monthly breakdown
     let monthlyBreakdown = {
@@ -65,6 +74,10 @@ class DashboardController {
           grade: user.grade,
           locationType: user.locationType
         },
+        phase: isPersonalized ? 'personalized' : 'onboarding',
+        daysUntilPersonalized,
+        totalLogsCount,
+        personalizedUnlockedAt: user.personalizedUnlockedAt,
         streak: user.streak,
         weekly: {
           totalDaysLogged: weeklyLogs.length,

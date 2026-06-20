@@ -1,8 +1,8 @@
 import PlanPage from '@/views/PlanPage';
 
 export const metadata = {
-  title: 'Action Plan - नेओकर्म',
-  description: 'Create and track your 3-month carbon mitigation plan'
+  title: 'Action Plan - Neo Karma',
+  description: 'Create and track your carbon mitigation plan'
 };
 
 export default function Plan() {

@@ -53,17 +53,25 @@ class DailyLogController {
     });
 
     // Create log
-    const createdLog = await dailyLogRepository.create({
-      userId,
-      date: today,
-      transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
-      food: { mealType: foodMealType },
-      wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
-      energy: { usageHours: energyUsageHours, firewoodKg: energyFirewoodKg || 0 },
-      extraAnswer: extraAnswer || null,
-      breakdown: emissionResult.breakdown,
-      totalEmissionKg: emissionResult.totalEmissionKg
-    });
+    let createdLog;
+    try {
+      createdLog = await dailyLogRepository.create({
+        userId,
+        date: today,
+        transportation: { mode: transportationMode, distanceKm: transportationDistanceKm },
+        food: { mealType: foodMealType },
+        wasteAndPlastic: { plasticItemCount: wasteAndPlasticCount },
+        energy: { usageHours: energyUsageHours, firewoodKg: energyFirewoodKg || 0 },
+        extraAnswer: extraAnswer || null,
+        breakdown: emissionResult.breakdown,
+        totalEmissionKg: emissionResult.totalEmissionKg
+      });
+    } catch (error) {
+      if (error?.code === 11000) {
+        throw new AppError("You have already logged today's emissions", 400);
+      }
+      throw error;
+    }
 
     // Update streak
     const updatedUser = await streakService.updateStreakAfterLogCreation(userId);

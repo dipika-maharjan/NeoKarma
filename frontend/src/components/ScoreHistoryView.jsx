@@ -182,7 +182,7 @@ const ScoreHistoryView = () => {
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(22);
-      doc.text('Neo Karma (Neo\u0915\u0930\u094d\u092e)', 15, 18);
+      doc.text('Neo Karma', 15, 18);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);

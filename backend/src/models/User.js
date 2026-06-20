@@ -127,6 +127,10 @@ const UserSchema = new mongoose.Schema(
         }
       }
     },
+    personalizedUnlockedAt: {
+      type: Date,
+      default: null
+    },
     isActive: {
       type: Boolean,
       default: true
