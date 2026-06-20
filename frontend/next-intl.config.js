@@ -1,9 +1,11 @@
 import { getRequestConfig } from 'next-intl/server';
-import { routing } from '@/i18n/routing';
+import { routing } from './src/i18n/routing';
+import en from './messages/en.json';
+import ne from './messages/ne.json';
+
+const messages = { en, ne };
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  // This is typically used to determine the locale, but we already
-  // have it from the middleware, so this returns it as-is
   let locale = requestLocale;
 
   // Validate that the requested locale is supported
@@ -13,6 +15,6 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
-    messages: (await import(`@/messages/${locale}.json`)).default,
+    messages: messages[locale],
   };
 });

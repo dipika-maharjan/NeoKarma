@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import nextIntl from 'next-intl/plugin';
 import withPWA from 'next-pwa';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -60,6 +61,6 @@ const pwaConfig = withPWA({
   ],
 })(baseConfig);
 
-const nextConfig = pwaConfig;
+const nextConfig = nextIntl('./next-intl.config.js')(pwaConfig);
 
 export default nextConfig;
