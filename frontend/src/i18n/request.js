@@ -5,7 +5,7 @@ export default getRequestConfig(async () => {
   // Prefer cookie-based locale detection in App Router.
   let locale;
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const localeCookie = cookieStore.get('locale');
     if (localeCookie && localeCookie.value) {
       locale = localeCookie.value;
