@@ -12,6 +12,19 @@ import {
   Users,
   Wind
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  LineChart,
+  Line,
+  Cell
+} from 'recharts';
 import apiClient from '@/lib/api/axios';
 import { useAuth } from '@/context/AuthContext';
 
@@ -59,6 +72,7 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeChart, setActiveChart] = useState('grades');
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -244,6 +258,275 @@ export default function AdminDashboardPage() {
               </h2>
             </div>
           ))}
+        </section>
+
+        <section
+          style={{
+            background: '#fff',
+            borderRadius: 14,
+            border: '1px solid #eef0ee',
+            padding: '22px 24px',
+            marginBottom: 16
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: 24
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: '#888',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: 4
+                }}
+              >
+                Student performance
+              </p>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111', margin: 0 }}>
+                Grade Analytics
+              </h3>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                gap: 4,
+                background: '#f4f6f4',
+                borderRadius: 8,
+                padding: 4
+              }}
+            >
+              {[
+                { key: 'grades', label: 'By Grade' },
+                { key: 'marks', label: 'Marks Range' },
+                { key: 'activity', label: 'Weekly Logs' }
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveChart(tab.key)}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: 6,
+                    border: 'none',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    background: activeChart === tab.key ? '#1a7a4a' : 'transparent',
+                    color: activeChart === tab.key ? '#fff' : '#888',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ width: '100%', height: 280 }}>
+            {activeChart === 'grades' && (
+              (data.gradeDistribution || []).length === 0 ? (
+                <div
+                  style={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#888',
+                    fontSize: 13
+                  }}
+                >
+                  No grade data yet. Students need to be assigned grades.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={data.gradeDistribution || []}
+                    margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+                    barCategoryGap="30%"
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                    <XAxis
+                      dataKey="grade"
+                      tickFormatter={(value) => `Grade ${value}`}
+                      tick={{ fontSize: 12, fill: '#888' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 10,
+                        border: '1px solid #eef0ee',
+                        fontSize: 12,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                      }}
+                      formatter={(value, name) => [
+                        value,
+                        name === 'studentCount'
+                          ? 'Students'
+                          : name === 'avgMarks'
+                            ? 'Avg Marks'
+                            : 'Avg Streak'
+                      ]}
+                      labelFormatter={(label) => `Grade ${label}`}
+                    />
+                    <Legend
+                      formatter={(value) =>
+                        value === 'studentCount'
+                          ? 'Students'
+                          : value === 'avgMarks'
+                            ? 'Avg Marks'
+                            : 'Avg Streak'
+                      }
+                      wrapperStyle={{ fontSize: 12 }}
+                    />
+                    <Bar dataKey="studentCount" fill="#1a7a4a" radius={[6, 6, 0, 0]} name="studentCount" />
+                    <Bar dataKey="avgMarks" fill="#4ecf96" radius={[6, 6, 0, 0]} name="avgMarks" />
+                    <Bar dataKey="avgStreak" fill="#f59e0b" radius={[6, 6, 0, 0]} name="avgStreak" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )
+            )}
+            {activeChart === 'marks' && (
+              (data.marksDistribution || []).length === 0 ? (
+                <div
+                  style={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#888',
+                    fontSize: 13
+                  }}
+                >
+                  No marks data yet.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={data.marksDistribution || []}
+                    margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+                    barCategoryGap="40%"
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                    <XAxis dataKey="range" tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 10,
+                        border: '1px solid #eef0ee',
+                        fontSize: 12
+                      }}
+                      formatter={(value) => [value, 'Students']}
+                      labelFormatter={(label) => `Marks: ${label}`}
+                    />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]} name="Students">
+                      {(data.marksDistribution || []).map((entry, index) => (
+                        <Cell
+                          key={`${entry.range}-${index}`}
+                          fill={
+                            index === 0
+                              ? '#fde8e8'
+                              : index === 1
+                                ? '#f59e0b'
+                                : index === 2
+                                  ? '#4ecf96'
+                                  : '#1a7a4a'
+                          }
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )
+            )}
+            {activeChart === 'activity' && (
+              (data.weeklyActivity || []).length === 0 ? (
+                <div
+                  style={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#888',
+                    fontSize: 13
+                  }}
+                >
+                  No log activity in the last 7 days.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={data.weeklyActivity || []}
+                    margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(value) =>
+                        new Date(value).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        })
+                      }
+                      tick={{ fontSize: 12, fill: '#888' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 10,
+                        border: '1px solid #eef0ee',
+                        fontSize: 12
+                      }}
+                      labelFormatter={(value) =>
+                        new Date(value).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          month: 'short',
+                          day: 'numeric'
+                        })
+                      }
+                      formatter={(value, name) => [
+                        value,
+                        name === 'logs' ? 'Logs submitted' : 'Avg Emission (kg)'
+                      ]}
+                    />
+                    <Legend
+                      formatter={(value) =>
+                        value === 'logs' ? 'Logs submitted' : 'Avg Emission (kg)'
+                      }
+                      wrapperStyle={{ fontSize: 12 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="logs"
+                      stroke="#1a7a4a"
+                      strokeWidth={2.5}
+                      dot={{ fill: '#1a7a4a', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="avgEmission"
+                      stroke="#f59e0b"
+                      strokeWidth={2.5}
+                      dot={{ fill: '#f59e0b', r: 4 }}
+                      activeDot={{ r: 6 }}
+                      strokeDasharray="5 5"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )
+            )}
+          </div>
         </section>
 
         <section style={{ display: 'grid', gridTemplateColumns: '1.45fr 1fr', gap: 16, marginBottom: 18 }}>

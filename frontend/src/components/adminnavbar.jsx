@@ -16,8 +16,8 @@ const getCookie = (name) => {
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
-  const role = getCookie('role');
+  const { user, isAuthenticated, logout } = useAuth();
+  const role = user?.role || getCookie('role');
   const isAdmin = role === 'school_admin';
 
   const adminLinks = [
@@ -27,9 +27,7 @@ const Navbar = () => {
   ];
 
   const handleLogout = () => {
-    document.cookie = 'token=; max-age=0; path=/';
-    document.cookie = 'role=; max-age=0; path=/';
-    localStorage.removeItem('token');
+    logout();
     router.replace('/');
   };
 
