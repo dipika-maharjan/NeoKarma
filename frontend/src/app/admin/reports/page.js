@@ -46,7 +46,6 @@ const exportCsv = (rows) => {
   const headers = [
     'Student',
     'Grade',
-    'Section',
     'Date',
     'Total Emission (kg)',
     'Meat-Free',
@@ -58,7 +57,6 @@ const exportCsv = (rows) => {
       [
         row.studentName,
         row.grade || '',
-        row.section || '',
         row.date ? new Date(row.date).toISOString().slice(0, 10) : '',
         row.totalEmissionKg || 0,
         row.meatFreeDay ? 'Yes' : 'No',
@@ -78,12 +76,68 @@ const exportCsv = (rows) => {
   URL.revokeObjectURL(url);
 };
 
+function Pagination({
+  page,
+  totalPages,
+  total,
+  pageSize,
+  label,
+  onChange
+}) {
+  if (totalPages <= 1) return null;
+
+  const start = (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+
+  return (
+    <div className="mt-4 flex items-center justify-between border-t border-[#eef0ee] pt-3">
+      <span className="text-xs text-[#6b7280]">
+        {start}–{end} of {total} {label}
+      </span>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(1, page - 1))}
+          disabled={page === 1}
+          className="rounded-md border border-[#e5e7eb] px-2.5 py-1 text-xs font-semibold text-[#111827] disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-[#d1d5db]"
+        >
+          ←
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onChange(p)}
+            className={`min-w-7 rounded-md border px-2 py-1 text-xs font-semibold ${
+              page === p
+                ? 'border-[#1a7a4a] bg-[#1a7a4a] text-white'
+                : 'border-[#e5e7eb] bg-white text-[#111827]'
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
+          className="rounded-md border border-[#e5e7eb] px-2.5 py-1 text-xs font-semibold text-[#111827] disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-[#d1d5db]"
+        >
+          →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminReportsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [logsPage, setLogsPage] = useState(1);
+  const LOGS_PAGE_SIZE = 8;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -110,6 +164,18 @@ export default function AdminReportsPage() {
     () => (data?.emissionTrend || []).map((entry) => ({ ...entry })),
     [data]
   );
+  const recentLogs = data?.recentLogs || [];
+  const logsTotalPages = Math.max(1, Math.ceil(recentLogs.length / LOGS_PAGE_SIZE));
+  const paginatedLogs = recentLogs.slice(
+    (logsPage - 1) * LOGS_PAGE_SIZE,
+    logsPage * LOGS_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    if (logsPage > logsTotalPages) {
+      setLogsPage(1);
+    }
+  }, [logsPage, logsTotalPages]);
 
   if (loading) {
     return (
@@ -263,10 +329,10 @@ export default function AdminReportsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#eef0ee] bg-white">
-                    {(data.recentLogs || []).map((row, index) => (
+                    {paginatedLogs.map((row, index) => (
                       <tr key={`${row.studentName}-${index}`} className="hover:bg-[#f9fbfa]">
                         <td className="px-4 py-3 font-medium text-[#111827]">{row.studentName}</td>
-                        <td className="px-4 py-3 text-[#6b7280]">{row.grade || '—'} · {row.section || '—'}</td>
+                        <td className="px-4 py-3 text-[#6b7280]">{row.grade || '—'}</td>
                         <td className="px-4 py-3 text-[#6b7280]">{formatDate(row.date)}</td>
                         <td className="px-4 py-3 font-semibold text-[#0A3D25]">{formatNumber(row.totalEmissionKg)}kg</td>
                         <td className="px-4 py-3 text-[#6b7280]">{formatNumber(row.transportEmission)}kg</td>
@@ -276,6 +342,14 @@ export default function AdminReportsPage() {
                 </table>
               </div>
             </div>
+            <Pagination
+              page={logsPage}
+              totalPages={logsTotalPages}
+              total={recentLogs.length}
+              pageSize={LOGS_PAGE_SIZE}
+              label="logs"
+              onChange={setLogsPage}
+            />
           </div>
 
           <div className="space-y-4">

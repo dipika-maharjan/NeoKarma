@@ -10,15 +10,19 @@ const streakToMarks = require('../utils/streakToMarks');
 class AdminController {
   getDashboard = asyncHandler(async (req, res) => {
     const adminId = req.user.schoolId || req.user.userId || req.user._id;
-    const schoolObjectId = new mongoose.Types.ObjectId(adminId);
-    const schoolAdmin = await User.findById(schoolObjectId).select('name schoolName');
+    const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
+      ? new mongoose.Types.ObjectId(adminId)
+      : null;
+    const schoolAdmin = schoolObjectId
+      ? await User.findById(schoolObjectId).select('name schoolName')
+      : null;
     const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
     const studentMatch = {
       role: 'student',
       $or: [
-        { schoolId: schoolObjectId },
-        { schoolName }
-      ].filter((condition) => Object.values(condition)[0])
+        ...(schoolObjectId ? [{ schoolId: schoolObjectId }] : []),
+        ...(schoolName ? [{ schoolName }] : [])
+      ]
     };
 
     const students = await User.find(studentMatch).select('_id name grade section streak practicalMarks');
@@ -145,7 +149,7 @@ class AdminController {
         },
         {
           $group: {
-            _id: { grade: '$student.grade', section: '$student.section' },
+            _id: { grade: '$student.grade' },
             studentCount: { $addToSet: '$student._id' },
             avgEmissionKg: { $avg: '$totalEmissionKg' },
             totalLogs: { $sum: 1 }
@@ -159,9 +163,7 @@ class AdminController {
             className: {
               $concat: [
                 'Grade ',
-                { $toString: '$_id.grade' },
-                ' - ',
-                { $ifNull: ['$_id.section', 'A'] }
+                { $toString: '$_id.grade' }
               ]
             },
             studentCount: { $size: '$studentCount' },

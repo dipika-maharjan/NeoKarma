@@ -236,7 +236,7 @@ export default function AdminStudentsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className="rounded-full bg-[#f5f7f6] px-2.5 py-1 text-xs font-medium text-[#0A3D25]">
-                          Grade {student.grade || '—'} · {student.section || '—'}
+                          Grade {student.grade || '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-[#111827]">{student.currentStreak} day{student.currentStreak === 1 ? '' : 's'}</td>
