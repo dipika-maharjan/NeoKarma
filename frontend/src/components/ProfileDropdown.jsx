@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import LanguageToggle from './LanguageToggle';
 import profileImg from '../../public/profile.png';
 
 export default function ProfileDropdown() {
@@ -40,68 +42,59 @@ export default function ProfileDropdown() {
 
   if (!user) return null;
 
+  const displayName = user.name || user.email || 'Student';
+  const displaySchool = user.schoolName || user.email || 'School not added';
+
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Trigger: User Rounded Avatar Node Frame */}
       <button
         onClick={toggleDropdown}
         aria-expanded={isOpen}
+        aria-label="Open profile menu"
         className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:border-forest-green transition-colors flex items-center justify-center bg-white outline-none focus:ring-2 focus:ring-forest-green"
       >
-        <img
-          src={profileImg.src || profileImg}
+        <Image
+          src={profileImg}
           alt="User Profile Menu"
+          width={36}
+          height={36}
           className="w-full h-full object-cover"
         />
       </button>
 
-      {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-          {/* Header: Name and Email */}
+        <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="px-4 py-2 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
-            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+            <p className="text-xs text-gray-500 truncate">{displaySchool}</p>
             <span className="inline-block mt-1 text-[10px] font-bold text-forest-green bg-[#E8F5E9] px-2 py-0.5 rounded-full uppercase">
-              Grade {user.grade} • {user.locationType}
+              Grade {user.grade || '--'} - {user.locationType || 'student'}
             </span>
           </div>
 
-          {/* Links */}
           <div className="py-1">
             <Link
-              href="/profile"
+              href="/profile/account"
               onClick={() => setIsOpen(false)}
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-forest-green transition-colors cursor-pointer no-underline"
             >
               Profile / Account
             </Link>
-            <Link
-              href="/dashboard"
-              onClick={() => setIsOpen(false)}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-forest-green transition-colors cursor-pointer no-underline"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/settings"
-              onClick={() => setIsOpen(false)}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-forest-green transition-colors cursor-pointer no-underline"
-            >
-              Settings
-            </Link>
+          
+            <div className="mt-1 flex items-center justify-between px-4 py-2">
+              <span className="text-sm font-medium text-gray-700">Language</span>
+              <LanguageToggle />
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-gray-100 my-1"></div>
+          <div className="border-t border-gray-100 my-1" />
 
-          {/* Logout Action */}
           <div className="py-1">
             <button
               onClick={() => {
                 setIsOpen(false);
                 logout();
-                router.replace('/');
+                router.push('/login');
               }}
               className="w-full text-left block px-4 py-2 text-sm text-rose-accent hover:bg-rose-50 transition-colors font-medium cursor-pointer"
             >

@@ -1,12 +1,10 @@
 /**
- * Seed Daily Logs for Test User — Past 1 Month
+ * Seed Daily Logs for Test User — Past 3 Months (90 Days)
  * Populates realistic daily log data for guragainaruna@gmail.com
- * for the past 30 days (today + 29 prior days) to demonstrate the
- * streak, dashboard trends, carbon mirror, and mitigation plan eligibility
- * (most "after 30 days" features need a full month of history to trigger).
+ * for the past 90 days to demonstrate long-term streaks, dashboard trends,
+ * carbon mirror, and advanced mitigation plan eligibility.
  *
  * Run: npm run seed:logs
- * (Add to package.json: "seed:logs": "node scripts/seedDailyLogsForUser.js")
  */
 require('dotenv').config({ path: '.env' });
 const mongoose = require('mongoose');
@@ -14,7 +12,7 @@ const User = require('../src/models/User');
 const DailyLog = require('../src/models/DailyLog');
 const emissionFactorRepository = require('../src/repositories/emissionFactor.repository');
 
-const NUM_DAYS = 30; // today + past 29 days = 30 total days of history
+const NUM_DAYS = 90; // 3 months of history
 
 /**
  * Helper: format Date to YYYY-MM-DD string
@@ -52,11 +50,10 @@ async function calculateBreakdown(transportMode, distance, mealType, plasticCoun
 async function calculateStreak(userId) {
   const logs = await DailyLog.find({ userId })
     .sort({ date: -1 })
-    .limit(NUM_DAYS + 5); // small buffer in case of pre-existing logs beyond our seed window
+    .limit(NUM_DAYS + 5);
 
   if (logs.length === 0) return { current: 0, longest: 0 };
 
-  // Sort by date ascending to check consecutive days
   const sortedLogs = logs.sort((a, b) => new Date(a.date) - new Date(b.date));
 
   let currentStreak = 1;
@@ -73,49 +70,58 @@ async function calculateStreak(userId) {
     } else if (diffDays > 1) {
       currentStreak = 1;
     }
-    // diffDays === 0 (duplicate date) is ignored — shouldn't happen since
-    // dates are generated uniquely below, but guards against weirdness
-    // if pre-existing logs overlap with the seeded window.
   }
 
   return { current: currentStreak, longest: longestStreak };
 }
 
 /**
- * Build a realistic, varied log entry for a given day index (0 = oldest, NUM_DAYS-1 = today).
- * Cycles through different transport modes, meal types, and energy/plastic usage so the
- * 30-day trend looks like a real student's life, not 30 identical days.
- *
- * Deliberately shapes a gentle downward emissions trend across the month (higher emissions
- * in the earlier days, lower in the most recent days) so the demo can visually show
- * "improvement over time" on the dashboard/carbon mirror — matches the pitch narrative of
- * a student becoming more aware and reducing their footprint.
+ * Build a realistic, macro-progressive log entry over 90 days.
+ * * - Month 1 (Days 0-29): High carbon habits (unaware phase)
+ * - Month 2 (Days 30-59): Transitional habits (awareness phase)
+ * - Month 3 (Days 60-89): Sustainable habits (optimized phase)
  */
 function buildLogEntryForDay(dayIndex, dateStr) {
-  const transportCycle = ['walk', 'bicycle', 'bus', 'bus', 'motorbike', 'car', 'bicycle'];
-  const mealCycle = ['vegetarian', 'mixed', 'vegetarian', 'non-vegetarian', 'mixed', 'vegan', 'vegetarian'];
+  let transportCycle, mealCycle;
+  let plasticItemCount, foodWasteGrams, energyHours, segregated;
+
+  // Distances matched to transportation modes
+  const distanceByMode = { walk: 1.5, bicycle: 4, bus: 8, motorbike: 6, car: 12 };
+
+  if (dayIndex < 30) {
+    // --- MONTH 1: Heavy carbon footprint ---
+    transportCycle = ['car', 'motorbike', 'bus', 'car', 'motorbike', 'walk', 'bus'];
+    mealCycle = ['non-vegetarian', 'mixed', 'non-vegetarian', 'mixed', 'vegetarian', 'non-vegetarian', 'mixed'];
+    
+    plasticItemCount = dayIndex % 3 === 0 ? 3 : 2;
+    foodWasteGrams = dayIndex % 2 === 0 ? 80 : 40;
+    energyHours = 6;
+    segregated = false;
+
+  } else if (dayIndex < 60) {
+    // --- MONTH 2: Making conscious changes ---
+    transportCycle = ['bus', 'motorbike', 'bicycle', 'bus', 'walk', 'car', 'bicycle'];
+    mealCycle = ['mixed', 'vegetarian', 'mixed', 'non-vegetarian', 'vegetarian', 'mixed', 'vegan'];
+    
+    plasticItemCount = dayIndex % 4 === 0 ? 1 : 2;
+    foodWasteGrams = dayIndex % 3 === 0 ? 40 : 0;
+    energyHours = 4;
+    segregated = dayIndex % 2 === 0; // starts recycling half the time
+
+  } else {
+    // --- MONTH 3: Highly sustainable eco-champ ---
+    transportCycle = ['walk', 'bicycle', 'bus', 'walk', 'bicycle', 'bus', 'car']; // car only once a week max
+    mealCycle = ['vegetarian', 'vegan', 'vegetarian', 'mixed', 'vegan', 'vegetarian', 'vegan'];
+    
+    plasticItemCount = dayIndex % 5 === 0 ? 1 : 0; // mostly zero plastic
+    foodWasteGrams = dayIndex % 7 === 0 ? 20 : 0; // minimal waste
+    energyHours = 3;
+    segregated = true; // completely locked in green habits
+  }
 
   const transportMode = transportCycle[dayIndex % transportCycle.length];
   const mealType = mealCycle[dayIndex % mealCycle.length];
-
-  // Distance varies by mode so numbers stay realistic (walking/cycling = short, car/bus = longer)
-  const distanceByMode = {
-    walk: 1.5,
-    bicycle: 4,
-    bus: 8,
-    motorbike: 6,
-    car: 10
-  };
   const distanceKm = distanceByMode[transportMode] ?? 5;
-
-  // Improvement trend: early in the month (low dayIndex) = more plastic/energy use,
-  // later in the month (high dayIndex, closer to today) = slightly better habits.
-  // This is intentional for demo storytelling, not random noise.
-  const progressRatio = dayIndex / (NUM_DAYS - 1); // 0 (oldest) -> 1 (today)
-  const plasticItemCount = progressRatio < 0.5 ? 2 : (dayIndex % 3 === 0 ? 1 : 0);
-  const foodWasteGrams = progressRatio < 0.5 ? 60 : (dayIndex % 4 === 0 ? 30 : 0);
-  const energyHours = progressRatio < 0.5 ? 5 : 3;
-  const segregated = progressRatio >= 0.5; // started segregating waste properly partway through
 
   return {
     date: dateStr,
@@ -128,23 +134,21 @@ function buildLogEntryForDay(dayIndex, dateStr) {
 
 async function seedDailyLogs() {
   try {
-    console.log(`Seeding ${NUM_DAYS} days of daily logs for test user...`);
+    console.log(`Seeding ${NUM_DAYS} days (3 Months) of progressive daily logs...`);
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✓ Connected to MongoDB\n');
 
-    // Find the user by email
     const user = await User.findOne({ email: 'guragainaruna@gmail.com' });
     if (!user) {
       throw new Error('User guragainaruna@gmail.com not found. Please create the user first.');
     }
 
     console.log(`✓ Found user: ${user.name} (${user.email})\n`);
-
     const userId = user._id;
 
-    // Build the list of dates: today going back NUM_DAYS-1 days, oldest first
+    // Generate dates sequentially from 90 days ago up until today
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // normalize to midnight to avoid off-by-one issues with diffDays
+    today.setHours(0, 0, 0, 0);
 
     const dateEntries = [];
     for (let i = NUM_DAYS - 1; i >= 0; i--) {
@@ -153,15 +157,12 @@ async function seedDailyLogs() {
       dateEntries.push(formatDate(d));
     }
 
-    console.log(`Will seed logs from ${dateEntries[0]} (30 days ago) through ${dateEntries[dateEntries.length - 1]} (today)\n`);
+    console.log(`Will seed logs from ${dateEntries[0]} through ${dateEntries[dateEntries.length - 1]}\n`);
 
-    // Build the full set of log entries using the cyclical/trend generator
     const logEntries = dateEntries.map((dateStr, idx) => buildLogEntryForDay(idx, dateStr));
-
     const createdLogs = [];
 
     for (const entry of logEntries) {
-      // Calculate emissions
       const emissionResult = await calculateBreakdown(
         entry.transportation.mode,
         entry.transportation.distanceKm,
@@ -170,7 +171,6 @@ async function seedDailyLogs() {
         entry.energy.usageHours
       );
 
-      // Upsert log (avoid duplicates if script is re-run)
       const log = await DailyLog.findOneAndUpdate(
         { userId, date: entry.date },
         {
@@ -190,16 +190,16 @@ async function seedDailyLogs() {
       createdLogs.push(log);
     }
 
-    console.log(`✓ Upserted ${createdLogs.length} daily logs (${dateEntries[0]} → ${dateEntries[dateEntries.length - 1]})\n`);
+    console.log(`✓ Upserted ${createdLogs.length} daily logs successfully.\n`);
 
-    // Calculate and display streak
+    // Calculate and save streak info
     const streak = await calculateStreak(userId);
-    console.log(`\n Streak calculation:\n   Current: ${streak.current} days\n   Longest: ${streak.longest} days\n`);
+    console.log(`Streak calculation:\n   Current: ${streak.current} days\n   Longest: ${streak.longest} days\n`);
 
-    // Persist streak to user document so dashboard and profile show updated values
     try {
-      const lastLogDate = dateEntries[dateEntries.length - 1]; // today
+      const lastLogDate = dateEntries[dateEntries.length - 1];
       const newParticipation = (user.streak && user.streak.participationScore) ? user.streak.participationScore + createdLogs.length : createdLogs.length;
+      
       await User.findByIdAndUpdate(userId, {
         streak: {
           current: streak.current,
@@ -214,54 +214,29 @@ async function seedDailyLogs() {
       console.warn('Could not persist streak to user document:', err.message);
     }
 
-    // Print summary table
-    console.log(' Seeded Daily Logs Summary:');
-    console.log('═'.repeat(100));
-    console.log(
-      `${'Date'.padEnd(12)} | ${'Transport'.padEnd(15)} | ${'Meal'.padEnd(15)} | ${'Plastic'.padEnd(8)} | ${'Energy'.padEnd(8)} | ${'Total CO₂'.padEnd(12)}`
-    );
-    console.log('─'.repeat(100));
-
-    createdLogs.forEach((log) => {
-      const transportStr = `${log.transportation.mode} (${log.transportation.distanceKm}km)`;
-      const mealStr = log.food.mealType;
-      const plasticStr = `${log.wasteAndPlastic.plasticItemCount} items`;
-      const energyStr = `${log.energy.usageHours}h`;
-      const totalStr = `${log.totalEmissionKg} kg`;
-
-      console.log(
-        `${log.date.padEnd(12)} | ${transportStr.padEnd(15)} | ${mealStr.padEnd(15)} | ${plasticStr.padEnd(8)} | ${energyStr.padEnd(8)} | ${totalStr.padEnd(12)}`
-      );
-    });
-
-    console.log('═'.repeat(100));
-
-    // Quick aggregate stats for sanity-checking the demo narrative
+    // Performance Metrics / Trend calculation
     const totalCo2 = createdLogs.reduce((sum, log) => sum + log.totalEmissionKg, 0);
     const avgCo2 = totalCo2 / createdLogs.length;
-    const firstWeekAvg =
-      createdLogs.slice(0, 7).reduce((sum, log) => sum + log.totalEmissionKg, 0) / 7;
-    const lastWeekAvg =
-      createdLogs.slice(-7).reduce((sum, log) => sum + log.totalEmissionKg, 0) / 7;
+    
+    // Compare first 2 weeks vs last 2 weeks to calculate true progressive trend
+    const firstTwoWeeksAvg = createdLogs.slice(0, 14).reduce((sum, log) => sum + log.totalEmissionKg, 0) / 14;
+    const lastTwoWeeksAvg = createdLogs.slice(-14).reduce((sum, log) => sum + log.totalEmissionKg, 0) / 14;
 
-    console.log(`\n Month total: ${totalCo2.toFixed(2)} kg CO₂  |  Daily average: ${avgCo2.toFixed(2)} kg CO₂`);
-    console.log(` First week avg: ${firstWeekAvg.toFixed(2)} kg CO₂  →  Last week avg: ${lastWeekAvg.toFixed(2)} kg CO₂`);
+    console.log('\n═'.repeat(60));
+    console.log(` 90-Day Seed Summary:`);
+    console.log(` Total Footprint: ${totalCo2.toFixed(2)} kg CO₂`);
+    console.log(` Overall Daily Avg: ${avgCo2.toFixed(2)} kg CO₂`);
+    console.log(` Month 1 Baseline Avg (First 14 days): ${firstTwoWeeksAvg.toFixed(2)} kg CO₂`);
+    console.log(` Month 3 Target Avg (Last 14 days): ${lastTwoWeeksAvg.toFixed(2)} kg CO₂`);
     console.log(
-      ` Trend: ${lastWeekAvg < firstWeekAvg ? '↓ improving' : '↑ worsening'} (${Math.abs(
-        (((firstWeekAvg - lastWeekAvg) / firstWeekAvg) * 100)
-      ).toFixed(1)}% change)\n`
+      ` Narrative Trend: ${lastTwoWeeksAvg < firstTwoWeeksAvg ? '↓ Improving Lifestyle' : '↑ Worsening'}` +
+      ` (${Math.abs(((firstTwoWeeksAvg - lastTwoWeeksAvg) / firstTwoWeeksAvg) * 100).toFixed(1)}% footprint reduction)`
     );
-
-    console.log(' 30-day daily logs seeded successfully!');
-    console.log(
-      `\n Next: Log in as ${user.email} and verify the dashboard shows a ${NUM_DAYS}-day history, ` +
-      `streak displays as ${streak.current} days, and the AI mitigation plan / carbon mirror ` +
-      `30-day-trigger features are now unlocked.\n`
-    );
+    console.log('═'.repeat(60));
 
     process.exit(0);
   } catch (error) {
-    console.error(' Seed failed:', error.message);
+    console.error('❌ Seed failed:', error.message);
     process.exit(1);
   }
 }

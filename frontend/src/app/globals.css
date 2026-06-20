@@ -87,8 +87,351 @@ samp {
   animation: footer-reveal 520ms ease-out both;
 }
 
+@keyframes score-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes score-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes score-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.score-page-shell {
+  animation: score-page-enter 620ms ease-out both;
+}
+
+.score-card,
+.score-table-panel,
+.score-gauge {
+  animation: score-rise 520ms ease-out both;
+}
+
+.score-card {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.score-card-icon {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dfe8e3;
+  border-radius: 999px;
+  color: #0A3D25;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.score-card:hover {
+  border-color: rgba(10, 61, 37, 0.16);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+  transform: translateY(-3px);
+}
+
+.score-gauge {
+  animation: score-rise 520ms ease-out both, score-float 4s ease-in-out 700ms infinite;
+}
+
+.score-meter-ring {
+  transition: stroke-dashoffset 800ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.score-progress-bar {
+  transform-origin: left center;
+  animation: score-fill 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.score-row {
+  animation: score-rise 380ms ease-out both;
+}
+
+@keyframes score-page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.score-filter-menu {
+  animation: score-menu-enter 150ms ease-out both;
+  transform-origin: top right;
+}
+
+@keyframes score-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .footer-reveal {
     animation: none;
   }
+
+  .score-page-shell,
+  .score-card,
+  .score-table-panel,
+  .score-gauge,
+  .score-filter-menu,
+  .score-progress-bar,
+  .score-row {
+    animation: none;
+  }
+
+  .score-card:hover {
+    transform: none;
+  }
 }
+
+/* Floating card style for subtle lift and padding */
+.card-float {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15,23,42,0.04);
+  transition: transform 260ms cubic-bezier(.22,.9,.32,1), box-shadow 260ms ease;
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+.card-float:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12), 0 6px 12px rgba(15,23,42,0.06);
+}
+
+/* Gas rising animation in the green hero card */
+.gas-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.gas-bubble {
+  position: absolute;
+  bottom: -25%;
+  border-radius: 999px;
+  opacity: 0;
+  filter: blur(10px);
+  background: radial-gradient(circle at 30% 30%, rgba(188,229,209,0.16), rgba(162,203,160,0.06) 45%, rgba(162,203,160,0) 100%);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+.smoke-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.smoke-puff {
+  position: absolute;
+  bottom: 12%;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.2);
+  filter: blur(14px);
+  opacity: 0.12;
+  will-change: transform, opacity;
+  animation: smoke-rise 10s ease-in-out infinite;
+}
+
+.emission-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.emission-plume {
+  position: absolute;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 24% 48%, rgba(230, 246, 238, 0.34), rgba(183, 232, 204, 0.17) 38%, rgba(79, 117, 93, 0) 76%),
+    radial-gradient(circle at 72% 42%, rgba(207, 245, 222, 0.18), rgba(78, 126, 94, 0) 68%);
+  filter: blur(13px);
+  mix-blend-mode: screen;
+  transform-origin: center;
+  animation: emission-plume-drift 10s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.emission-plume::before,
+.emission-plume::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  background: inherit;
+  inset: 18% 10%;
+  filter: blur(10px);
+  opacity: 0.58;
+}
+
+.emission-plume::after {
+  inset: -12% 26% 14% -18%;
+  opacity: 0.34;
+}
+
+.emission-wisp {
+  position: absolute;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(183, 231, 206, 0), rgba(220, 255, 234, 0.34), rgba(142, 225, 176, 0.16), rgba(183, 231, 206, 0));
+  filter: blur(2.8px);
+  opacity: 0;
+  transform: rotate(-8deg);
+  animation: emission-wisp-flow 12s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes smoke-rise {
+  0% {
+    transform: translateY(0) scale(0.9);
+    opacity: 0.1;
+  }
+  25% {
+    transform: translateY(-18px) scale(1);
+    opacity: 0.14;
+  }
+  55% {
+    transform: translateY(-40px) scale(1.08);
+    opacity: 0.08;
+  }
+  100% {
+    transform: translateY(-88px) scale(1.16);
+    opacity: 0;
+  }
+}
+
+@keyframes emission-plume-drift {
+  0% {
+    transform: translate3d(36px, 14px, 0) scale(0.72) rotate(-3deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.78;
+  }
+  52% {
+    transform: translate3d(-42px, -16px, 0) scale(1.05) rotate(2deg);
+    opacity: 0.46;
+  }
+  100% {
+    transform: translate3d(-118px, -44px, 0) scale(1.32) rotate(-6deg);
+    opacity: 0;
+  }
+}
+
+@keyframes emission-wisp-flow {
+  0% {
+    transform: translate3d(72px, 14px, 0) scaleX(0.45) rotate(-8deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.52;
+  }
+  58% {
+    opacity: 0.28;
+  }
+  100% {
+    transform: translate3d(-180px, -32px, 0) scaleX(1.12) rotate(-13deg);
+    opacity: 0;
+  }
+}
+
+/* Default size helpers (can be overridden inline) */
+.gas-bubble.small { width: 28px; height: 28px; }
+.gas-bubble.mid { width: 52px; height: 52px; }
+.gas-bubble.large { width: 96px; height: 96px; }
+.gas-bubble.xlarge { width: 160px; height: 160px; }
+
+/* Organic rise + sway keyframes (four variations) */
+@keyframes rise-sway-1 {
+  0%   { transform: translateY(0)    translateX(0)    scale(0.9); opacity: 0; }
+  10%  { opacity: 0.06; }
+  35%  { transform: translateY(-32%) translateX(8px)  scale(1.02); opacity: 0.08; }
+  65%  { transform: translateY(-75%) translateX(-6px) scale(1.06); opacity: 0.05; }
+  100% { transform: translateY(-140%)translateX(0)    scale(1.12); opacity: 0; }
+}
+
+@keyframes rise-sway-2 {
+  0%   { transform: translateY(0)    translateX(0)     scale(0.92); opacity: 0; }
+  12%  { opacity: 0.05; }
+  38%  { transform: translateY(-36%) translateX(-12px) scale(1.04); opacity: 0.09; }
+  68%  { transform: translateY(-82%) translateX(14px)  scale(1.12); opacity: 0.04; }
+  100% { transform: translateY(-150%)translateX(0)     scale(1.25); opacity: 0; }
+}
+
+@keyframes rise-sway-3 {
+  0%   { transform: translateY(0)    translateX(0)     scale(0.9); opacity: 0; }
+  8%   { opacity: 0.04; }
+  36%  { transform: translateY(-40%) translateX(20px)  scale(1.08); opacity: 0.07; }
+  70%  { transform: translateY(-95%) translateX(-26px) scale(1.18); opacity: 0.03; }
+  100% { transform: translateY(-160%)translateX(0)     scale(1.35); opacity: 0; }
+}
+
+@keyframes rise-sway-4 {
+  0%   { transform: translateY(0)    translateX(0)     scale(0.88); opacity: 0; }
+  14%  { opacity: 0.05; }
+  44%  { transform: translateY(-48%) translateX(-28px) scale(1.10); opacity: 0.08; }
+  76%  { transform: translateY(-110%)translateX(22px)  scale(1.20); opacity: 0.02; }
+  100% { transform: translateY(-180%)translateX(0)     scale(1.5); opacity: 0; }
+}
+
+@media (max-width: 768px) {
+  /* let utilities control corner size on small screens */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gas-bubble,
+  .smoke-puff,
+  .emission-plume,
+  .emission-wisp {
+    animation: none;
+  }
+}
+
+/* Compact card variant to reduce visual bulk */
+.card-compact {
+  padding: 1rem !important; /* reduce internal padding */
+  transition: transform 220ms cubic-bezier(.22,.9,.32,1), box-shadow 220ms ease;
+}
+@media (min-width: 768px) {
+  .card-compact { padding: 1.1rem !important; }
+}
+
+/* Size modifiers for compact variant */
+.card-compact.hero { min-height: 120px !important; }
+.card-compact.large { min-height: 180px !important; }
+
+/* Slightly reduce the visual weight of very large typography inside compact cards */
+.card-compact .hero-number { font-size: 40px; }
+

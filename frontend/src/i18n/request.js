@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { cookies } from 'next/headers';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default async function getI18nConfig() {
   // Prefer cookie-based locale detection in App Router.
@@ -15,7 +18,7 @@ export default async function getI18nConfig() {
 
   if (!locale) locale = 'en';
 
-  const messagesPath = path.resolve(process.cwd(), 'messages', `${locale}.json`);
+  const messagesPath = path.resolve(currentDir, '..', '..', 'messages', `${locale}.json`);
   let messages = {};
   try {
     const raw = await fs.promises.readFile(messagesPath, 'utf-8');

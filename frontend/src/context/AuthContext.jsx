@@ -2,13 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCookie } from '../lib/api/cookie';
-import { login as authLogin, logout as authLogout, getProfile } from '../lib/actions/authActions';
+import { login as authLogin, logout as authLogout, getProfile, editProfile } from '../lib/actions/authActions';
+import { STREAK_UPDATED_EVENT } from '../lib/actions/calculatorActions';
 
 const defaultAuthValue = {
   user: null,
   token: null,
   loading: false,
   login: async () => ({ success: false, error: 'Auth provider is unavailable' }),
+  updateProfile: async () => ({ success: false, error: 'Auth provider is unavailable' }),
   logout: () => {},
   isAuthenticated: false
 };
@@ -30,9 +32,22 @@ export const AuthProvider = ({ children }) => {
     const handleUnauthorized = () => {
       logout();
     };
+    const handleStreakUpdated = (event) => {
+      setUser((currentUser) => {
+        if (!currentUser || !event.detail) return currentUser;
+        return {
+          ...currentUser,
+          streak: {
+            ...(currentUser.streak || {}),
+            ...event.detail
+          }
+        };
+      });
+    };
 
     if (typeof window !== 'undefined') {
       window.addEventListener('auth-unauthorized', handleUnauthorized);
+      window.addEventListener(STREAK_UPDATED_EVENT, handleStreakUpdated);
     }
 
     const savedToken = getCookie('token') || localStorage.getItem('token');
@@ -44,19 +59,25 @@ export const AuthProvider = ({ children }) => {
           setUser(profileData);
         })
         .catch((err) => {
-          console.error('Failed to fetch user profile:', err);
-          logout();
+          if (err?.status === 401) {
+            logout();
+            return;
+          }
+
+          console.warn('Could not refresh user profile. Keeping the current session token.', err);
+          setToken(savedToken);
         })
         .finally(() => {
           setLoading(false);
         });
     } else {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
     }
 
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('auth-unauthorized', handleUnauthorized);
+        window.removeEventListener(STREAK_UPDATED_EVENT, handleStreakUpdated);
       }
     };
   }, [logout]);
@@ -66,14 +87,19 @@ export const AuthProvider = ({ children }) => {
       const { user: userData, token: authToken, role } = await authLogin(credentials);
       setUser(userData);
       setToken(authToken);
-      return {
-        success: true,
-        user: userData,
-        token: authToken,
-        role: role || userData?.role
-      };
+      return { success: true, user: userData, token: authToken };
     } catch (error) {
       return { success: false, error: error.message || 'Login failed' };
+    }
+  };
+
+  const updateProfile = async (profileUpdates) => {
+    try {
+      const updatedUser = await editProfile(profileUpdates);
+      setUser(updatedUser);
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      return { success: false, error: error.message || 'Profile update failed' };
     }
   };
 
@@ -82,6 +108,7 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
+    updateProfile,
     logout,
     isAuthenticated: !!token
   };

@@ -28,7 +28,17 @@ apiClient.interceptors.response.use(
         window.dispatchEvent(new Event('auth-unauthorized'));
       }
     }
-    return Promise.reject(error.response?.data || error.message || 'Unknown error');
+    if (error.response?.data) {
+      return Promise.reject({
+        ...error.response.data,
+        status: error.response.status
+      });
+    }
+    return Promise.reject({
+      message: error.message || 'Unknown error',
+      status: error.response?.status,
+      code: error.code
+    });
   }
 );
 

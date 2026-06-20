@@ -2,6 +2,7 @@
  * DailyLog Repository
  * All database operations related to DailyLog model
  */
+const mongoose = require('mongoose');
 const DailyLog = require('../models/DailyLog');
 
 class DailyLogRepository {
@@ -31,6 +32,23 @@ class DailyLogRepository {
   }
 
   /**
+   * Create or update a daily log atomically by user and date
+   */
+  async upsertByUserAndDate(userId, date, logData) {
+    return await DailyLog.findOneAndUpdate(
+      { userId, date },
+      logData,
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+        runValidators: true,
+        rawResult: true
+      }
+    );
+  }
+
+  /**
    * Get recent logs for a user (default 30 days)
    * Returns sorted descending (newest first)
    */
@@ -57,7 +75,7 @@ class DailyLogRepository {
     return await DailyLog.aggregate([
       {
         $match: {
-          userId: require('mongoose').Types.ObjectId(userId),
+          userId: new mongoose.Types.ObjectId(userId),
           date: { $gte: startDate, $lte: endDate }
         }
       },

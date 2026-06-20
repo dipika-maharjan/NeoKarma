@@ -22,10 +22,9 @@ const LandingNavbar = () => {
   }, []);
 
   const navLinks = [
-    { label: t('howItWorks'), href: '#how' },
-    { label: t('about'), href: '#about' },
-    // calculator href will be resolved based on current page
-    { label: t('calculator'), href: '/calculator' },
+    { key: 'howItWorks', href: '/#journey' },
+    { key: 'about', href: '/#features' },
+    { key: 'calculator', href: '/calculator' },
   ];
 
   return (
@@ -45,14 +44,15 @@ const LandingNavbar = () => {
 
         <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center gap-8 pointer-events-auto">
           {navLinks.map((link, i) => {
-            const href = link.label === t('calculator') && pathname === '/' ? '#preview' : link.href;
+            const label = t(link.key);
+            const href = link.key === 'calculator' && pathname === '/' ? '#preview' : link.href;
             return (
               <Link
-                key={`${link.label}-${i}`}
+                key={`${link.key}-${i}`}
                 href={href}
                 className="text-sm font-medium text-gray-600 no-underline transition-colors hover:text-[#0A3D25]"
               >
-                {link.label}
+                {label}
               </Link>
             );
           })}
@@ -87,15 +87,16 @@ const LandingNavbar = () => {
       {mobileOpen && (
         <div className="space-y-3 border-t border-gray-100 bg-white px-6 py-4 animate-[fadeIn_0.2s_ease-in] md:hidden">
           {navLinks.map((link, i) => {
-            const href = link.label === 'Calculator' && pathname === '/' ? '#preview' : link.href;
+            const label = t(link.key);
+            const href = link.key === 'calculator' && pathname === '/' ? '#preview' : link.href;
             return (
               <Link
-                key={`${link.label}-mobile-${i}`}
+                key={`${link.key}-mobile-${i}`}
                 href={href}
                 onClick={() => setMobileOpen(false)}
                 className="block py-2 text-sm font-medium text-gray-600 no-underline transition-colors hover:text-[#0A3D25]"
               >
-                {link.label}
+                {label}
               </Link>
             );
           })}
