@@ -39,6 +39,8 @@ export default function AdminStudentsPage() {
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -82,12 +84,22 @@ export default function AdminStudentsPage() {
     });
   }, [students, query, statusFilter]);
 
+  const totalPages = Math.ceil(filteredStudents.length / PAGE_SIZE);
+  const paginatedStudents = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredStudents.slice(start, start + PAGE_SIZE);
+  }, [filteredStudents, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter]);
+
   const summary = useMemo(() => {
     const activeCount = students.filter((student) => !student.atRisk).length;
     const atRiskCount = students.filter((student) => student.atRisk).length;
-    const avgMarks =
+    const avgEmission =
       students.length > 0
-        ? students.reduce((sum, item) => sum + Number(item.marksAwarded || 0), 0) /
+        ? students.reduce((sum, item) => sum + Number(item.avgEmission || 0), 0) /
           students.length
         : 0;
 
@@ -95,7 +107,7 @@ export default function AdminStudentsPage() {
       totalStudents: students.length,
       activeStudents: activeCount,
       atRiskStudents: atRiskCount,
-      avgMarks
+      avgEmission
     };
   }, [students]);
 
@@ -160,8 +172,8 @@ export default function AdminStudentsPage() {
               accent: 'bg-[#fff7ed]'
             },
             {
-              label: 'Avg marks',
-              value: formatNumber(summary.avgMarks),
+              label: 'Avg emission',
+              value: `${formatNumber(summary.avgEmission)} kg`,
               accent: 'bg-[#f5f3ff]'
             }
           ].map((item) => (
@@ -205,16 +217,16 @@ export default function AdminStudentsPage() {
                 <thead className="bg-[#f9faf9] text-[#6b7280]">
                   <tr>
                     <th className="px-4 py-3 text-left font-semibold">Student</th>
-                    <th className="px-4 py-3 text-left font-semibold">Class</th>
-                    <th className="px-4 py-3 text-left font-semibold">Logs</th>
+                    <th className="px-4 py-3 text-left font-semibold">Grade</th>
                     <th className="px-4 py-3 text-left font-semibold">Streak</th>
-                    <th className="px-4 py-3 text-left font-semibold">Marks</th>
-                    <th className="px-4 py-3 text-left font-semibold">Last log</th>
+                    <th className="px-4 py-3 text-left font-semibold">Logs</th>
+                    <th className="px-4 py-3 text-left font-semibold">Avg Emission</th>
                     <th className="px-4 py-3 text-left font-semibold">Status</th>
+                    <th className="px-4 py-3 text-left font-semibold">Last Active</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eef0ee] bg-white">
-                  {filteredStudents.map((student) => (
+                  {paginatedStudents.map((student) => (
                     <tr key={student._id} className="hover:bg-[#f9fbfa]">
                       <td className="px-4 py-3">
                         <div>
@@ -227,10 +239,28 @@ export default function AdminStudentsPage() {
                           Grade {student.grade || '—'} · {student.section || '—'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#111827]">{formatInt(student.totalLogs)}</td>
                       <td className="px-4 py-3 text-[#111827]">{student.currentStreak} day{student.currentStreak === 1 ? '' : 's'}</td>
-                      <td className="px-4 py-3 text-[#111827]">{formatNumber(student.marksAwarded)}</td>
-                      <td className="px-4 py-3 text-[#111827]">{formatDate(student.lastLogAt)}</td>
+                      <td className="px-4 py-3 text-[#111827]">{formatInt(student.totalLogs)}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color:
+                              student.avgEmission === 0
+                                ? '#aaa'
+                                : student.avgEmission <= 2
+                                  ? '#1a7a4a'
+                                  : student.avgEmission <= 4
+                                    ? '#f59e0b'
+                                    : '#c0392b'
+                          }}
+                        >
+                          {student.avgEmission === 0
+                            ? 'No logs'
+                            : `${student.avgEmission} kg`}
+                        </span>
+                      </td>
                       <td className="px-4 py-3">
                         {student.atRisk ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-[#fff7ed] px-2.5 py-1 text-xs font-semibold text-[#b45309]">
@@ -242,10 +272,73 @@ export default function AdminStudentsPage() {
                           </span>
                         )}
                       </td>
+                      <td className="px-4 py-3 text-[#111827]">{formatDate(student.lastLogAt)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-[#eef0ee] pt-4">
+            <span className="text-xs text-[#6b7280]">
+              Showing {(page - 1) * PAGE_SIZE + 1}–
+              {Math.min(page * PAGE_SIZE, filteredStudents.length)} of {filteredStudents.length} students
+            </span>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
+                  page === 1
+                    ? 'cursor-not-allowed border-[#eef0ee] bg-[#f9faf9] text-[#cbd5e1]'
+                    : 'border-[#e5e7eb] bg-white text-[#111827] hover:bg-[#f9faf9]'
+                }`}
+              >
+                ← Prev
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .reduce((acc, p, idx, arr) => {
+                  if (idx > 0 && p - arr[idx - 1] > 1) {
+                    acc.push('...');
+                  }
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, i) =>
+                  p === '...' ? (
+                    <span key={`ellipsis-${i}`} className="px-1 text-xs text-[#6b7280]">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={`page-${p}`}
+                      onClick={() => setPage(p)}
+                      className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
+                        page === p
+                          ? 'border-[#1a7a4a] bg-[#1a7a4a] text-white'
+                          : 'border-[#e5e7eb] bg-white text-[#111827] hover:bg-[#f9faf9]'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || totalPages === 0}
+                className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
+                  page === totalPages || totalPages === 0
+                    ? 'cursor-not-allowed border-[#eef0ee] bg-[#f9faf9] text-[#cbd5e1]'
+                    : 'border-[#e5e7eb] bg-white text-[#111827] hover:bg-[#f9faf9]'
+                }`}
+              >
+                Next →
+              </button>
             </div>
           </div>
         </section>

@@ -6,6 +6,7 @@ require('dotenv').config({
 
 const User = require('../src/models/User');
 const DailyLog = require('../src/models/DailyLog');
+const emissionCalculationService = require('../src/services/emissionCalculation.service');
 
 function randomBetween(min, max) {
   return parseFloat((Math.random() * (max - min) + min).toFixed(2));
@@ -67,14 +68,6 @@ const GRADES = [8, 9, 10, 11, 12];
 const SECTIONS = ['A', 'B', 'C'];
 const LOCATION_TYPES = ['urban', 'rural'];
 
-const EMISSION_PROFILE = {
-  8: { transport: [1.5, 4.0], food: [0.5, 2.0], energy: [0.3, 1.5] },
-  9: { transport: [1.2, 3.5], food: [0.4, 1.8], energy: [0.3, 1.3] },
-  10: { transport: [1.0, 3.0], food: [0.3, 1.5], energy: [0.2, 1.2] },
-  11: { transport: [0.8, 2.5], food: [0.3, 1.2], energy: [0.2, 1.0] },
-  12: { transport: [0.5, 2.0], food: [0.2, 1.0], energy: [0.1, 0.8] }
-};
-
 function normalizeEmail(name) {
   return name.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z.]/g, '');
 }
@@ -123,10 +116,6 @@ async function seed() {
     const section = SECTIONS[index % SECTIONS.length];
     const streak = randomInt(0, 21);
     const totalLogDays = randomInt(streak, 30);
-    const marksAwarded = Math.min(
-      20,
-      Math.floor(streak / 5) + randomInt(0, 5)
-    );
     const email = `${normalizeEmail(name)}@student.np`;
     const passwordHash = await bcrypt.hash('Student123!', 10);
 
@@ -151,7 +140,6 @@ async function seed() {
         currentStreak: streak,
         longestStreak: Math.max(streak, streak + randomInt(0, 5)),
         totalLogDays,
-        marksAwarded,
         lastSyncedAt: streak > 0
           ? daysAgo(randomInt(0, 2))
           : daysAgo(5)
@@ -167,7 +155,6 @@ async function seed() {
   const allLogs = [];
 
   for (const student of students) {
-    const profile = EMISSION_PROFILE[student.grade];
     const logCount = randomInt(5, 28);
     const chosenOffsets = new Set();
 
@@ -177,52 +164,52 @@ async function seed() {
 
     for (const dayOffset of chosenOffsets) {
       const logDate = daysAgo(dayOffset);
-      const transportEmission = randomBetween(...profile.transport);
-      const foodEmission = randomBetween(...profile.food);
-      const energyEmission = randomBetween(...profile.energy);
       const meatFreeDay = Math.random() > 0.4;
-
       const mealType = meatFreeDay
         ? pickRandom(['vegetarian', 'vegan'])
         : pickRandom(['mixed', 'non-vegetarian']);
 
-      const totalEmissionKg = Number(
-        (
-          (transportEmission + foodEmission + energyEmission) *
-          (meatFreeDay ? 0.75 : 1)
-        ).toFixed(2)
-      );
+      const transportationMode = pickRandom(['walk', 'bicycle', 'bus', 'motorbike', 'car']);
+      const transportationDistanceKm = randomBetween(0.5, 8);
+      const foodWasteGrams = randomInt(0, 60);
+      const plasticItemCount = randomInt(0, 8);
+      const usageHours = randomBetween(0.5, 6);
+      const firewoodKg = randomBetween(0, 2);
+
+      const emissionResult = await emissionCalculationService.calculateEmissions({
+        transportationMode,
+        transportationDistanceKm,
+        foodMealType: mealType,
+        wasteAndPlasticCount: plasticItemCount,
+        energyUsageHours: usageHours,
+        energyFirewoodKg: firewoodKg
+      });
 
       allLogs.push({
         userId: student._id,
         date: logDate.toISOString().slice(0, 10),
         transportation: {
-          mode: pickRandom(['walk', 'bicycle', 'bus', 'motorbike', 'car']),
-          distanceKm: randomBetween(0.5, 8)
+          mode: transportationMode,
+          distanceKm: transportationDistanceKm
         },
         food: {
           mealType,
-          foodWasteGrams: randomInt(0, 60)
+          foodWasteGrams
         },
         wasteAndPlastic: {
-          plasticItemCount: randomInt(0, 8),
+          plasticItemCount,
           segregated: Math.random() > 0.3
         },
         energy: {
-          usageHours: randomBetween(0.5, 6),
-          firewoodKg: randomBetween(0, 2)
+          usageHours,
+          firewoodKg
         },
         extraAnswer: {
           questionKey: null,
           value: null
         },
-        breakdown: {
-          transportKg: Number(transportEmission.toFixed(2)),
-          foodKg: Number(foodEmission.toFixed(2)),
-          wasteKg: Number(randomBetween(0.05, 0.4).toFixed(2)),
-          energyKg: Number(energyEmission.toFixed(2))
-        },
-        totalEmissionKg,
+        breakdown: emissionResult.breakdown,
+        totalEmissionKg: emissionResult.totalEmissionKg,
         createdAt: logDate
       });
     }

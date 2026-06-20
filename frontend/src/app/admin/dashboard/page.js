@@ -23,7 +23,8 @@ import {
   Legend,
   LineChart,
   Line,
-  Cell
+  Cell,
+  LabelList
 } from 'recharts';
 import apiClient from '@/lib/api/axios';
 import { useAuth } from '@/context/AuthContext';
@@ -73,6 +74,8 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeChart, setActiveChart] = useState('grades');
+  const [streaksVisible, setStreaksVisible] = useState(4);
+  const [activityVisible, setActivityVisible] = useState(4);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -148,6 +151,15 @@ export default function AdminDashboardPage() {
     adminName,
     studentsEnrolled
   } = data;
+
+  const sourceBreakdown = (data.emissionSources || []).map((entry) => ({
+    category: entry.category,
+    value: Number(entry.value || 0),
+    color: entry.color || '#1a7a4a'
+  }));
+
+  const impact = systemImpact || {};
+  const remainingPct = Math.max(0, 100 - (impact.targetMetPct || 0));
 
   const statCards = [
     {
@@ -288,10 +300,10 @@ export default function AdminDashboardPage() {
                   marginBottom: 4
                 }}
               >
-                Student performance
+                Carbon insights
               </p>
               <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111', margin: 0 }}>
-                Grade Analytics
+                Emission Analytics
               </h3>
             </div>
             <div
@@ -304,9 +316,9 @@ export default function AdminDashboardPage() {
               }}
             >
               {[
-                { key: 'grades', label: 'By Grade' },
-                { key: 'marks', label: 'Marks Range' },
-                { key: 'activity', label: 'Weekly Logs' }
+                { key: 'grades', label: 'Emissions by Grade' },
+                { key: 'sources', label: 'Emission Sources' },
+                { key: 'activity', label: 'Weekly Activity' }
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -342,60 +354,95 @@ export default function AdminDashboardPage() {
                     fontSize: 13
                   }}
                 >
-                  No grade data yet. Students need to be assigned grades.
+                  No emission data yet. Students need to submit logs.
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={data.gradeDistribution || []}
-                    margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-                    barCategoryGap="30%"
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                    <XAxis
-                      dataKey="grade"
-                      tickFormatter={(value) => `Grade ${value}`}
-                      tick={{ fontSize: 12, fill: '#888' }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 10,
-                        border: '1px solid #eef0ee',
-                        fontSize: 12,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
-                      }}
-                      formatter={(value, name) => [
-                        value,
-                        name === 'studentCount'
-                          ? 'Students'
-                          : name === 'avgMarks'
-                            ? 'Avg Marks'
-                            : 'Avg Streak'
-                      ]}
-                      labelFormatter={(label) => `Grade ${label}`}
-                    />
-                    <Legend
-                      formatter={(value) =>
-                        value === 'studentCount'
-                          ? 'Students'
-                          : value === 'avgMarks'
-                            ? 'Avg Marks'
-                            : 'Avg Streak'
-                      }
-                      wrapperStyle={{ fontSize: 12 }}
-                    />
-                    <Bar dataKey="studentCount" fill="#1a7a4a" radius={[6, 6, 0, 0]} name="studentCount" />
-                    <Bar dataKey="avgMarks" fill="#4ecf96" radius={[6, 6, 0, 0]} name="avgMarks" />
-                    <Bar dataKey="avgStreak" fill="#f59e0b" radius={[6, 6, 0, 0]} name="avgStreak" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, height: '100%', minHeight: 320, minWidth: 0 }}>
+                  <div style={{ width: '100%', minWidth: 0, minHeight: 320 }}>
+                    <div style={{ marginBottom: 8, fontSize: 12, color: '#6b7280' }}>
+                      Avg Emission by Grade
+                    </div>
+                    <div style={{ width: '100%', height: 280, minWidth: 0 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={data.gradeDistribution || []}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                        barCategoryGap="25%"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                        <XAxis
+                          dataKey="grade"
+                          tickFormatter={(value) => `Grade ${value}`}
+                          tick={{ fontSize: 12, fill: '#888' }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: '#888' }}
+                          axisLine={false}
+                          tickLine={false}
+                          width={48}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            borderRadius: 10,
+                            border: '1px solid #eef0ee',
+                            fontSize: 12,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                          }}
+                          formatter={(value) => [`${Number(value || 0).toFixed(2)} kg CO₂`, 'Avg Emission']}
+                          labelFormatter={(label) => `Grade ${label}`}
+                        />
+                        <Bar dataKey="avgEmission" fill="#1a7a4a" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <div style={{ width: '100%', minWidth: 0, minHeight: 320 }}>
+                    <div style={{ marginBottom: 8, fontSize: 12, color: '#6b7280' }}>
+                      Meat-free Days by Grade
+                    </div>
+                    <div style={{ width: '100%', height: 280, minWidth: 0 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={data.gradeDistribution || []}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                        barCategoryGap="25%"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                        <XAxis
+                          dataKey="grade"
+                          tickFormatter={(value) => `Grade ${value}`}
+                          tick={{ fontSize: 12, fill: '#888' }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: '#888' }}
+                          axisLine={false}
+                          tickLine={false}
+                          width={48}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            borderRadius: 10,
+                            border: '1px solid #eef0ee',
+                            fontSize: 12,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                          }}
+                          formatter={(value) => [`${Number(value || 0)} days`, 'Meat-free Days']}
+                          labelFormatter={(label) => `Grade ${label}`}
+                        />
+                        <Bar dataKey="meatFreeDays" fill="#4ecf96" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
               )
             )}
-            {activeChart === 'marks' && (
-              (data.marksDistribution || []).length === 0 ? (
+            {activeChart === 'sources' && (
+              sourceBreakdown.length === 0 ? (
                 <div
                   style={{
                     height: '100%',
@@ -406,42 +453,36 @@ export default function AdminDashboardPage() {
                     fontSize: 13
                   }}
                 >
-                  No marks data yet.
+                  No source data yet.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={data.marksDistribution || []}
-                    margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-                    barCategoryGap="40%"
+                    data={sourceBreakdown}
+                    margin={{ top: 18, right: 20, left: 0, bottom: 0 }}
+                    barCategoryGap="30%"
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                    <XAxis dataKey="range" tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="category" tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
                     <Tooltip
                       contentStyle={{
                         borderRadius: 10,
                         border: '1px solid #eef0ee',
                         fontSize: 12
                       }}
-                      formatter={(value) => [value, 'Students']}
-                      labelFormatter={(label) => `Marks: ${label}`}
+                      formatter={(value) => [`${Number(value || 0).toFixed(2)} kg`, 'Avg Emission']}
                     />
-                    <Bar dataKey="count" radius={[6, 6, 0, 0]} name="Students">
-                      {(data.marksDistribution || []).map((entry, index) => (
-                        <Cell
-                          key={`${entry.range}-${index}`}
-                          fill={
-                            index === 0
-                              ? '#fde8e8'
-                              : index === 1
-                                ? '#f59e0b'
-                                : index === 2
-                                  ? '#4ecf96'
-                                  : '#1a7a4a'
-                          }
-                        />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Avg Emission">
+                      {sourceBreakdown.map((entry, index) => (
+                        <Cell key={`${entry.category}-${index}`} fill={entry.color} />
                       ))}
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        formatter={(value) => `${Number(value || 0).toFixed(2)} kg`}
+                        style={{ fill: '#111827', fontSize: 11, fontWeight: 600 }}
+                      />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -545,7 +586,15 @@ export default function AdminDashboardPage() {
                     <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>Class</th>
                     <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>Students</th>
                     <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>Avg Emission</th>
-                    <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>Avg Score</th>
+                    <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>
+                      Total Logs{' '}
+                      <span
+                        title="The number of daily carbon logs submitted by this class."
+                        style={{ cursor: 'help', color: '#0A3D25' }}
+                      >
+                        ⓘ
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -555,19 +604,7 @@ export default function AdminDashboardPage() {
                       <td style={{ padding: '12px 8px', fontWeight: 600 }}>{school.className || school.schoolName}</td>
                       <td style={{ padding: '12px 8px' }}>{formatInt(school.studentCount)}</td>
                       <td style={{ padding: '12px 8px' }}>{formatNumber(school.avgEmissionKg)} kg CO₂</td>
-                      <td style={{ padding: '12px 8px' }}>
-                        {formatInt(school.avgScore)}
-                        <div style={{ width: 60, height: 5, background: '#eef2ee', borderRadius: 999, marginTop: 6 }}>
-                          <div
-                            style={{
-                              width: `${Math.min(100, school.avgScore)}%`,
-                              height: '100%',
-                              background: '#0e6b45',
-                              borderRadius: 999
-                            }}
-                          />
-                        </div>
-                      </td>
+                      <td style={{ padding: '12px 8px' }}>{formatInt(school.totalLogs || 0)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -590,13 +627,13 @@ export default function AdminDashboardPage() {
                   fill="none"
                   stroke="#0e6b45"
                   strokeWidth="13"
-                  strokeDasharray={donutDash(systemImpact.targetMetPct)}
+                  strokeDasharray={donutDash(impact.targetMetPct || 0)}
                   strokeDashoffset={2 * Math.PI * 50 * 0.25}
                   strokeLinecap="round"
                   transform="rotate(-90 65 65)"
                 />
                 <text x="65" y="58" textAnchor="middle" fontSize="20" fontWeight="700" fill="#111">
-                  {systemImpact.targetMetPct}%
+                  {impact.targetMetPct || 0}%
                 </text>
                 <text x="65" y="78" textAnchor="middle" fontSize="10" fill="#888">
                   Target Met
@@ -604,13 +641,16 @@ export default function AdminDashboardPage() {
               </svg>
               <div style={{ flex: 1 }}>
                 <div style={{ marginBottom: 8, fontSize: 13, color: '#6b7280' }}>
-                  Transport Redux — {systemImpact.transportReduxPct}%
+                  Eco transport — {impact.ecoTransportPct || 0}%
                 </div>
                 <div style={{ marginBottom: 8, fontSize: 13, color: '#6b7280' }}>
-                  Meat-free Days — {systemImpact.meatFreeDaysPct}%
+                  Veg days — {impact.vegDaysPct || 0}%
+                </div>
+                <div style={{ marginBottom: 8, fontSize: 13, color: '#6b7280' }}>
+                  No plastic — {impact.noPlasticPct || 0}%
                 </div>
                 <div style={{ fontSize: 13, color: '#6b7280' }}>
-                  Remaining — {systemImpact.remainingPct}%
+                  Remaining — {remainingPct}%
                 </div>
               </div>
             </div>
@@ -636,26 +676,72 @@ export default function AdminDashboardPage() {
                   No activity yet. Students need to submit carbon logs.
                 </div>
               ) : (
-                activityFeed.map((entry, index) => {
-                const style = feedStyle[entry.type] || feedStyle.MIRROR;
-                const FeedIcon = style.icon;
-                return (
-                  <div key={`${entry.type}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid #f2f4f1' }}>
-                    <div style={{ width: 38, height: 38, borderRadius: '50%', background: style.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FeedIcon size={14} color={style.color} />
+                <>
+                  {activityFeed
+                    .slice(0, activityVisible)
+                    .map((entry, index) => {
+                      const style = feedStyle[entry.type] || feedStyle.MIRROR;
+                      const FeedIcon = style.icon;
+                      return (
+                        <div key={`${entry.type}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid #f2f4f1' }}>
+                          <div style={{ width: 38, height: 38, borderRadius: '50%', background: style.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <FeedIcon size={14} color={style.color} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 600, color: '#111827' }}>{entry.description}</div>
+                            <div style={{ fontSize: 12, color: '#6b7280' }}>
+                              {timeAgo(entry.createdAt)} · {entry.school}
+                            </div>
+                          </div>
+                          <span style={{ background: style.bg, color: style.color, borderRadius: 999, fontSize: 12, padding: '5px 9px', fontWeight: 700 }}>
+                            {entry.type}
+                          </span>
+                        </div>
+                      );
+                    })}
+
+                  {activityFeed.length > 4 && (
+                    <div style={{ marginTop: 12, textAlign: 'center' }}>
+                      {activityVisible < activityFeed.length ? (
+                        <button
+                          onClick={() => setActivityVisible((prev) => Math.min(prev + 4, activityFeed.length))}
+                          style={{
+                            background: 'none',
+                            border: '1px solid #e0e0e0',
+                            borderRadius: 20,
+                            padding: '6px 20px',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#1a7a4a',
+                            cursor: 'pointer',
+                            width: '100%'
+                          }}
+                        >
+                          Show more
+                          ({activityFeed.length - activityVisible} more)
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setActivityVisible(4)}
+                          style={{
+                            background: 'none',
+                            border: '1px solid #e0e0e0',
+                            borderRadius: 20,
+                            padding: '6px 20px',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#888',
+                            cursor: 'pointer',
+                            width: '100%'
+                          }}
+                        >
+                          Show less
+                        </button>
+                      )}
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, color: '#111827' }}>{entry.description}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>
-                        {timeAgo(entry.createdAt)} · {entry.school}
-                      </div>
-                    </div>
-                    <span style={{ background: style.bg, color: style.color, borderRadius: 999, fontSize: 12, padding: '5px 9px', fontWeight: 700 }}>
-                      {entry.type}
-                    </span>
-                  </div>
-                );
-              }))}
+                  )}
+                </>
+              )}
             </div>
           </div>
 
@@ -677,33 +763,82 @@ export default function AdminDashboardPage() {
                   No students found for this school.
                 </div>
               ) : (
-                streakRows.map((student) => (
-                <div key={`${student.name}-${student.grade}-${student.section || ''}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f5f5f5' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 999, background: student.atRisk ? '#fef2f2' : '#e6f4ed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: student.atRisk ? '#c0392b' : '#1a7a4a', flexShrink: 0 }}>
-                    {initials(student.name || '')}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {student.name}
-                      {student.atRisk && (
-                        <span style={{ fontSize: 10, background: '#fef2f2', color: '#c0392b', padding: '1px 6px', borderRadius: 10, fontWeight: 600 }}>
-                          At risk
-                        </span>
+                <>
+                  {streakRows
+                    .slice(0, streaksVisible)
+                    .map((student) => (
+                      <div
+                        key={`${student.name}-${student.grade}-${student.section || ''}`}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f5f5f5' }}
+                      >
+                        <div style={{ width: 36, height: 36, borderRadius: 999, background: student.atRisk ? '#fef2f2' : '#e6f4ed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: student.atRisk ? '#c0392b' : '#1a7a4a', flexShrink: 0 }}>
+                          {initials(student.name || '')}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {student.name}
+                            {student.atRisk && (
+                              <span style={{ fontSize: 10, background: '#fef2f2', color: '#c0392b', padding: '1px 6px', borderRadius: 10, fontWeight: 600 }}>
+                                At risk
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#6b7280' }}>
+                            {student.grade}{student.section ? ` • ${student.section}` : ''}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                            {formatInt(student.totalLogDays)} logs total
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: student.currentStreak > 0 ? '#1a7a4a' : '#888' }}>{student.currentStreak} days</div>
+                          <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>best: {student.longestStreak} days</div>
+                        </div>
+                      </div>
+                    ))}
+
+                  {streakRows.length > 4 && (
+                    <div style={{ marginTop: 12, textAlign: 'center' }}>
+                      {streaksVisible < streakRows.length ? (
+                        <button
+                          onClick={() => setStreaksVisible((prev) => Math.min(prev + 5, streakRows.length))}
+                          style={{
+                            background: 'none',
+                            border: '1px solid #e0e0e0',
+                            borderRadius: 20,
+                            padding: '6px 20px',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#1a7a4a',
+                            cursor: 'pointer',
+                            width: '100%'
+                          }}
+                        >
+                          Show more
+                          ({streakRows.length - streaksVisible} remaining)
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setStreaksVisible(4)}
+                          style={{
+                            background: 'none',
+                            border: '1px solid #e0e0e0',
+                            borderRadius: 20,
+                            padding: '6px 20px',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#888',
+                            cursor: 'pointer',
+                            width: '100%'
+                          }}
+                        >
+                          Show less
+                        </button>
                       )}
                     </div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>
-                      {student.grade}{student.section ? ` • ${student.section}` : ''}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
-                      {formatInt(student.totalLogDays)} logs total
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: student.currentStreak > 0 ? '#1a7a4a' : '#888' }}>{student.currentStreak} days</div>
-                    <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>best: {student.longestStreak} days</div>
-                  </div>
-                </div>
-              )))}
+                  )}
+                </>
+              )}
             </div>
           </div>
         </section>

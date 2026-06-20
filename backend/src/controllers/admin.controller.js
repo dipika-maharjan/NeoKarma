@@ -94,7 +94,8 @@ class AdminController {
       emissionAgg,
       schoolPerformance,
       topStudents,
-      impactAgg
+      impactAgg,
+      sourceAgg
     ] = await Promise.all([
       User.countDocuments({ role: 'school_admin' }),
       DailyLog.countDocuments({ userId: { $in: studentIds } }),
@@ -123,17 +124,33 @@ class AdminController {
           }
         }
       ]),
-      User.aggregate([
-        { $match: studentMatch },
+      DailyLog.aggregate([
         {
-          $group: {
-            _id: { grade: '$grade', section: '$section' },
-            studentCount: { $sum: 1 },
-            avgEmissionKg: { $avg: '$totalEmissionKg' },
-            avgScore: { $avg: '$practicalMarks.marksAwarded' }
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'student'
           }
         },
-        { $sort: { avgScore: -1 } },
+        { $unwind: '$student' },
+        {
+          $match: {
+            $or: [
+              { 'student.schoolId': schoolObjectId },
+              { 'student.schoolName': schoolName }
+            ].filter((condition) => Object.values(condition)[0])
+          }
+        },
+        {
+          $group: {
+            _id: { grade: '$student.grade', section: '$student.section' },
+            studentCount: { $addToSet: '$student._id' },
+            avgEmissionKg: { $avg: '$totalEmissionKg' },
+            totalLogs: { $sum: 1 }
+          }
+        },
+        { $sort: { avgEmissionKg: -1 } },
         { $limit: 10 },
         {
           $project: {
@@ -146,9 +163,9 @@ class AdminController {
                 { $ifNull: ['$_id.section', 'A'] }
               ]
             },
-            studentCount: 1,
+            studentCount: { $size: '$studentCount' },
             avgEmissionKg: { $round: ['$avgEmissionKg', 1] },
-            avgScore: { $round: ['$avgScore', 0] }
+            totalLogs: 1
           }
         }
       ]),
@@ -171,23 +188,41 @@ class AdminController {
           $group: {
             _id: null,
             totalLogs: { $sum: 1 },
-            transportLogs: {
+            targetMetLogs: {
               $sum: {
-                $cond: [{ $gt: ['$breakdown.transportKg', 0] }, 1, 0]
+                $cond: [{ $lte: ['$totalEmissionKg', 3] }, 1, 0]
               }
             },
-            meatFreeLogs: {
+            ecoTransportLogs: {
               $sum: {
                 $cond: [
-                  { $in: ['$food.mealType', ['vegetarian', 'vegan']] },
+                  { $in: ['$transportation.mode', ['walk', 'bicycle']] },
                   1,
                   0
                 ]
               }
             },
-            targetMetLogs: {
+            vegDayLogs: {
               $sum: {
-                $cond: [{ $lte: ['$totalEmissionKg', 3] }, 1, 0]
+                $cond: [
+                  { $in: ['$food.mealType', ['vegan', 'vegetarian']] },
+                  1,
+                  0
+                ]
+              }
+            },
+            noPlasticLogs: {
+              $sum: {
+                $cond: [
+                  {
+                    $or: [
+                      { $eq: ['$wasteAndPlastic.plasticItemCount', 0] },
+                      { $eq: ['$wasteAndPlastic.plasticItemCount', null] }
+                    ]
+                  },
+                  1,
+                  0
+                ]
               }
             }
           }
@@ -196,9 +231,31 @@ class AdminController {
           $project: {
             _id: 0,
             totalLogs: 1,
-            transportLogs: 1,
-            meatFreeLogs: 1,
-            targetMetLogs: 1
+            targetMetLogs: 1,
+            ecoTransportLogs: 1,
+            vegDayLogs: 1,
+            noPlasticLogs: 1
+          }
+        }
+      ]),
+      DailyLog.aggregate([
+        { $match: { userId: { $in: studentIds } } },
+        {
+          $group: {
+            _id: null,
+            avgTransport: { $avg: '$breakdown.transportKg' },
+            avgFood: { $avg: '$breakdown.foodKg' },
+            avgWaste: { $avg: '$breakdown.wasteKg' },
+            avgEnergy: { $avg: '$breakdown.energyKg' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            avgTransport: { $round: [{ $ifNull: ['$avgTransport', 0] }, 2] },
+            avgFood: { $round: [{ $ifNull: ['$avgFood', 0] }, 2] },
+            avgWaste: { $round: [{ $ifNull: ['$avgWaste', 0] }, 2] },
+            avgEnergy: { $round: [{ $ifNull: ['$avgEnergy', 0] }, 2] }
           }
         }
       ])
@@ -208,46 +265,62 @@ class AdminController {
       (emissionAgg[0]?.avgEmission || 0).toFixed(1)
     );
 
-    const gradeDistribution = await User.aggregate([
-      { $match: studentMatch },
+    const gradeDistribution = await DailyLog.aggregate([
+      {
+        $match: {
+          userId: { $in: studentIds }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'student'
+        }
+      },
+      { $unwind: '$student' },
       {
         $group: {
-          _id: '$grade',
-          studentCount: { $sum: 1 },
-          avgMarks: {
-            $avg: '$practicalMarks.marksAwarded'
+          _id: '$student.grade',
+          avgEmission: { $avg: '$totalEmissionKg' },
+          totalLogs: { $sum: 1 },
+          vegDays: {
+            $sum: {
+              $cond: [
+                { $in: ['$food.mealType', ['vegan', 'vegetarian']] },
+                1,
+                0
+              ]
+            }
           },
-          avgStreak: {
-            $avg: '$practicalMarks.currentStreak'
+          ecoTransportDays: {
+            $sum: {
+              $cond: [
+                { $in: ['$transportation.mode', ['walk', 'bicycle']] },
+                1,
+                0
+              ]
+            }
           },
-          avgEmission: {
-            $avg: '$practicalMarks.totalLogDays'
-          }
+          avgTransport: { $avg: '$breakdown.transportKg' },
+          avgFood: { $avg: '$breakdown.foodKg' },
+          avgEnergy: { $avg: '$breakdown.energyKg' },
+          studentCount: { $addToSet: '$student._id' }
         }
       },
       { $sort: { _id: 1 } },
       {
         $project: {
           grade: { $toString: '$_id' },
-          studentCount: 1,
-          avgMarks: { $round: [{ $ifNull: ['$avgMarks', 0] }, 1] },
-          avgStreak: { $round: [{ $ifNull: ['$avgStreak', 0] }, 1] },
-          totalLogDays: { $round: [{ $ifNull: ['$avgEmission', 0] }, 0] }
-        }
-      }
-    ]);
-
-    const marksDistribution = await User.aggregate([
-      { $match: studentMatch },
-      {
-        $bucket: {
-          groupBy: '$practicalMarks.marksAwarded',
-          boundaries: [0, 5, 10, 15, 20],
-          default: 'No marks',
-          output: {
-            count: { $sum: 1 },
-            students: { $push: '$name' }
-          }
+          avgEmission: { $round: [{ $ifNull: ['$avgEmission', 0] }, 2] },
+          totalLogs: 1,
+          vegDays: 1,
+          ecoTransportDays: 1,
+          avgTransport: { $round: [{ $ifNull: ['$avgTransport', 0] }, 2] },
+          avgFood: { $round: [{ $ifNull: ['$avgFood', 0] }, 2] },
+          avgEnergy: { $round: [{ $ifNull: ['$avgEnergy', 0] }, 2] },
+          studentCount: { $size: '$studentCount' }
         }
       }
     ]);
@@ -288,26 +361,41 @@ class AdminController {
       rank: index + 1
     }));
 
-    const impactRow = impactAgg[0] || {
-      totalLogs: 0,
-      transportLogs: 0,
-      meatFreeLogs: 0,
-      targetMetLogs: 0
+    const sourceRow = sourceAgg[0] || {
+      avgTransport: 0,
+      avgFood: 0,
+      avgWaste: 0,
+      avgEnergy: 0
     };
 
-    const targetMetPct = impactRow.totalLogs
-      ? Math.round((impactRow.targetMetLogs / impactRow.totalLogs) * 100)
+    const emissionSources = [
+      { category: 'Transport', value: sourceRow.avgTransport, color: '#f59e0b' },
+      { category: 'Lunch', value: sourceRow.avgFood, color: '#1a7a4a' },
+      { category: 'Waste', value: sourceRow.avgWaste, color: '#c0392b' },
+      { category: 'Energy', value: sourceRow.avgEnergy, color: '#3b82f6' }
+    ];
+
+    const impactRow = impactAgg[0] || {
+      totalLogs: 0,
+      targetMetLogs: 0,
+      ecoTransportLogs: 0,
+      vegDayLogs: 0,
+      noPlasticLogs: 0
+    };
+
+    const totalLogs = impactRow.totalLogs || 0;
+    const targetMetPct = totalLogs
+      ? Math.round((impactRow.targetMetLogs / totalLogs) * 100)
       : 0;
-    const transportReduxPct = impactRow.totalLogs
-      ? Math.round((impactRow.transportLogs / impactRow.totalLogs) * 100)
+    const ecoTransportPct = totalLogs
+      ? Math.round((impactRow.ecoTransportLogs / totalLogs) * 100)
       : 0;
-    const meatFreeDaysPct = impactRow.totalLogs
-      ? Math.round((impactRow.meatFreeLogs / impactRow.totalLogs) * 100)
+    const vegDaysPct = totalLogs
+      ? Math.round((impactRow.vegDayLogs / totalLogs) * 100)
       : 0;
-    const remainingPct = Math.max(
-      0,
-      100 - transportReduxPct - meatFreeDaysPct
-    );
+    const noPlasticPct = totalLogs
+      ? Math.round((impactRow.noPlasticLogs / totalLogs) * 100)
+      : 0;
 
     res.status(200).json({
       schoolName: schoolName || '',
@@ -328,19 +416,6 @@ class AdminController {
         score: student.practicalMarks?.marksAwarded || 0
       })),
       gradeDistribution,
-      marksDistribution: marksDistribution.map((b) => ({
-        range:
-          b._id === 'No marks'
-            ? 'No marks'
-            : b._id === 0
-              ? '0–4'
-              : b._id === 5
-                ? '5–9'
-                : b._id === 10
-                  ? '10–14'
-                  : '15–20',
-        count: b.count
-      })),
       weeklyActivity: weeklyActivity.map((w) => ({
         date: w.date,
         logs: w.logCount,
@@ -348,11 +423,12 @@ class AdminController {
       })),
       studentStreaks,
       liveActivity,
+      emissionSources,
       systemImpact: {
         targetMetPct,
-        transportReduxPct,
-        meatFreeDaysPct,
-        remainingPct
+        ecoTransportPct,
+        vegDaysPct,
+        noPlasticPct
       }
     });
   });
@@ -387,27 +463,28 @@ class AdminController {
       'practicalMarks.currentStreak': 1,
       'practicalMarks.longestStreak': 1,
       'practicalMarks.totalLogDays': 1,
-      'practicalMarks.marksAwarded': 1,
       'practicalMarks.lastSyncedAt': 1
     }).sort({ grade: 1, name: 1 });
 
     const studentIds = students.map((student) => student._id);
 
-    const logCounts = await DailyLog.aggregate([
+    const logStats = await DailyLog.aggregate([
       { $match: { userId: { $in: studentIds } } },
       {
         $group: {
           _id: '$userId',
           count: { $sum: 1 },
+          avgEmission: { $avg: '$totalEmissionKg' },
           lastLog: { $max: '$createdAt' }
         }
       }
     ]);
 
     const logMap = {};
-    logCounts.forEach((entry) => {
+    logStats.forEach((entry) => {
       logMap[entry._id.toString()] = {
         count: entry.count,
+        avgEmission: parseFloat((entry.avgEmission || 0).toFixed(2)),
         lastLog: entry.lastLog
       };
     });
@@ -426,11 +503,11 @@ class AdminController {
         isActive: student.isActive,
         joinedAt: student.createdAt,
         totalLogs: logMap[student._id.toString()]?.count || 0,
+        avgEmission: logMap[student._id.toString()]?.avgEmission || 0,
         lastLogAt: logMap[student._id.toString()]?.lastLog || null,
         currentStreak: student.practicalMarks?.currentStreak || 0,
         longestStreak: student.practicalMarks?.longestStreak || 0,
         totalLogDays: student.practicalMarks?.totalLogDays || 0,
-        marksAwarded: student.practicalMarks?.marksAwarded || 0,
         atRisk: student.practicalMarks?.lastSyncedAt
           ? new Date(student.practicalMarks.lastSyncedAt) < twoDaysAgo
           : true
@@ -464,6 +541,37 @@ class AdminController {
     })
       .sort({ createdAt: -1 })
       .populate('userId', 'name grade section');
+
+    const transportModes = await DailyLog.aggregate([
+      { $match: { userId: { $in: studentIds } } },
+      {
+        $group: {
+          _id: '$transportation.mode',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          mode: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$_id', 'walk'] }, then: 'Walk' },
+                { case: { $eq: ['$_id', 'bicycle'] }, then: 'Bicycle' },
+                { case: { $eq: ['$_id', 'bus'] }, then: 'Bus' },
+                { case: { $eq: ['$_id', 'motorbike'] }, then: 'Motorbike' },
+                { case: { $eq: ['$_id', 'car'] }, then: 'Car' }
+              ],
+              default: 'Other'
+            }
+          },
+          count: 1,
+          isEco: {
+            $in: ['$_id', ['walk', 'bicycle']]
+          }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
@@ -503,6 +611,7 @@ class AdminController {
           _id: null,
           avgTransport: { $avg: '$breakdown.transportKg' },
           avgFood: { $avg: '$breakdown.foodKg' },
+          avgWaste: { $avg: '$breakdown.wasteKg' },
           avgEnergy: { $avg: '$breakdown.energyKg' },
           totalLogs: { $sum: 1 },
           meatFreeDays: {
@@ -517,6 +626,7 @@ class AdminController {
     const breakdown = categoryBreakdown[0] || {
       avgTransport: 0,
       avgFood: 0,
+      avgWaste: 0,
       avgEnergy: 0,
       totalLogs: 0,
       meatFreeDays: 0
@@ -525,9 +635,11 @@ class AdminController {
     res.status(200).json({
       totalLogs: logs.length,
       emissionTrend,
+      transportModes,
       categoryBreakdown: {
         transport: parseFloat((breakdown.avgTransport || 0).toFixed(2)),
         food: parseFloat((breakdown.avgFood || 0).toFixed(2)),
+        waste: parseFloat((breakdown.avgWaste || 0).toFixed(2)),
         energy: parseFloat((breakdown.avgEnergy || 0).toFixed(2)),
         meatFreeDays: breakdown.meatFreeDays,
         totalLogs: breakdown.totalLogs

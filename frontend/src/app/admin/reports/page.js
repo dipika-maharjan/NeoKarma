@@ -13,7 +13,10 @@ import {
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -133,6 +136,13 @@ export default function AdminReportsPage() {
   if (!data) return null;
 
   const breakdown = data.categoryBreakdown || {};
+  const categoryItems = [
+    { label: 'Transportation', value: breakdown.transport || 0 },
+    { label: 'Food', value: breakdown.food || 0 },
+    { label: 'Waste', value: breakdown.waste || 0 },
+    { label: 'Energy', value: breakdown.energy || 0 }
+  ];
+  const maxCategoryValue = Math.max(...categoryItems.map((item) => item.value || 0), 1);
 
   return (
     <main className="min-h-screen bg-[#f5f7f6] p-6">
@@ -155,7 +165,7 @@ export default function AdminReportsPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-5">
           {[
             {
               label: 'Total logs',
@@ -171,6 +181,11 @@ export default function AdminReportsPage() {
               label: 'Avg food',
               value: `${formatNumber(breakdown.food)}kg`,
               icon: <Leaf size={18} className="text-[#10b981]" />
+            },
+            {
+              label: 'Avg waste',
+              value: `${formatNumber(breakdown.waste)}kg`,
+              icon: <TrendingUp size={18} className="text-[#ef4444]" />
             },
             {
               label: 'Avg energy',
@@ -269,11 +284,7 @@ export default function AdminReportsPage() {
                 Category snapshot
               </p>
               <div className="mt-4 space-y-3">
-                {[
-                  { label: 'Transportation', value: breakdown.transport || 0 },
-                  { label: 'Food', value: breakdown.food || 0 },
-                  { label: 'Energy', value: breakdown.energy || 0 }
-                ].map((item) => (
+                {categoryItems.map((item) => (
                   <div key={item.label}>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-[#6b7280]">{item.label}</span>
@@ -282,11 +293,40 @@ export default function AdminReportsPage() {
                     <div className="mt-1 h-2 rounded-full bg-[#eef0ee]">
                       <div
                         className="h-2 rounded-full bg-[#1a7a4a]"
-                        style={{ width: `${Math.min(100, item.value * 5)}%` }}
+                        style={{ width: `${Math.min(100, ((item.value || 0) / maxCategoryValue) * 100)}%` }}
                       />
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+                Transport mode breakdown
+              </p>
+              <div className="mt-4 h-56 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.transportModes || []} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid stroke="#eef0ee" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 12, fill: '#6b7280' }} />
+                    <YAxis
+                      type="category"
+                      dataKey="mode"
+                      width={80}
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                    />
+                    <Tooltip
+                      formatter={(value) => [value, 'Count']}
+                      contentStyle={{ borderRadius: 12, border: '1px solid #eef0ee' }}
+                    />
+                    <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                      {(data.transportModes || []).map((entry, index) => (
+                        <Cell key={`${entry.mode}-${index}`} fill={entry.isEco ? '#1a7a4a' : '#f59e0b'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
