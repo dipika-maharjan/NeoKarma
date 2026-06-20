@@ -1,31 +1,35 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { cookies } from 'next/headers';
+import enMessages from '../../messages/en.json';
+import neMessages from '../../messages/ne.json';
 
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const messages = {
+  en: enMessages,
+  ne: neMessages,
+};
+const defaultLocale = 'en';
 
-export default async function getI18nConfig() {
-  // Prefer cookie-based locale detection in App Router.
-  let locale = undefined;
-  try {
-    const cookieStore = await cookies();
-    const localeCookie = cookieStore.get('locale');
-    if (localeCookie && localeCookie.value) locale = localeCookie.value;
-  } catch (e) {
-    // ignore
-  }
-
-  if (!locale) locale = 'en';
-
-  const messagesPath = path.resolve(currentDir, '..', '..', 'messages', `${locale}.json`);
-  let messages = {};
-  try {
-    const raw = await fs.promises.readFile(messagesPath, 'utf-8');
-    messages = JSON.parse(raw);
-  } catch (err) {
-    console.warn('Missing messages for locale', locale, err.message);
-  }
-
-  return { locale, messages };
+async function getLocaleFromCookies() {
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore?.get?.('locale');
+  return localeCookie?.value;
 }
+
+export async function getI18nConfig() {
+  const locale = await getLocaleFromCookies() || defaultLocale;
+  return {
+    locale,
+    messages: messages[locale] ?? {},
+  };
+}
+
+function getRequestConfig(createRequestConfig) {
+  return createRequestConfig;
+}
+
+export default getRequestConfig(async ({ locale, requestLocale }) => {
+  const selectedLocale = locale ?? (await requestLocale) ?? await getLocaleFromCookies() ?? defaultLocale;
+  return {
+    locale: selectedLocale,
+    messages: messages[selectedLocale] ?? {},
+  };
+});
