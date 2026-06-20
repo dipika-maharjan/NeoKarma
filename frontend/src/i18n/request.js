@@ -1,3 +1,4 @@
+import { getRequestConfig } from 'next-intl/server';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -5,13 +6,15 @@ import { cookies } from 'next/headers';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
-export default async function getI18nConfig() {
+export default getRequestConfig(async () => {
   // Prefer cookie-based locale detection in App Router.
-  let locale = undefined;
+  let locale;
   try {
-    const cookieStore = await cookies();
+    const cookieStore = cookies();
     const localeCookie = cookieStore.get('locale');
-    if (localeCookie && localeCookie.value) locale = localeCookie.value;
+    if (localeCookie && localeCookie.value) {
+      locale = localeCookie.value;
+    }
   } catch (e) {
     // ignore
   }
@@ -28,4 +31,4 @@ export default async function getI18nConfig() {
   }
 
   return { locale, messages };
-}
+});

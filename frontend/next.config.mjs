@@ -61,6 +61,8 @@ const pwaConfig = withPWA({
   ],
 })(baseConfig);
 
-const nextConfig = nextIntl('./next-intl.config.js')(pwaConfig);
+const nextConfig = nextIntl({
+  requestConfig: './src/i18n/request.js',
+})(pwaConfig);
 
 export default nextConfig;
