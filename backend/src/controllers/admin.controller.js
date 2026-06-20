@@ -208,6 +208,81 @@ class AdminController {
       (emissionAgg[0]?.avgEmission || 0).toFixed(1)
     );
 
+    const gradeDistribution = await User.aggregate([
+      { $match: studentMatch },
+      {
+        $group: {
+          _id: '$grade',
+          studentCount: { $sum: 1 },
+          avgMarks: {
+            $avg: '$practicalMarks.marksAwarded'
+          },
+          avgStreak: {
+            $avg: '$practicalMarks.currentStreak'
+          },
+          avgEmission: {
+            $avg: '$practicalMarks.totalLogDays'
+          }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          grade: { $toString: '$_id' },
+          studentCount: 1,
+          avgMarks: { $round: [{ $ifNull: ['$avgMarks', 0] }, 1] },
+          avgStreak: { $round: [{ $ifNull: ['$avgStreak', 0] }, 1] },
+          totalLogDays: { $round: [{ $ifNull: ['$avgEmission', 0] }, 0] }
+        }
+      }
+    ]);
+
+    const marksDistribution = await User.aggregate([
+      { $match: studentMatch },
+      {
+        $bucket: {
+          groupBy: '$practicalMarks.marksAwarded',
+          boundaries: [0, 5, 10, 15, 20],
+          default: 'No marks',
+          output: {
+            count: { $sum: 1 },
+            students: { $push: '$name' }
+          }
+        }
+      }
+    ]);
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const weeklyActivity = await DailyLog.aggregate([
+      {
+        $match: {
+          userId: { $in: studentIds },
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          logCount: { $sum: 1 },
+          avgEmission: { $avg: '$totalEmissionKg' }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          date: '$_id',
+          logCount: 1,
+          avgEmission: { $round: ['$avgEmission', 1] }
+        }
+      }
+    ]);
+
     const ranked = schoolPerformance.map((school, index) => ({
       ...school,
       rank: index + 1
@@ -252,6 +327,25 @@ class AdminController {
         section: student.section,
         score: student.practicalMarks?.marksAwarded || 0
       })),
+      gradeDistribution,
+      marksDistribution: marksDistribution.map((b) => ({
+        range:
+          b._id === 'No marks'
+            ? 'No marks'
+            : b._id === 0
+              ? '0–4'
+              : b._id === 5
+                ? '5–9'
+                : b._id === 10
+                  ? '10–14'
+                  : '15–20',
+        count: b.count
+      })),
+      weeklyActivity: weeklyActivity.map((w) => ({
+        date: w.date,
+        logs: w.logCount,
+        avgEmission: w.avgEmission || 0
+      })),
       studentStreaks,
       liveActivity,
       systemImpact: {
@@ -264,35 +358,209 @@ class AdminController {
   });
 
   getStudents = asyncHandler(async (req, res) => {
-    const { grade, section, sortBy = 'streak' } = req.query;
-    const filter = {
+    const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
+      ? new mongoose.Types.ObjectId(adminId)
+      : null;
+    const schoolAdmin = schoolObjectId
+      ? await User.findById(schoolObjectId).select('name schoolName')
+      : null;
+    const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
+
+    const studentMatch = {
       role: 'student',
-      schoolId: req.user.schoolId
+      $or: [
+        ...(schoolObjectId ? [{ schoolId: schoolObjectId }] : []),
+        ...(schoolName ? [{ schoolName }] : [])
+      ]
     };
 
-    if (grade) filter.grade = Number(grade);
-    if (section) filter.section = section;
+    const students = await User.find(studentMatch, {
+      name: 1,
+      email: 1,
+      grade: 1,
+      section: 1,
+      schoolName: 1,
+      locationType: 1,
+      isActive: 1,
+      createdAt: 1,
+      'practicalMarks.currentStreak': 1,
+      'practicalMarks.longestStreak': 1,
+      'practicalMarks.totalLogDays': 1,
+      'practicalMarks.marksAwarded': 1,
+      'practicalMarks.lastSyncedAt': 1
+    }).sort({ grade: 1, name: 1 });
 
-    const sortOptions = {
-      streak: { 'streak.current': -1, 'streak.longest': -1 },
-      emissions: { 'practicalMarks.marksAwarded': -1 }
+    const studentIds = students.map((student) => student._id);
+
+    const logCounts = await DailyLog.aggregate([
+      { $match: { userId: { $in: studentIds } } },
+      {
+        $group: {
+          _id: '$userId',
+          count: { $sum: 1 },
+          lastLog: { $max: '$createdAt' }
+        }
+      }
+    ]);
+
+    const logMap = {};
+    logCounts.forEach((entry) => {
+      logMap[entry._id.toString()] = {
+        count: entry.count,
+        lastLog: entry.lastLog
+      };
+    });
+
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+    res.status(200).json(
+      students.map((student) => ({
+        _id: student._id,
+        name: student.name,
+        email: student.email,
+        grade: student.grade,
+        section: student.section,
+        schoolName: student.schoolName,
+        locationType: student.locationType,
+        isActive: student.isActive,
+        joinedAt: student.createdAt,
+        totalLogs: logMap[student._id.toString()]?.count || 0,
+        lastLogAt: logMap[student._id.toString()]?.lastLog || null,
+        currentStreak: student.practicalMarks?.currentStreak || 0,
+        longestStreak: student.practicalMarks?.longestStreak || 0,
+        totalLogDays: student.practicalMarks?.totalLogDays || 0,
+        marksAwarded: student.practicalMarks?.marksAwarded || 0,
+        atRisk: student.practicalMarks?.lastSyncedAt
+          ? new Date(student.practicalMarks.lastSyncedAt) < twoDaysAgo
+          : true
+      }))
+    );
+  });
+
+  getReports = asyncHandler(async (req, res) => {
+    const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
+      ? new mongoose.Types.ObjectId(adminId)
+      : null;
+    const schoolAdmin = schoolObjectId
+      ? await User.findById(schoolObjectId).select('name schoolName')
+      : null;
+    const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
+
+    const studentMatch = {
+      role: 'student',
+      $or: [
+        ...(schoolObjectId ? [{ schoolId: schoolObjectId }] : []),
+        ...(schoolName ? [{ schoolName }] : [])
+      ]
     };
 
-    const students = await User.find(filter)
-      .sort(sortOptions[sortBy] || sortOptions.streak)
-      .select('-passwordHash');
+    const students = await User.find(studentMatch, { _id: 1 });
+    const studentIds = students.map((student) => student._id);
+
+    const logs = await DailyLog.find({
+      userId: { $in: studentIds }
+    })
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name grade section');
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const emissionTrend = await DailyLog.aggregate([
+      {
+        $match: {
+          userId: { $in: studentIds },
+          createdAt: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          avgEmission: { $avg: '$totalEmissionKg' },
+          totalLogs: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          date: '$_id',
+          avgEmission: { $round: ['$avgEmission', 2] },
+          totalLogs: 1
+        }
+      }
+    ]);
+
+    const categoryBreakdown = await DailyLog.aggregate([
+      { $match: { userId: { $in: studentIds } } },
+      {
+        $group: {
+          _id: null,
+          avgTransport: { $avg: '$breakdown.transportKg' },
+          avgFood: { $avg: '$breakdown.foodKg' },
+          avgEnergy: { $avg: '$breakdown.energyKg' },
+          totalLogs: { $sum: 1 },
+          meatFreeDays: {
+            $sum: {
+              $cond: [{ $in: ['$food.mealType', ['vegetarian', 'vegan']] }, 1, 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    const breakdown = categoryBreakdown[0] || {
+      avgTransport: 0,
+      avgFood: 0,
+      avgEnergy: 0,
+      totalLogs: 0,
+      meatFreeDays: 0
+    };
 
     res.status(200).json({
-      success: true,
-      data: students
+      totalLogs: logs.length,
+      emissionTrend,
+      categoryBreakdown: {
+        transport: parseFloat((breakdown.avgTransport || 0).toFixed(2)),
+        food: parseFloat((breakdown.avgFood || 0).toFixed(2)),
+        energy: parseFloat((breakdown.avgEnergy || 0).toFixed(2)),
+        meatFreeDays: breakdown.meatFreeDays,
+        totalLogs: breakdown.totalLogs
+      },
+      recentLogs: logs.slice(0, 50).map((log) => ({
+        studentName: log.userId?.name || 'Unknown',
+        grade: log.userId?.grade,
+        section: log.userId?.section,
+        date: log.createdAt,
+        totalEmissionKg: log.totalEmissionKg || 0,
+        meatFreeDay: ['vegetarian', 'vegan'].includes(log.food?.mealType),
+        transportEmission: log.breakdown?.transportKg || 0
+      }))
     });
   });
 
   getStudentById = asyncHandler(async (req, res) => {
+    const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
+      ? new mongoose.Types.ObjectId(adminId)
+      : null;
+    const schoolAdmin = schoolObjectId
+      ? await User.findById(schoolObjectId).select('name schoolName')
+      : null;
+    const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
+
     const student = await User.findOne({
       _id: req.params.id,
       role: 'student',
-      schoolId: req.user.schoolId
+      $or: [
+        ...(schoolObjectId ? [{ schoolId: schoolObjectId }] : []),
+        ...(schoolName ? [{ schoolName }] : [])
+      ]
     }).select('-passwordHash');
 
     if (!student) {
