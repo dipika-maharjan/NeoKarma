@@ -12,7 +12,7 @@ class AuthController {
    * POST /api/auth/register
    */
   signup = asyncHandler(async (req, res) => {
-    const { name, email, password, grade, locationType, schoolName, extraProfile } = req.body;
+    const { name, email, password, grade, section, locationType, schoolName, extraProfile } = req.body;
 
     // Validation
     if (!name || !email || !password || !grade || !locationType) {
@@ -24,6 +24,7 @@ class AuthController {
       email,
       password,
       grade,
+      section,
       locationType,
       schoolName,
       extraProfile

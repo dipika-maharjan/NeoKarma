@@ -2,6 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  Activity,
+  AlertTriangle,
+  Award,
+  FileText,
+  Flame,
+  TrendingDown,
+  Users,
+  Wind
+} from 'lucide-react';
 import apiClient from '@/lib/api/axios';
 import { useAuth } from '@/context/AuthContext';
 
@@ -38,9 +48,9 @@ const donutDash = (pct) => {
 };
 
 const feedStyle = {
-  MIRROR: { bg: '#e6f4ed', color: '#0e6b45', icon: '◌' },
-  AWARD: { bg: '#e8f0fc', color: '#1a56b0', icon: '✦' },
-  MILESTONE: { bg: '#fef3e0', color: '#92600a', icon: '↗' }
+  MIRROR: { bg: '#e6f4ed', color: '#1a7a4a', icon: TrendingDown },
+  AWARD: { bg: '#e8f0fc', color: '#1a56b0', icon: Award },
+  MILESTONE: { bg: '#fef3e0', color: '#92600a', icon: Activity }
 };
 
 export default function AdminDashboardPage() {
@@ -60,7 +70,12 @@ export default function AdminDashboardPage() {
       try {
         setLoading(true);
         const response = await apiClient.get('/admin/dashboard');
-        setData(response.data || null);
+        const dashboardData = response.data || null;
+        console.log('Dashboard data:', dashboardData);
+        console.log('Total students:', dashboardData?.stats?.totalStudents);
+        console.log('Total reports:', dashboardData?.stats?.totalReports);
+        console.log('Student streaks:', dashboardData?.studentStreaks);
+        setData(dashboardData);
       } catch (err) {
         setError(err?.message || 'Failed to load dashboard data.');
       } finally {
@@ -124,30 +139,24 @@ export default function AdminDashboardPage() {
     {
       label: 'Total Students',
       value: formatInt(stats.totalStudents),
-      icon: '👥',
-      accent: '#dff7ea'
+      icon: <Users size={18} color="#1a7a4a" />,
+      accent: '#e6f4ed'
     },
     {
       label: 'Avg Emission',
       value: `${formatNumber(stats.avgEmissionKg)}kg`,
-      icon: '🌿',
-      accent: '#e8f5ef'
+      icon: <Wind size={18} color="#f59e0b" />,
+      accent: '#fff8ed'
     },
     {
       label: 'Reports',
       value: formatInt(stats.totalReports),
-      icon: '📄',
-      accent: '#eef4ff'
-    },
-    {
-      label: 'Certificates',
-      value: formatInt(stats.totalCertificates),
-      icon: '🏅',
-      accent: '#fff7dd'
+      icon: <FileText size={18} color="#3b82f6" />,
+      accent: '#eff6ff'
     }
   ];
-
-  const activeStreaks = studentStreaks || [];
+  const activityFeed = liveActivity || [];
+  const streakRows = studentStreaks || [];
 
   return (
     <main
@@ -197,7 +206,7 @@ export default function AdminDashboardPage() {
         <section
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
             gap: 16,
             marginBottom: 18
           }}
@@ -215,20 +224,20 @@ export default function AdminDashboardPage() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 13, color: '#6b7280' }}>{card.label}</span>
-                <span
+                <div
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    display: 'inline-flex',
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     background: card.accent,
-                    fontSize: 18
+                    flexShrink: 0
                   }}
                 >
                   {card.icon}
-                </span>
+                </div>
               </div>
               <h2 style={{ margin: '10px 0 0', fontSize: 28, fontWeight: 800, color: '#0A3D25' }}>
                 {card.value}
@@ -332,12 +341,25 @@ export default function AdminDashboardPage() {
               <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Activity feed</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {liveActivity.map((entry, index) => {
+              {activityFeed.length === 0 ? (
+                <div
+                  style={{
+                    padding: '24px',
+                    textAlign: 'center',
+                    color: '#888',
+                    fontSize: 13
+                  }}
+                >
+                  No activity yet. Students need to submit carbon logs.
+                </div>
+              ) : (
+                activityFeed.map((entry, index) => {
                 const style = feedStyle[entry.type] || feedStyle.MIRROR;
+                const FeedIcon = style.icon;
                 return (
                   <div key={`${entry.type}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid #f2f4f1' }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 10, background: style.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: style.color, fontWeight: 700 }}>
-                      {style.icon}
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', background: style.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FeedIcon size={14} color={style.color} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 600, color: '#111827' }}>{entry.description}</div>
@@ -350,33 +372,55 @@ export default function AdminDashboardPage() {
                     </span>
                   </div>
                 );
-              })}
+              }))}
             </div>
           </div>
 
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8ece7', padding: 16 }}>
             <div style={{ marginBottom: 14 }}>
               <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>Student streaks</p>
-              <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Top streaks</h3>
+              <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Streaks</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {activeStreaks.map((student) => (
-                <div key={student.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 999, background: '#eef5ef', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#0A3D25' }}>
-                    {initials(student.name)}
+              {streakRows.length === 0 ? (
+                <div
+                  style={{
+                    padding: '20px',
+                    textAlign: 'center',
+                    color: '#888',
+                    fontSize: 13
+                  }}
+                >
+                  No students found for this school.
+                </div>
+              ) : (
+                streakRows.map((student) => (
+                <div key={`${student.name}-${student.grade}-${student.section || ''}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f5f5f5' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 999, background: student.atRisk ? '#fef2f2' : '#e6f4ed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: student.atRisk ? '#c0392b' : '#1a7a4a', flexShrink: 0 }}>
+                    {initials(student.name || '')}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: '#111827' }}>{student.name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {student.name}
+                      {student.atRisk && (
+                        <span style={{ fontSize: 10, background: '#fef2f2', color: '#c0392b', padding: '1px 6px', borderRadius: 10, fontWeight: 600 }}>
+                          At risk
+                        </span>
+                      )}
+                    </div>
                     <div style={{ fontSize: 12, color: '#6b7280' }}>
                       {student.grade}{student.section ? ` • ${student.section}` : ''}
                     </div>
+                    <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                      {formatInt(student.totalLogDays)} logs total
+                    </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 800, color: '#0A3D25' }}>{student.currentStreak} day streak</div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>{student.score} score</div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: student.currentStreak > 0 ? '#1a7a4a' : '#888' }}>{student.currentStreak} days</div>
+                    <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>best: {student.longestStreak} days</div>
                   </div>
                 </div>
-              ))}
+              )))}
             </div>
           </div>
         </section>

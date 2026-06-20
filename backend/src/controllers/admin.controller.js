@@ -3,58 +3,119 @@ const AppError = require('../utils/AppError');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const DailyLog = require('../models/DailyLog');
-const Certificate = require('../models/Certificate');
 const ActivityLog = require('../models/ActivityLog');
 const ClassSection = require('../models/ClassSection');
 const streakToMarks = require('../utils/streakToMarks');
 
 class AdminController {
   getDashboard = asyncHandler(async (req, res) => {
-    const schoolId = req.user.schoolId;
-    const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
-
-    const students = await User.find({
+    const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const schoolObjectId = new mongoose.Types.ObjectId(adminId);
+    const schoolAdmin = await User.findById(schoolObjectId).select('name schoolName');
+    const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
+    const studentMatch = {
       role: 'student',
-      schoolId
-    }).select('_id name grade section streak practicalMarks');
+      $or: [
+        { schoolId: schoolObjectId },
+        { schoolName }
+      ].filter((condition) => Object.values(condition)[0])
+    };
 
+    const students = await User.find(studentMatch).select('_id name grade section streak practicalMarks');
+    const studentIds = students.map((student) => student._id);
+    const totalStudents = students.length;
+
+    if (studentIds.length > 0 && schoolName) {
+      await User.updateMany(
+        {
+          role: 'student',
+          schoolName,
+          $or: [
+            { schoolId: null },
+            { schoolId: { $exists: false } }
+          ]
+        },
+        { $set: { schoolId: schoolObjectId } }
+      );
+    }
+
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
     const studentStreaks = students
       .slice()
-      .sort((a, b) => {
-        const streakDiff = (b.streak?.current || 0) - (a.streak?.current || 0);
-        if (streakDiff !== 0) return streakDiff;
-        return (b.streak?.longest || 0) - (a.streak?.longest || 0);
-      })
-      .slice(0, 5)
+      .sort((a, b) => (b.practicalMarks?.currentStreak || 0) - (a.practicalMarks?.currentStreak || 0))
       .map((student) => ({
         name: student.name,
         grade: student.grade,
         section: student.section,
-        currentStreak: student.streak?.current || 0,
-        longestStreak: student.streak?.longest || 0,
-        lastLogDate: student.streak?.lastLogDate || null,
-        score: student.practicalMarks?.marksAwarded || 0
+        currentStreak: student.practicalMarks?.currentStreak || 0,
+        longestStreak: student.practicalMarks?.longestStreak || 0,
+        totalLogDays: student.practicalMarks?.totalLogDays || 0,
+        lastSyncedAt: student.practicalMarks?.lastSyncedAt || null,
+        atRisk: student.practicalMarks?.lastSyncedAt
+          ? new Date(student.practicalMarks.lastSyncedAt) < twoDaysAgo
+          : true
       }));
 
-    const studentIds = students.map((student) => student._id);
+    const activityLogs = await ActivityLog.find({
+      studentId: { $in: studentIds }
+    })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('studentId', 'name grade section');
+
+    let liveActivity = activityLogs.map((entry) => ({
+      type: entry.type,
+      description: entry.description,
+      studentName: entry.studentId?.name || 'Unknown',
+      school: schoolName || '',
+      createdAt: entry.createdAt
+    }));
+
+    if (liveActivity.length === 0) {
+      const recentLogs = await DailyLog.find({
+        userId: { $in: studentIds }
+      })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate('userId', 'name grade section');
+
+      liveActivity = recentLogs.map((log) => ({
+        type: 'MIRROR',
+        description: `${log.userId?.name || 'Unknown'} (Grade ${log.userId?.grade || 'N/A'}) submitted a carbon log`,
+        studentName: log.userId?.name || 'Unknown',
+        school: schoolName || '',
+        createdAt: log.createdAt
+      }));
+    }
 
     const [
       totalSchools,
-      totalStudents,
       totalReports,
-      totalCertificates,
       emissionAgg,
       schoolPerformance,
       topStudents,
-      liveActivity,
       impactAgg
     ] = await Promise.all([
       User.countDocuments({ role: 'school_admin' }),
-      User.countDocuments({ role: 'student', schoolId }),
       DailyLog.countDocuments({ userId: { $in: studentIds } }),
-      Certificate.countDocuments({ schoolId: schoolObjectId }),
       DailyLog.aggregate([
-        { $match: { userId: { $in: studentIds } } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'student'
+          }
+        },
+        { $unwind: '$student' },
+        {
+          $match: {
+            $or: [
+              { 'student.schoolId': schoolObjectId },
+              { 'student.schoolName': schoolName }
+            ].filter((condition) => Object.values(condition)[0])
+          }
+        },
         {
           $group: {
             _id: null,
@@ -63,12 +124,7 @@ class AdminController {
         }
       ]),
       User.aggregate([
-        {
-          $match: {
-            role: 'student',
-            schoolId: new mongoose.Types.ObjectId(req.user.schoolId || req.user._id)
-          }
-        },
+        { $match: studentMatch },
         {
           $group: {
             _id: { grade: '$grade', section: '$section' },
@@ -87,7 +143,7 @@ class AdminController {
                 'Grade ',
                 { $toString: '$_id.grade' },
                 ' - ',
-                '$_id.section'
+                { $ifNull: ['$_id.section', 'A'] }
               ]
             },
             studentCount: 1,
@@ -97,7 +153,7 @@ class AdminController {
         }
       ]),
       User.find(
-        { role: 'student', schoolId },
+        studentMatch,
         {
           name: 1,
           grade: 1,
@@ -108,11 +164,6 @@ class AdminController {
       )
         .sort({ 'practicalMarks.marksAwarded': -1 })
         .limit(3)
-        .populate('schoolId', 'schoolName'),
-      ActivityLog.find({ schoolId })
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .populate('studentId', 'name grade section')
         .populate('schoolId', 'schoolName'),
       DailyLog.aggregate([
         { $match: { userId: { $in: studentIds } } },
@@ -184,15 +235,14 @@ class AdminController {
     );
 
     res.status(200).json({
-      schoolName: req.user.schoolName || '',
-      adminName: req.user.name || req.user.schoolName || 'Admin',
+      schoolName: schoolName || '',
+      adminName: schoolAdmin?.name || schoolName || 'Admin',
       studentsEnrolled: totalStudents,
       stats: {
         totalSchools,
         totalStudents,
         avgEmissionKg,
-        totalReports,
-        totalCertificates
+        totalReports
       },
       schoolPerformance: ranked,
       topStudents: topStudents.map((student) => ({
@@ -203,12 +253,7 @@ class AdminController {
         score: student.practicalMarks?.marksAwarded || 0
       })),
       studentStreaks,
-      liveActivity: liveActivity.map((entry) => ({
-        type: entry.type,
-        description: entry.description,
-        school: entry.schoolId?.schoolName || '',
-        createdAt: entry.createdAt
-      })),
+      liveActivity,
       systemImpact: {
         targetMetPct,
         transportReduxPct,
