@@ -28,6 +28,14 @@ const pwaConfig = withPWA({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  // Precache critical routes so they are available offline after first online visit
+  additionalManifestEntries: [
+    { url: '/dashboard', revision: null },
+    { url: '/calculator', revision: null },
+    { url: '/carbon-mirror', revision: null },
+    { url: '/plan', revision: null },
+    { url: '/score', revision: null }
+  ],
   runtimeCaching: [
     {
       urlPattern: /^https?:\/\/.*\/api\/emission-factors/,

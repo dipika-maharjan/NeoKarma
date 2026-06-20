@@ -8,6 +8,7 @@ import { getCookie } from '@/lib/api/cookie';
 import ProfileDropdown from './ProfileDropdown';
 import streakIcon from '../../public/streak.png';
 import LanguageToggle from './LanguageToggle';
+import OfflineReadyBadge from './OfflineReadyBadge';
 import { useTranslations } from 'next-intl';
 import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
@@ -116,6 +117,9 @@ const Navbar = () => {
         {/* Right: Streak Metrics Status & Profile Action Wrapper */}
         <div className="flex items-center gap-4">
           <LanguageToggle />
+          <div className="hidden md:block">
+            <OfflineReadyBadge />
+          </div>
           
           {isAuthenticated && user ? (
             <>
