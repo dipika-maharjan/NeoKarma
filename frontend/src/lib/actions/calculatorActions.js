@@ -1,4 +1,5 @@
 import { submitDailyLog, fetchTodayLog, fetchDailyLogHistory } from '../api/calculatorApi';
+import { savePendingLog } from '@/lib/offline/db';
 
 const STREAK_CACHE_KEY = 'neokarma_streak_cache';
 const STREAK_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
@@ -36,13 +37,47 @@ export const getCachedStreak = () => {
   }
 };
 
+// Use Nepal local date (UTC+5:45) for all client-side date tagging
+const getNepalDateStr = (d = new Date()) => {
+  const utc = Date.UTC(
+    d.getUTCFullYear(),
+    d.getUTCMonth(),
+    d.getUTCDate(),
+    d.getUTCHours(),
+    d.getUTCMinutes(),
+    d.getUTCSeconds(),
+    d.getUTCMilliseconds()
+  );
+  const nepalOffsetMinutes = 5 * 60 + 45; // +5:45
+  const nepalMs = utc + nepalOffsetMinutes * 60 * 1000;
+  return new Date(nepalMs).toISOString().slice(0, 10);
+};
+
 export const logDailyCarbon = async (payload) => {
-  const response = await submitDailyLog(payload);
-  // Cache the updated streak if available
-  if (response.data?.data?.updatedStreak) {
-    cacheStreakData(response.data.data.updatedStreak);
+  // Attach a date (Nepal local) so server can upsert on (userId, date)
+  const todayStr = getNepalDateStr();
+  const payloadWithDate = { ...payload, date: payload.date || todayStr };
+
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    // Offline: save locally and notify UI
+    await savePendingLog(payloadWithDate);
+    try { window.dispatchEvent(new CustomEvent('offline-saved', { detail: { date: payloadWithDate.date } })); } catch (e) {}
+    return null;
   }
-  return response.data;
+
+  try {
+    const response = await submitDailyLog(payloadWithDate);
+    // Cache the updated streak if available
+    if (response.data?.data?.updatedStreak) {
+      cacheStreakData(response.data.data.updatedStreak);
+    }
+    return response.data;
+  } catch (err) {
+    // Network failed while claiming to be online: fallback to local save
+    await savePendingLog(payloadWithDate);
+    try { window.dispatchEvent(new CustomEvent('offline-saved', { detail: { date: payloadWithDate.date } })); } catch (e) {}
+    return null;
+  }
 };
 
 export const getTodayLog = async () => {

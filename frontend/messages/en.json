@@ -314,4 +314,7 @@
     "english": "English",
     "nepali": "नेपाली"
   }
+  ,"offline": {
+    "offlineBannerMessage": "You're offline — your data is saved and will sync automatically when you're back online."
+  }
 }

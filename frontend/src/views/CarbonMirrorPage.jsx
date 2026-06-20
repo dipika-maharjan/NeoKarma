@@ -80,7 +80,7 @@ const CarbonMirrorPage = () => {
     if (isAuthenticated) {
       fetchData();
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, locale]);
 
   useEffect(() => {
     let mounted = true;
