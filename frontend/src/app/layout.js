@@ -5,7 +5,7 @@ import LayoutShell from "@/components/layout/LayoutShell";
 import OfflineSyncProvider from '@/components/OfflineSyncProvider';
 import OfflineBanner from '@/components/OfflineBanner';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getI18nConfig } from '@/i18n/request';
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
@@ -24,8 +24,7 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
+  const { locale, messages } = await getI18nConfig();
 
   return (
     <html

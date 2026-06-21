@@ -32,8 +32,11 @@ module.exports = {
   AI_SERVICE_TIMEOUT: process.env.AI_SERVICE_TIMEOUT || 8000,
 
   // Carbon Metrics
-  KG_CO2_PER_TREE_PER_YEAR: parseFloat(process.env.KG_CO2_PER_TREE_PER_YEAR) || 21, // Default: mature tree absorbs ~21kg/year
-  DAILY_TREE_ABSORPTION_KG: parseFloat(process.env.KG_CO2_PER_TREE_PER_YEAR) / 365 || 0.0575,
+  // Base value (kg CO2 absorbed per tree per year). Default to ~21 kg/year for a mature tree.
+  KG_CO2_PER_TREE_PER_YEAR: parseFloat(process.env.KG_CO2_PER_TREE_PER_YEAR) || 21,
+  // Derived metrics: daily and monthly absorption based on the annual value.
+  DAILY_TREE_ABSORPTION_KG: (parseFloat(process.env.KG_CO2_PER_TREE_PER_YEAR) || 21) / 365,
+  MONTHLY_TREE_ABSORPTION_KG: (parseFloat(process.env.KG_CO2_PER_TREE_PER_YEAR) || 21) / 12,
   IMPACT_SCORE_GOAL: parseInt(process.env.IMPACT_SCORE_GOAL, 10) || 94,
 
   // Score Calculation Weights

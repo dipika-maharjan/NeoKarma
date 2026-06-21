@@ -1,27 +1,35 @@
-import { getRequestConfig } from 'next-intl/server';
 import { cookies } from 'next/headers';
+import enMessages from '../../messages/en.json';
+import neMessages from '../../messages/ne.json';
 
-export default getRequestConfig(async () => {
-  // Prefer cookie-based locale detection in App Router.
-  let locale;
-  try {
-    const cookieStore = await cookies();
-    const localeCookie = cookieStore.get('locale');
-    if (localeCookie && localeCookie.value) {
-      locale = localeCookie.value;
-    }
-  } catch (e) {
-    // ignore
-  }
+const messages = {
+  en: enMessages,
+  ne: neMessages,
+};
+const defaultLocale = 'en';
 
-  if (!locale) locale = 'en';
+async function getLocaleFromCookies() {
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore?.get?.('locale');
+  return localeCookie?.value;
+}
 
-  let messages = {};
-  try {
-    messages = (await import(`../../messages/${locale}.json`)).default;
-  } catch (err) {
-    console.warn('Missing messages for locale', locale, err.message);
-  }
+export async function getI18nConfig() {
+  const locale = await getLocaleFromCookies() || defaultLocale;
+  return {
+    locale,
+    messages: messages[locale] ?? {},
+  };
+}
 
-  return { locale, messages };
+function getRequestConfig(createRequestConfig) {
+  return createRequestConfig;
+}
+
+export default getRequestConfig(async ({ locale, requestLocale }) => {
+  const selectedLocale = locale ?? (await requestLocale) ?? await getLocaleFromCookies() ?? defaultLocale;
+  return {
+    locale: selectedLocale,
+    messages: messages[selectedLocale] ?? {},
+  };
 });

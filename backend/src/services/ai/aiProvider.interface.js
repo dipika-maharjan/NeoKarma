@@ -8,7 +8,7 @@ class AIProviderInterface {
   /**
    * Generate mitigation recommendations for a user
    * 
-   * @param {Object} aggregatedData - Last 30 days of aggregated emissions data
+   * @param {Object} aggregatedData - Last 7 days of aggregated emissions data
    * @param {number} aggregatedData.totalEmissionKg - Total kg CO2 for the period
    * @param {number} aggregatedData.transportKg - Total transport emissions
    * @param {number} aggregatedData.foodKg - Total food emissions

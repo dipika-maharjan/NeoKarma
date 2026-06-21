@@ -1,7 +1,7 @@
 /**
  * MitigationPlan Model
  * Stores AI-generated (or rule-based fallback) personalized action plans
- * One plan covers a 1-month period
+ * One plan covers a 7-day period
  */
 const mongoose = require('mongoose');
 

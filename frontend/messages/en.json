@@ -185,6 +185,38 @@
     "userFallback":"Student",
     "failedToLoadDashboard":"Unable to load dashboard. Please refresh or try again."
   },
+  "Profile": {
+    "profileAccount": "Profile / Account",
+    "language": "Language",
+    "logout": "Logout",
+    "gradeLabel": "Grade {grade} - {location}",
+    "schoolNotAdded": "School not added",
+    "openProfileMenu": "Open profile menu",
+    "studentDefault": "Student"
+    ,"accountTitle":"Account details"
+    ,"accountDescription":"Keep your student profile aligned with your school carbon journey."
+    ,"dashboardButton":"Dashboard"
+    ,"profileInfoTitle":"Profile information"
+    ,"profileInfoDesc":"Your name, email, grade, and location are editable here and used throughout your reports and progress tracking."
+    ,"languageNotice":"This uses the same language toggle as the navbar and profile menu."
+    ,"nameLabel":"Name"
+    ,"schoolLabel":"School name"
+    ,"schoolPlaceholder":"Enter your school name"
+    ,"emailLabel":"Email"
+    ,"selectLocation":"Select location"
+    ,"notSet":"Not set"
+    ,"currentStreak":"Current Streak"
+    ,"days":"days"
+    ,"saving":"Saving..."
+    ,"saveChanges":"Save changes"
+    ,"nameRequired":"Name is required."
+    ,"emailRequired":"Email is required."
+    ,"emailInvalid":"Please enter a valid email address."
+    ,"gradeRequired":"Grade is required."
+    ,"locationRequired":"Location is required."
+    ,"profileUpdatedSuccess":"Profile updated successfully."
+    ,"profileUpdateFailed":"Could not update profile."
+  },
   "Score": {
     "title": "Your Impact Score",
     "subtitle": "We score consistency, not perfection. Keep making small changes to see your impact grow over time.",
@@ -234,6 +266,12 @@
     "treesEquivalentThisMonth":"{count} trees this month",
     "currentLabel":"Current:",
     "goalLabel":"Goal:",
+    "mappedPointsLabel":"Mapped points: {count}",
+    "minLabel":"min",
+    "maxLabel":"max",
+    "debugRawHistoryTitle":"Debug: raw history sample",
+    "debugMappedChartTitle":"Debug: mapped chart sample",
+    "dailyEmission":"Daily emission",
     "shareTitle":"My Carbon Mirror",
     "shareText":"I emitted {kg} kg CO2 this month{improvementPart}.",
     "viewCarbonMirror":"View Carbon Mirror"

@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation';
 import { GraduationCap, Loader2, Mail, MapPin, Save, School, Trophy, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import LanguageToggle from '@/components/LanguageToggle';
+import { useTranslations } from 'next-intl';
 
 const ProfileAccountPage = () => {
   const router = useRouter();
   const { user, isAuthenticated, updateProfile } = useAuth();
+  const t = useTranslations('Profile');
+  const tAuth = useTranslations('Auth');
   const [formData, setFormData] = useState(() => ({
     name: user?.name || user?.email || '',
     email: user?.email || '',
@@ -40,21 +43,21 @@ const ProfileAccountPage = () => {
 
   const profileStats = useMemo(() => ([
     {
-      label: 'Grade',
-      value: user?.grade ? `Grade ${user.grade}` : 'Not set',
+      label: tAuth('grade'),
+      value: user?.grade ? t('gradeLabel', { grade: user.grade, location: tAuth(user.locationType) || user.locationType }) : t('notSet'),
       icon: GraduationCap
     },
     {
-      label: 'Location',
-      value: user?.locationType ? `${user.locationType.charAt(0).toUpperCase()}${user.locationType.slice(1)}` : 'Not set',
+      label: tAuth('location'),
+      value: user?.locationType ? (tAuth(user.locationType) || user.locationType.charAt(0).toUpperCase() + user.locationType.slice(1)) : t('notSet'),
       icon: MapPin
     },
     {
-      label: 'Current streak',
-      value: `${user?.streak?.current || 0} days`,
+      label: t('currentStreak'),
+      value: `${user?.streak?.current || 0} ${t('days') || 'days'}`,
       icon: Trophy
     }
-  ]), [user]);
+  ]), [user, t, tAuth]);
 
   if (!isAuthenticated || !user) {
     return null;
@@ -76,27 +79,27 @@ const ProfileAccountPage = () => {
     const nextLocationType = formData.locationType;
 
     if (!nextName) {
-      setStatus({ type: 'error', message: 'Name is required.' });
+      setStatus({ type: 'error', message: t('nameRequired') });
       return;
     }
 
     if (!nextEmail) {
-      setStatus({ type: 'error', message: 'Email is required.' });
+      setStatus({ type: 'error', message: t('emailRequired') });
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
-      setStatus({ type: 'error', message: 'Please enter a valid email address.' });
+      setStatus({ type: 'error', message: t('emailInvalid') });
       return;
     }
 
     if (!nextGrade) {
-      setStatus({ type: 'error', message: 'Grade is required.' });
+      setStatus({ type: 'error', message: t('gradeRequired') });
       return;
     }
 
     if (!nextLocationType) {
-      setStatus({ type: 'error', message: 'Location is required.' });
+      setStatus({ type: 'error', message: t('locationRequired') });
       return;
     }
 
@@ -111,9 +114,9 @@ const ProfileAccountPage = () => {
     setSaving(false);
 
     if (result.success) {
-      setStatus({ type: 'success', message: 'Profile updated successfully.' });
+      setStatus({ type: 'success', message: t('profileUpdatedSuccess') });
     } else {
-      setStatus({ type: 'error', message: result.error || 'Could not update profile.' });
+      setStatus({ type: 'error', message: result.error || t('profileUpdateFailed') });
     }
   };
 
@@ -123,20 +126,20 @@ const ProfileAccountPage = () => {
         <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-2 text-[13px] font-bold uppercase tracking-[0.18em] text-[#4A6B5D]">
-              Profile / Account
+              {t('profileAccount')}
             </p>
             <h1 className="text-[32px] font-extrabold tracking-tight text-[#17202A] md:text-[36px]">
-              Account details
+              {t('accountTitle')}
             </h1>
             <p className="mt-2 max-w-[640px] text-[15px] leading-6 text-[#52665B]">
-              Keep your student profile aligned with your school carbon journey.
+              {t('accountDescription')}
             </p>
           </div>
           <Link
             href="/dashboard"
             className="inline-flex h-11 items-center justify-center rounded-full border-2 border-[#0A3D25] px-6 text-[14px] font-bold text-[#0A3D25] no-underline transition-colors hover:bg-[#E8F5E9]"
           >
-            Dashboard
+            {t('dashboardButton')}
           </Link>
         </div>
 
@@ -174,20 +177,20 @@ const ProfileAccountPage = () => {
 
             <section className="rounded-xl border border-[#D8E8DE] bg-[#EEF7F1] p-5">
               <div className="mb-3 flex items-center justify-between gap-4">
-                <p className="text-[14px] font-bold text-[#17202A]">Language</p>
+                <p className="text-[14px] font-bold text-[#17202A]">{t('language')}</p>
                 <LanguageToggle />
               </div>
               <p className="text-[13px] leading-5 text-[#52665B]">
-                This uses the same language toggle as the navbar and profile menu.
+                {t('languageNotice')}
               </p>
             </section>
           </aside>
 
           <section className="rounded-xl border border-[#E0E5E2] bg-white p-6 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-7">
             <div className="mb-6">
-              <h2 className="text-[22px] font-extrabold text-[#17202A]">Profile information</h2>
+              <h2 className="text-[22px] font-extrabold text-[#17202A]">{t('profileInfoTitle')}</h2>
               <p className="mt-1 text-[14px] leading-6 text-[#52665B]">
-                Your name, email, grade, and location are editable here and used throughout your reports and progress tracking.
+                {t('profileInfoDesc')}
               </p>
             </div>
 
@@ -205,9 +208,9 @@ const ProfileAccountPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
+                  <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
                   <User size={16} />
-                  Name
+                  {t('nameLabel')}
                 </label>
                 <input
                   type="text"
@@ -220,63 +223,63 @@ const ProfileAccountPage = () => {
               </div>
 
               <div>
-                <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
+                  <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
                   <School size={16} />
-                  School name
+                  {t('schoolLabel')}
                 </label>
                 <input
                   type="text"
                   name="schoolName"
                   value={formData.schoolName}
                   onChange={handleChange}
-                  placeholder="Enter your school name"
+                  placeholder={t('schoolPlaceholder') || t('schoolLabel')}
                   className="h-12 w-full rounded-lg border border-[#cfd7df] bg-white px-4 text-[14px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                 />
               </div>
 
               <div>
-                <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
+                  <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
                   <Mail size={16} />
-                  Email
+                  {t('emailLabel')}
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="you@example.com"
+                  placeholder={tAuth('emailPlaceholder')}
                   className="h-12 w-full rounded-lg border border-[#cfd7df] bg-white px-4 text-[14px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                 />
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-[13px] font-extrabold text-[#303542]">Grade</label>
+                  <label className="mb-2 block text-[13px] font-extrabold text-[#303542]">{tAuth('grade')}</label>
                   <select
                     name="grade"
                     value={formData.grade}
                     onChange={handleChange}
                     className="h-12 w-full rounded-lg border border-[#cfd7df] bg-white px-4 text-[14px] text-gray-900 outline-none transition focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                   >
-                    <option value="">Select grade</option>
+                    <option value="">{tAuth('selectGrade')}</option>
                     {[8, 9, 10, 11, 12].map((gradeOption) => (
                       <option key={gradeOption} value={gradeOption}>
-                        Grade {gradeOption}
+                        {tAuth('grade')} {gradeOption}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-[13px] font-extrabold text-[#303542]">Location</label>
+                  <label className="mb-2 block text-[13px] font-extrabold text-[#303542]">{tAuth('location')}</label>
                   <select
                     name="locationType"
                     value={formData.locationType}
                     onChange={handleChange}
                     className="h-12 w-full rounded-lg border border-[#cfd7df] bg-white px-4 text-[14px] text-gray-900 outline-none transition focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                   >
-                    <option value="">Select location</option>
-                    <option value="urban">Urban</option>
-                    <option value="rural">Rural</option>
+                    <option value="">{t('selectLocation')}</option>
+                    <option value="urban">{tAuth('urban')}</option>
+                    <option value="rural">{tAuth('rural')}</option>
                   </select>
                 </div>
               </div>
@@ -288,7 +291,7 @@ const ProfileAccountPage = () => {
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-7 text-[14px] font-extrabold text-white transition-colors hover:bg-[#072B1A] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                  {saving ? 'Saving...' : 'Save changes'}
+                  {saving ? t('saving') : t('saveChanges')}
                 </button>
               </div>
             </form>

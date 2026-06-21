@@ -45,6 +45,9 @@ class DailyLogController {
       energyUsageKg: energyUsageKg || 0
     });
 
+    const existingLog = await dailyLogRepository.findByUserAndDate(userId, date);
+    const isExistingLog = !!existingLog;
+
     const logPayload = {
       userId,
       date,
@@ -58,14 +61,12 @@ class DailyLogController {
     };
 
     const upsertResult = await dailyLogRepository.upsertByUserAndDate(userId, date, logPayload);
-    // Mongoose rawResult can vary by driver/version; ensure we have the created/updated doc
     let createdLog = upsertResult?.value;
     if (!createdLog) {
       createdLog = await dailyLogRepository.findByUserAndDate(userId, date);
     }
-    const isExistingLog = upsertResult.lastErrorObject?.updatedExisting === true;
-    let updatedStreak = null;
 
+    let updatedStreak = null;
     if (!isExistingLog) {
       const updatedUser = await streakService.updateStreakAfterLogCreation(userId);
       updatedStreak = updatedUser?.streak || null;
@@ -78,7 +79,9 @@ class DailyLogController {
 
     res.status(statusCode).json({
       success: true,
-      message: isExistingLog ? 'Daily log updated successfully' : 'Daily log submitted successfully',
+      message: isExistingLog
+        ? 'Daily log already exists for this date; your entry was updated successfully.'
+        : 'Daily log submitted successfully.',
       data: {
         log: createdLog,
         mirror,
