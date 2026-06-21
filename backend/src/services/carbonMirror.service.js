@@ -21,15 +21,14 @@ class CarbonMirrorService {
 
     return `${languageInstruction}
 
-You are generating a short, motivational "tree mirror" story for a student based on their daily carbon footprint equivalent to trees.
+You are generating a short, factual environmental cost message for a student based on their daily carbon footprint equivalent to trees.
 
 Trees equivalent: ${treesEquivalent}
 
-Generate a short (1-2 sentences) motivational message that:
-1. Describes what ${treesEquivalent} trees means in context of their daily carbon footprint
-2. If high (>20 trees), suggest practical changes they could make
-3. If low (≤20 trees), congratulate them on good choices
-4. Keep tone encouraging, not preachy
+Generate a single factual sentence that:
+1. States the numeric tree equivalent and what it means for their daily footprint
+2. Uses neutral wording only
+3. Does not praise, congratulate, scold, or suggest behavior change
 
 Respond with ONLY the story text, no explanations.`;
   }
@@ -40,43 +39,28 @@ Respond with ONLY the story text, no explanations.`;
    * Now locale-aware
    */
   async generateMirror(totalEmissionKg, locale = 'en') {
-    const dailyTreeAbsorption = config.DAILY_TREE_ABSORPTION_KG;
-    const treesEquivalent = parseFloat((totalEmissionKg / dailyTreeAbsorption).toFixed(1));
+    // Compare a day's emissions against a tree's MONTHLY filtration capacity
+    const monthlyTreeAbsorption = config.MONTHLY_TREE_ABSORPTION_KG || (config.KG_CO2_PER_TREE_PER_YEAR / 12);
+    const treesEquivalent = parseFloat((totalEmissionKg / monthlyTreeAbsorption).toFixed(1));
 
     let story = '';
     let status = '';
 
     // Generate stories based on locale
     if (locale === 'ne' || locale === 'np') {
-      // Nepali stories
-      if (treesEquivalent >= 50) {
-        story = `आपको आज को छनोटहरू ${treesEquivalent} परिपक्व रूखको दैनिक फिल्टरेशन क्षमताको बन वनस्पति घटाउने बराबर छन्। भोलि केहি बानीहरू परिवर्तन गर्न विचार गर्नुहोस्!`;
-        status = 'deforestation';
-      } else if (treesEquivalent >= 20) {
-        story = `आपको दैनिक कार्बन पदचिह्न ${treesEquivalent} रूखको दैनिक कार्बन क्लीयरिंग लोडको बराबर छ। यातायात वा आहारमा साना परिवर्तनहरू मदद गर्न सक्छन्!`;
-        status = 'deforestation';
-      } else if (treesEquivalent > 0) {
-        story = `उत्कृष्ट प्रयास! आपको आधारभूत पदचिह्न कुशल छ र लगभग ${treesEquivalent} रूखको दैनिक अवशोषण क्षमताको बराबर छ।`;
-        status = 'balanced';
-      } else {
-        story = `उत्कृष्ट काम! आपको आज को पदचिह्न नगण्य छ — तपाइँ सक्रिय रूपमा कार्बन पृथक्करणमा योगदान गर्दै हुनुहुन्छ।`;
-        status = 'afforestation';
-      }
+      story = `तपाईंको आजको पदचिह्न लगभग ${treesEquivalent} परिपक्व रूखहरूको मासिक अवशोषण क्षमतासँग बराबर छ।`;
     } else {
-      // English stories (default)
-      if (treesEquivalent >= 50) {
-        story = `Your choices today map to the deforestation equivalent of cutting down ${treesEquivalent} mature trees' daily filtration capacity. Consider switching a few habits tomorrow!`;
-        status = 'deforestation';
-      } else if (treesEquivalent >= 20) {
-        story = `Your daily footprint equals the daily carbon clearing load of ${treesEquivalent} trees. Small changes in transport or diet can help!`;
-        status = 'deforestation';
-      } else if (treesEquivalent > 0) {
-        story = `Great effort! Your baseline footprint is efficient and equals roughly ${treesEquivalent} trees' daily absorption capacity.`;
-        status = 'balanced';
-      } else {
-        story = `Excellent work! Your footprint today is negligible — you're actively contributing to carbon sequestration.`;
-        status = 'afforestation';
-      }
+      story = `Your footprint today equals roughly ${treesEquivalent} mature trees' monthly absorption capacity.`;
+    }
+
+    if (treesEquivalent >= 50) {
+      status = 'deforestation';
+    } else if (treesEquivalent >= 20) {
+      status = 'deforestation';
+    } else if (treesEquivalent > 0) {
+      status = 'balanced';
+    } else {
+      status = 'afforestation';
     }
 
     return {

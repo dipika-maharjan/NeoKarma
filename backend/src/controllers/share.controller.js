@@ -7,6 +7,7 @@ const userRepository = require('../repositories/user.repository');
 const dailyLogRepository = require('../repositories/dailyLog.repository');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
+const config = require('../config/env');
 
 class ShareController {
   /**
@@ -69,10 +70,11 @@ class ShareController {
     // Get total logs and current streak
     const logsCount = await dailyLogRepository.countByUser(user._id);
 
-    // Calculate trees equivalent (1 tree absorbs ~20kg CO2/year)
+    // Calculate trees equivalent using configured annual absorption per tree
     // Assuming average of ~2 kg CO2/day
     const estimatedTotalCo2 = (logsCount * 2);
-    const treesEquivalent = Math.round(estimatedTotalCo2 / 20);
+    const kgTreeYear = config.KG_CO2_PER_TREE_PER_YEAR || 21;
+    const treesEquivalent = Math.round(estimatedTotalCo2 / kgTreeYear);
 
     // Format display name (first name + last initial)
     const nameParts = user.name ? user.name.split(' ') : ['User'];
