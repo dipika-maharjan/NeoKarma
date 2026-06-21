@@ -183,6 +183,38 @@
     "carbonMirrorDescription":"तपाईंका दैनिक क्रियाकलापहरूले विद्यालय र वातावरणमा पार्ने समष्टिगत प्रभाव यहाँ देख्नुहोस्।",
     "kgCO2Unit":"किग्रा CO₂"
   },
+  "Profile": {
+    "profileAccount": "प्रोफाइल / खाता",
+    "language": "भाषा",
+    "logout": "लगआउट",
+    "gradeLabel": "कक्षा {grade} - {location}",
+    "schoolNotAdded": "विद्यालय थप गरिएको छैन",
+    "openProfileMenu": "प्रोफाइल मेनु खोल्नुहोस्",
+    "studentDefault": "विद्यार्थी"
+    ,"accountTitle":"खाता विवरण"
+    ,"accountDescription":"तपाईंको विद्यार्थी प्रोफाइललाई विद्यालयको कार्बन यात्रासँग मेल खाउदै राख्नुहोस्।"
+    ,"dashboardButton":"ड्यासबोर्ड"
+    ,"profileInfoTitle":"प्रोफाइल जानकारी"
+    ,"profileInfoDesc":"तपाईंको नाम, इमेल, कक्षा, र स्थान यहाँ सम्पादन गर्न मिल्छ र रिपोर्ट र प्रगति ट्र्याकिङमा प्रयोग गरिन्छ।"
+    ,"languageNotice":"यो नै भाषा टगल नेभबार र प्रोफाइल मेनुमा प्रयोग हुन्छ।"
+    ,"nameLabel":"नाम"
+    ,"schoolLabel":"विद्यालय नाम"
+    ,"schoolPlaceholder":"आफ्नो विद्यालयको नाम प्रविष्ट गर्नुहोस्"
+    ,"emailLabel":"इमेल"
+    ,"selectLocation":"स्थान छान्नुहोस्"
+    ,"notSet":"सेट गरिएको छैन"
+    ,"currentStreak":"वर्तमान क्रम"
+    ,"days":"दिन"
+    ,"saving":"सेभ गर्दै..."
+    ,"saveChanges":"परिवर्तन सुरक्षित गर्नुहोस्"
+    ,"nameRequired":"नाम आवश्यक छ।"
+    ,"emailRequired":"इमेल आवश्यक छ।"
+    ,"emailInvalid":"कृपया वैध इमेल ठेगाना प्रविष्ट गर्नुहोस्।"
+    ,"gradeRequired":"कक्षा आवश्यक छ।"
+    ,"locationRequired":"स्थान आवश्यक छ।"
+    ,"profileUpdatedSuccess":"प्रोफाइल सफलतापूर्वक अपडेट भयो।"
+    ,"profileUpdateFailed":"प्रोफाइल अपडेट गर्न सकिएन।"
+  },
   "Score": {
     "title": "तपाइँको प्रभाव स्कोर",
     "subtitle": "हामी निरन्तरतालाई स्कोर गर्छौं, पूर्णतालाई होइन। सानो परिवर्तनहरू जारी राख्नुहोस् र समयसँगै आफ्नो प्रभाव बढाउनुहोस्।",
@@ -234,6 +266,12 @@
     "treesEquivalentThisMonth":"{count} रूख यो महिनामा",
     "currentLabel":"वर्तमान:",
     "goalLabel":"लक्ष्य:",
+    "mappedPointsLabel":"नक्सांकित पोइन्ट: {count}",
+    "minLabel":"न्यूनतम",
+    "maxLabel":"अधिकतम",
+    "debugRawHistoryTitle":"डिबग: काँचो इतिहास नमुना",
+    "debugMappedChartTitle":"डिबग: नक्शा चार्ट नमुना",
+    "dailyEmission":"दैनिक उत्सर्जन",
     "shareTitle":"मेरो कार्बन मिरर",
     "shareText":"मैले यस महिनामा {kg} कि.ग्रा CO2 उत्सर्जन गरें{improvementPart}।",
     "viewCarbonMirror":"कार्बन मिरर हेर्नुहोस्"

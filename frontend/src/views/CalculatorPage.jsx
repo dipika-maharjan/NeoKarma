@@ -29,6 +29,9 @@ const CalculatorPage = () => {
   const formatNumber = useNumberFormatter();
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [submissionMirror, setSubmissionMirror] = useState(null);
+  const [submissionStreak, setSubmissionStreak] = useState(null);
   const [emissionFactors, setEmissionFactors] = useState(null);
   const [factorsError, setFactorsError] = useState(null);
   const [loadingFactors, setLoadingFactors] = useState(true);
@@ -178,14 +181,30 @@ const CalculatorPage = () => {
       };
 
       const response = await logDailyCarbon(payload);
-      if (response?.message) {
-        try {
-          sessionStorage.setItem('dailyLogSubmissionMessage', response.message);
-        } catch (e) {}
-      }
       // clear draft on successful submit
       try { sessionStorage.removeItem('calculatorFormDraft'); } catch (e) {}
-      router.push('/calculator/result');
+
+      if (!response) {
+        // offline saved fallback
+        setStatus({ type: 'success', message: 'Saved locally — will sync when online.' });
+        setSubmitting(false);
+        return;
+      }
+
+      const message = response.message || '';
+      // set banner type: duplicate -> neutral/info, new -> success
+      const isDuplicate = message.toLowerCase().includes('already exists');
+      setStatus({ type: isDuplicate ? 'info' : 'success', message });
+
+      // update in-place mirror and streak from response data (avoid re-fetch)
+      if (response.data && response.data.mirror) {
+        setSubmissionMirror(response.data.mirror);
+      } else if (response.data && response.data.log && response.data.log.mirror) {
+        setSubmissionMirror(response.data.log.mirror);
+      }
+      if (response.data && response.data.updatedStreak) {
+        setSubmissionStreak(response.data.updatedStreak);
+      }
     } catch (error) {
       console.error('Error logging carbon:', error);
       setErrors(prev => ({
@@ -292,6 +311,31 @@ const CalculatorPage = () => {
             </Button>
           </Link>
         </div>
+
+        {status.message && (
+          <div
+            className={`mb-5 rounded-lg border px-4 py-3 text-[13px] font-semibold ${
+              status.type === 'success'
+                ? 'border-[#BEE8D3] bg-[#E8F5E9] text-[#0A3D25]'
+                : 'border-[#D1ECF1] bg-[#E9F7FC] text-[#0C5460]'
+            }`}
+          >
+            {status.message}
+          </div>
+        )}
+
+        {submissionMirror && (
+          <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="rounded-xl border border-[#E0E5E2] bg-white p-4">
+              <p className="text-sm font-bold text-[#17202A]">Carbon Mirror</p>
+              <p className="mt-2 text-[15px] text-[#4A5550]">{submissionMirror.story || ''}</p>
+            </div>
+            <div className="rounded-xl border border-[#E0E5E2] bg-white p-4">
+              <p className="text-sm font-bold text-[#17202A]">Trees Equivalent</p>
+              <p className="mt-2 text-[20px] font-extrabold text-[#0A3D25]">{submissionMirror.treesEquivalent ?? submissionMirror.treesEquivalent === 0 ? submissionMirror.treesEquivalent : '--'}</p>
+            </div>
+          </div>
+        )}
 
         {errors.submit && (
           <div className="mb-5 flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4">

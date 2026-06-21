@@ -6,10 +6,12 @@ const CRITICAL_ROUTES = [
   '/score'
 ];
 
+// Confirmed API endpoints from backend routes
 const CRITICAL_DATA_ENDPOINTS = [
   '/api/emission-factors',
-  '/api/dashboard',
-  '/api/logs?range=30'
+  '/api/dashboard/summary',
+  '/api/daily-log/history',
+  '/api/daily-log/today'
 ];
 
 export async function warmOfflineCache() {

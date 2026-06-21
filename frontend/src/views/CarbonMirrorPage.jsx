@@ -51,6 +51,8 @@ const CarbonMirrorPage = () => {
   const [phaseData, setPhaseData] = useState(null);
   const [hasLoggedToday, setHasLoggedToday] = useState(false);
   const [error, setError] = useState(null);
+  const [debugHistoryRaw, setDebugHistoryRaw] = useState(null);
+  const [debugMappedRaw, setDebugMappedRaw] = useState(null);
   const t = useTranslations('CarbonMirror');
   const tImg = useTranslations('Images');
   const tResult = useTranslations('Result');
@@ -82,9 +84,57 @@ const CarbonMirrorPage = () => {
         setHasLoggedToday(!!todayLog);
 
         if (summary?.phase !== 'onboarding') {
-          const data = await getCarbonMirror();
+          const data = await getCarbonMirror(locale || 'en');
           if (data) {
             setMirrorData(data);
+          }
+          try {
+            const historyResp = await getDailyLogHistory();
+            if (historyResp && historyResp.data) {
+              // Debug: log raw response to assist troubleshooting when chart is empty
+              try {
+                console.info('CarbonMirror: raw history response count=', historyResp.count, 'sample=', historyResp.data.slice(0,6));
+              } catch (e) {}
+              // Ensure data is ordered oldest->newest so chart reads left-to-right
+              const raw = Array.isArray(historyResp.data) ? historyResp.data.slice() : [];
+              raw.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+              // Map into the chart shape { date, totalEmissionKg }
+              const mapped = raw.map((item) => {
+                const date = item.date || item._doc?.date || item.log?.date || null;
+                const value = item.totalEmissionKg ?? item._doc?.totalEmissionKg ?? item.log?.totalEmissionKg ?? item.totalEmission ?? null;
+                return { date, totalEmissionKg: value === null || value === undefined ? null : Number(value) };
+              }).filter((p) => p.date && Number.isFinite(p.totalEmissionKg));
+
+              if (mapped.length === 0) {
+                console.warn('CarbonMirror: no valid daily history points after mapping', historyResp.data?.slice?.(0,5) || historyResp.data);
+                try {
+                  setDebugHistoryRaw(JSON.stringify(historyResp.data?.slice?.(0,12) || historyResp.data, null, 2));
+                } catch (e) {
+                  setDebugHistoryRaw(String(historyResp.data));
+                }
+              } else {
+                setDebugHistoryRaw(null);
+                try {
+                  setDebugMappedRaw(JSON.stringify(mapped.slice(0,12), null, 2));
+                } catch (e) {
+                  setDebugMappedRaw(String(mapped.slice(0,12)));
+                }
+                // log min/max
+                try {
+                  const vals = mapped.map(m => m.totalEmissionKg);
+                  const min = Math.min(...vals);
+                  const max = Math.max(...vals);
+                  console.info('CarbonMirror: mapped values min/max=', min, max);
+                } catch (e) {}
+              }
+
+              console.info('CarbonMirror: mapped points count=', mapped.length, 'sample=', mapped.slice(0,6));
+
+              setDailyHistory(mapped);
+            }
+          } catch (err) {
+            console.error('Unable to load daily history for monthly trend:', err);
           }
         }
       } catch (err) {
@@ -161,6 +211,32 @@ const CarbonMirrorPage = () => {
     navigator.clipboard?.writeText(shareText);
   };
 
+  // Determine y-axis domain for better visibility
+  const yValues = dailyHistory.map((d) => d.totalEmissionKg).filter(Number.isFinite);
+  const yMin = yValues.length ? Math.max(0, Math.floor(Math.min(...yValues) - 1)) : 0;
+  const yMax = yValues.length ? Math.ceil(Math.max(...yValues) + 1) : 8;
+
+  const NEPALI_SHORT_MONTHS = ['जन', 'फेब', 'मार्च', 'अप्रि', 'मे', 'जुन', 'जुल', 'अग', 'सेप', 'अक्टो', 'नोभ', 'डिस'];
+
+  // Format X axis ticks according to locale (preserves month-day order left->right).
+  const formatTickDate = (value) => {
+    if (!value) return '';
+    try {
+      const parts = value.split('-');
+      if (parts.length < 3) return value;
+      const year = Number(parts[0]);
+      const month = Number(parts[1]);
+      const day = Number(parts[2]);
+      if (!year || !month || !day) return value;
+      if ((locale || 'en').startsWith('ne')) {
+        return `${NEPALI_SHORT_MONTHS[month - 1]} ${day}`;
+      }
+      return new Intl.DateTimeFormat(locale || 'en', { month: 'short', day: 'numeric' }).format(new Date(year, month - 1, day));
+    } catch (e) {
+      return value.slice(5);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f8ff] px-6 py-10 font-sans">
@@ -191,7 +267,7 @@ const CarbonMirrorPage = () => {
                   setPhaseData(summary);
                   setHasLoggedToday(!!todayLog);
                   if (summary?.phase !== 'onboarding') {
-                    const data = await getCarbonMirror();
+                    const data = await getCarbonMirror(locale || 'en');
                     setMirrorData(data);
                   }
                 } catch (err) {
@@ -545,21 +621,45 @@ const CarbonMirrorPage = () => {
           <div className={`${CARD_CLASS} border-[#E0E5E2] p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]`}>
             <h3 className={`mb-6 ${EYEBROW_CLASS}`}>{t('monthlyTrend')}</h3>
             <div className="min-h-[88px] rounded-xl border border-dashed border-[#E1E8E5] bg-[#F7FCF8] p-6 text-[14px] leading-relaxed text-[#4A5550]">
+                {/* Debug stats for mapped history */}
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-sm text-[#2F5F3F] font-semibold">
+                    {t('mappedPointsLabel', { count: dailyHistory.length })}
+                  </div>
+                  {dailyHistory.length > 0 && (
+                    <div className="text-sm text-[#4A5563]">
+                      {t('minLabel')}: {Math.min(...dailyHistory.map(d=>d.totalEmissionKg))} kg • {t('maxLabel')}: {Math.max(...dailyHistory.map(d=>d.totalEmissionKg))} kg
+                    </div>
+                  )}
+                </div>
               {dailyHistory.length > 0 ? (
                 <div className="h-[180px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dailyHistory} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                       <CartesianGrid stroke="#E5F2E8" vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(value) => value.slice(5)} />
-                      <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} width={40} />
-                      <Tooltip formatter={(value) => `${formatNumber(value, { maximumFractionDigits: 1 })} kg`} />
-                      <Area type="monotone" dataKey="totalEmissionKg" stroke="#0A3D25" fill="#D0E8D7" fillOpacity={0.7} strokeWidth={2} />
-                      <Line type="monotone" dataKey="totalEmissionKg" stroke="#0A3D25" strokeWidth={3} dot={{ r: 2 }} activeDot={{ r: 4 }} />
+                      <XAxis dataKey="date" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={formatTickDate} />
+                      <YAxis domain={[yMin, yMax]} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} width={40} />
+                      <Tooltip formatter={(value, name) => [`${formatNumber(value, { maximumFractionDigits: 1 })} ${tResult('unitKgCO2')}`, name]} />
+                      <Line type="monotone" dataKey="totalEmissionKg" name={t('dailyEmission')} stroke="#0A3D25" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
-                t('addMoreLogs')
+                <>
+                  {t('addMoreLogs')}
+                  {debugHistoryRaw && (
+                    <div className="mt-4 rounded border bg-white p-3 text-[12px] text-[#333]">
+                      <div className="mb-2 font-semibold">{t('debugRawHistoryTitle')}</div>
+                      <pre className="max-h-40 overflow-auto text-xs">{debugHistoryRaw}</pre>
+                    </div>
+                  )}
+                  {debugMappedRaw && (
+                    <div className="mt-4 rounded border bg-white p-3 text-[12px] text-[#333]">
+                      <div className="mb-2 font-semibold">{t('debugMappedChartTitle')}</div>
+                      <pre className="max-h-40 overflow-auto text-xs">{debugMappedRaw}</pre>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
