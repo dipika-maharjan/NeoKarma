@@ -11,6 +11,7 @@ class ConfigController {
       data: {
         kgCo2PerTreePerYear: config.KG_CO2_PER_TREE_PER_YEAR,
         dailyTreeAbsorptionKg: config.DAILY_TREE_ABSORPTION_KG,
+        monthlyTreeAbsorptionKg: config.MONTHLY_TREE_ABSORPTION_KG,
         impactScoreGoal: config.IMPACT_SCORE_GOAL,
         frontendOrigin: config.FRONTEND_ORIGIN
       }
