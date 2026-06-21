@@ -11,7 +11,7 @@ const PUBLIC_PREFIXES = ['/', '/login', '/register', '/share'];
 const LayoutShell = ({ children }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   const isLandingRoute = pathname === '/';
   const isAuthRoute = pathname === '/login' || pathname === '/register';
@@ -22,16 +22,16 @@ const LayoutShell = ({ children }) => {
   const isProtectedRoute = !isPublicRoute && !isAdminRoute;
 
   useEffect(() => {
-    if (isProtectedRoute && !isAuthenticated) {
+    if (isProtectedRoute && !loading && !isAuthenticated) {
       router.replace('/');
     }
-  }, [isProtectedRoute, isAuthenticated, router]);
+  }, [isProtectedRoute, loading, isAuthenticated, router]);
 
   if (isLandingRoute || isAdminRoute || isAuthRoute) {
     return <>{children}</>;
   }
 
-  if (isProtectedRoute && !isAuthenticated) {
+  if (isProtectedRoute && !loading && !isAuthenticated) {
     return null;
   }
 

@@ -8,6 +8,7 @@ import { getCookie } from '@/lib/api/cookie';
 import ProfileDropdown from './ProfileDropdown';
 import streakIcon from '../../public/streak.png';
 import LanguageToggle from './LanguageToggle';
+import OfflineReadyBadge from './OfflineReadyBadge';
 import { useTranslations } from 'next-intl';
 import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
@@ -15,12 +16,11 @@ import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 const Navbar = () => {
   const pathname = usePathname();
   const { user, isAuthenticated } = useAuth();
+  const isAdmin = user?.role === 'admin' || getCookie('role') === 'admin';
   const t = useTranslations('Navbar');
   const [scrolled, setScrolled] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(user?.streak?.current || 0);
   const formatNumber = useNumberFormatter();
-  const role = getCookie('role');
-  const isAdmin = role === 'school_admin';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -117,6 +117,9 @@ const Navbar = () => {
         {/* Right: Streak Metrics Status & Profile Action Wrapper */}
         <div className="flex items-center gap-4">
           <LanguageToggle />
+          <div className="hidden md:block">
+            <OfflineReadyBadge />
+          </div>
           
           {isAuthenticated && user ? (
             <>

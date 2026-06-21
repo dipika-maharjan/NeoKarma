@@ -1,33 +1,63 @@
+import createMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { routing } from '@/i18n/routing';
 
 const PUBLIC = ['/', '/login', '/register'];
 
+// Create i18n middleware from next-intl - let it handle locale detection
+const handleI18n = createMiddleware(routing);
+
 export function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
+
+  // Let next-intl handle the response first
+  const response = handleI18n(req);
+
   const token = req.cookies.get('token')?.value;
   const role = req.cookies.get('role')?.value;
-  const path = req.nextUrl.pathname;
 
-  if (!token && !PUBLIC.includes(path)) {
+  // Detect locale from cookie, headers, or default to 'en'
+  let locale = 'en';
+  const localeCookie = req.cookies.get('locale');
+  if (localeCookie?.value) {
+    locale = localeCookie.value;
+  } else if (req.headers.get('accept-language')?.startsWith('ne')) {
+    locale = 'ne';
+  }
+
+  // Set locale cookie so server components can read it
+  if (!localeCookie || localeCookie.value !== locale) {
+    response.cookies.set('locale', locale, {
+      maxAge: 60 * 60 * 24 * 365,
+      path: '/',
+    });
+  }
+
+  // Handle auth redirects
+  if (!token && !PUBLIC.includes(pathname)) {
     return NextResponse.redirect(new URL('/', req.url));
   }
 
-  if (token && (path === '/login' || path === '/')) {
+  if (token && (pathname === '/login' || pathname === '/')) {
     const dest = role === 'school_admin' ? '/admin/dashboard' : '/dashboard';
     return NextResponse.redirect(new URL(dest, req.url));
   }
 
-  if (path.startsWith('/admin') && role !== 'school_admin') {
+  if (pathname.startsWith('/admin') && role !== 'school_admin') {
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
-  if (path.startsWith('/dashboard') && role === 'school_admin') {
+  if (pathname.startsWith('/dashboard') && role === 'school_admin') {
     return NextResponse.redirect(new URL('/admin/dashboard', req.url));
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)']
+  matcher: [
+    // Match all request paths except static files and API
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 };

@@ -177,7 +177,12 @@ const CalculatorPage = () => {
         ...(formData.extraProfileAnswer !== null && { extraAnswer: formData.extraProfileAnswer })
       };
 
-      await logDailyCarbon(payload);
+      const response = await logDailyCarbon(payload);
+      if (response?.message) {
+        try {
+          sessionStorage.setItem('dailyLogSubmissionMessage', response.message);
+        } catch (e) {}
+      }
       // clear draft on successful submit
       try { sessionStorage.removeItem('calculatorFormDraft'); } catch (e) {}
       router.push('/calculator/result');

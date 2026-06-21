@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCookie } from '../lib/api/cookie';
 import { login as authLogin, logout as authLogout, getProfile, editProfile } from '../lib/actions/authActions';
+import { warmOfflineCache, requestPersistentStorage } from '@/lib/offline/warmCache';
 import { STREAK_UPDATED_EVENT } from '../lib/actions/calculatorActions';
 
 const defaultAuthValue = {
@@ -57,6 +58,15 @@ export const AuthProvider = ({ children }) => {
         .then((profileData) => {
           setToken(savedToken);
           setUser(profileData);
+          // Warm offline cache and request persistent storage on successful session restore
+          try {
+            if (typeof window !== 'undefined' && navigator.onLine) {
+              warmOfflineCache();
+              requestPersistentStorage();
+            }
+          } catch (err) {
+            console.warn('Failed to warm cache on session restore', err);
+          }
         })
         .catch((err) => {
           if (err?.status === 401) {
@@ -87,6 +97,15 @@ export const AuthProvider = ({ children }) => {
       const { user: userData, token: authToken, role } = await authLogin(credentials);
       setUser(userData);
       setToken(authToken);
+      // Warm offline cache and request persistent storage when user logs in
+      try {
+        if (typeof window !== 'undefined' && navigator.onLine) {
+          warmOfflineCache();
+          requestPersistentStorage();
+        }
+      } catch (err) {
+        console.warn('Failed to warm cache on login', err);
+      }
       return { success: true, user: userData, token: authToken };
     } catch (error) {
       return { success: false, error: error.message || 'Login failed' };

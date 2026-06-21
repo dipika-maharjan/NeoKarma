@@ -120,6 +120,23 @@ const ResultPage = () => {
     return () => { mounted = false; };
   }, [todayLog]);
 
+  useEffect(() => {
+    async function readSubmissionMessage() {
+      if (typeof window === 'undefined') return;
+      try {
+        const message = sessionStorage.getItem('dailyLogSubmissionMessage');
+        if (message) {
+          setError(message);
+          sessionStorage.removeItem('dailyLogSubmissionMessage');
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
+    readSubmissionMessage();
+  }, []);
+
+
   if (!isAuthenticated) {
     return null;
   }
@@ -143,9 +160,14 @@ const ResultPage = () => {
       <div className="min-h-screen bg-[#FAFAFA] px-4 py-10 md:px-8">
         <div className="mx-auto w-full max-w-[1500px]">
           <div className="rounded-[14px] border border-[#E2E8E2] bg-white p-6 shadow-sm">
+            {error && (
+              <div className="mb-4 rounded-xl border border-[#D1ECF1] bg-[#E9F7FC] p-4 text-sm text-[#0C5460]">
+                {error}
+              </div>
+            )}
             <div className="flex items-center gap-3 text-red-700">
               <AlertCircle size={24} />
-              <p>{error || t('noLog')}</p>
+              <p>{t('noLog')}</p>
             </div>
             <Link href="/calculator" className="mt-4 inline-block">
               <Button variant="primary">{t('goBack')}</Button>
