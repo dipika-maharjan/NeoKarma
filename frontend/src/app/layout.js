@@ -35,7 +35,7 @@ export default async function RootLayout({ children }) {
       <head>
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="min-h-full flex flex-col bg-[#FAFAFA]">
+      <body className="min-h-full flex flex-col bg-[#FAFAFA]" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AuthProvider>
             <OfflineSyncProvider>
