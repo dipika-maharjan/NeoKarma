@@ -21,16 +21,16 @@ const MetricCard = ({
 
   return (
     <Card className={className} {...props}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 uppercase tracking-wider mb-2">
+      <div className="flex min-w-0 items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-gray-600 uppercase tracking-wider mb-2">
             {label}
           </p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-gray-900">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="truncate text-4xl font-bold text-gray-900">
               {typeof value === 'number' ? formatNumber(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
             </span>
-            {unit && <span className="text-lg text-gray-500">{unit}</span>}
+            {unit && <span className="whitespace-nowrap text-lg text-gray-500">{unit}</span>}
           </div>
           {trend && (
             <p className={`text-xs font-semibold mt-2 ${trendColors[trendColor]}`}>
@@ -39,7 +39,7 @@ const MetricCard = ({
           )}
         </div>
         {Icon && (
-          <div className="text-[#1B5E20]">
+          <div className="shrink-0 text-[#1B5E20]">
             <Icon size={32} />
           </div>
         )}
