@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { getCookie } from '@/lib/api/cookie';
 import ProfileDropdown from './ProfileDropdown';
-import streakIcon from '../../public/streak.png'; 
+import streakIcon from '../../public/streak.png';
 import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
 import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
@@ -18,6 +19,8 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(user?.streak?.current || 0);
   const formatNumber = useNumberFormatter();
+  const role = getCookie('role');
+  const isAdmin = role === 'school_admin';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -76,7 +79,7 @@ const Navbar = () => {
       <div className={`mx-auto flex max-w-screen-2xl items-center justify-between transition-transform duration-300 ${scrolled ? 'translate-y-0' : 'translate-y-0.5'}`}>
         
         {/* Left: Branding Identity */}
-        <Link href="/dashboard" className="flex items-center no-underline select-none">
+        <Link href={isAdmin ? '/admin/dashboard' : '/dashboard'} className="flex items-center no-underline select-none">
           <span className="text-2xl font-bold text-[#0A3D25] tracking-wide cursor-pointer">
             Neoकर्म
           </span>

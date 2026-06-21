@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
+import { Bus, Utensils, Trash2, Lightbulb, Sprout, Leaf } from 'lucide-react';
 
 // Unified recommendations list matching the Smart Recommendations view
 const PRESETS = [
@@ -152,38 +153,61 @@ const INITIAL_PLAN_ITEMS = [
   }
 ];
 
+const renderIcon = (iconStr) => {
+  if (!iconStr) return <Sprout className="w-6 h-6" />;
+  const s = iconStr.toString();
+  if (s.includes('🚌') || s === 'bus') return <Bus className="w-6 h-6" />;
+  if (s.includes('🍽') || s === 'fork-knife') return <Utensils className="w-6 h-6" />;
+  if (s.includes('🗑') || s === 'bin') return <Trash2 className="w-6 h-6" />;
+  if (s.includes('💡') || s === 'lightbulb') return <Lightbulb className="w-6 h-6" />;
+  if (s.includes('🥤') || s.includes('📄')) return <Leaf className="w-6 h-6" />;
+  if (s.includes('🖥')) return <Lightbulb className="w-6 h-6" />;
+  if (s.includes('🥦') || s.includes('🌱')) return <Sprout className="w-6 h-6" />;
+  return <Sprout className="w-6 h-6" />;
+};
+
 const mapBackendRecToCard = (rec, index) => {
-  const id = rec._id || `backend-rec-${index}`;
-  let badge = 'EASY WIN';
-  let badgeColor = 'bg-blue-50 text-blue-500 border border-blue-100';
-  if (rec.effortLevel === 'medium') {
-    badge = 'MEDIUM IMPACT';
-    badgeColor = 'bg-green-50 text-green-600 border border-green-100';
-  } else if (rec.effortLevel === 'high') {
-    badge = 'HIGH IMPACT';
-    badgeColor = 'bg-red-50 text-red-500 border border-red-100';
-  }
+  const id = rec._id || rec.id || `backend-rec-${index}`;
+
+  // Use rich fields from backend if available to support custom visuals and colors
+  const badge = rec.badge || (
+    rec.effortLevel === 'medium' ? 'MEDIUM IMPACT' :
+      rec.effortLevel === 'high' ? 'HIGH IMPACT' : 'EASY WIN'
+  );
+
+  const badgeColor = rec.badgeColor || (
+    rec.effortLevel === 'medium' ? 'bg-green-50 text-green-600 border border-green-100' :
+      rec.effortLevel === 'high' ? 'bg-red-50 text-red-500 border border-red-100' :
+        'bg-blue-50 text-blue-500 border border-blue-100'
+  );
 
   let category = rec.category || 'general';
   if (category === 'transportation') category = 'transport';
 
-  let visualType = 'lightbulb';
-  if (category === 'transport') visualType = 'bus';
-  else if (category === 'food') visualType = 'fork-knife';
-  else if (category === 'waste') visualType = 'bin';
+  let visualType = rec.visualType;
+  if (!visualType) {
+    if (category === 'transport') visualType = 'bus';
+    else if (category === 'food') visualType = 'fork-knife';
+    else if (category === 'waste') visualType = 'bin';
+    else visualType = 'lightbulb';
+  }
+
+  const reduction = rec.reduction || `-${(rec.estimatedReductionKg || 0).toFixed(1)} kg CO2`;
+  const reductionUnit = rec.reductionUnit || '/month';
+  const personalSaving = rec.personalSaving !== undefined ? rec.personalSaving : (rec.estimatedReductionKg || 0);
 
   return {
     id,
     category,
     badge,
     badgeColor,
-    title: rec.text,
+    title: rec.text || rec.title,
     description: rec.description,
-    reduction: `-${rec.estimatedReductionKg.toFixed(1)} kg CO2`,
-    reductionUnit: '/month',
+    reduction,
+    reductionUnit,
     visualType,
-    personalSaving: rec.estimatedReductionKg,
-    actionDesc: rec.description
+    personalSaving,
+    actionDesc: rec.actionDesc || rec.description
   };
 };
 
@@ -195,11 +219,17 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   const [addedIds, setAddedIds] = useState(new Set());
   const [planItems, setPlanItems] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'transport', 'energy', 'waste', 'food'
-  
+
   const [recommendations, setRecommendations] = useState(PRESETS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // New two-tier states
+  const [planType, setPlanType] = useState(null);
+  const [logsCount, setLogsCount] = useState(0);
+  const [motivationalMessage, setMotivationalMessage] = useState('');
+  const [topContributors, setTopContributors] = useState([]);
 
   // Load planItems from localStorage unique to the logged-in user
   useEffect(() => {
@@ -235,24 +265,52 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   useEffect(() => {
     const loadPlan = async () => {
       if (!user) return;
-      
+
       setLoading(true);
       setError(null);
       try {
         let planData = await getActivePlan();
-        if (!planData || !planData.recommendations || planData.recommendations.length === 0) {
-          // If no active plan, trigger plan generation
+
+        // Auto-generation fallback logic if planData is completely empty
+        if (!planData) {
           try {
             const newPlan = await generatePlan();
             planData = newPlan;
           } catch (genErr) {
-            console.warn('Could not generate plan automatically, using presets:', genErr);
+            console.warn('Could not generate plan automatically:', genErr);
           }
         }
 
-        if (planData && planData.recommendations && planData.recommendations.length > 0) {
-          const cards = planData.recommendations.map((rec, index) => mapBackendRecToCard(rec, index));
-          setRecommendations(cards);
+        if (planData) {
+          setPlanType(planData.type || null);
+          setLogsCount(planData.logsCount || 0);
+          setMotivationalMessage(planData.message || '');
+
+          if (planData.type === 'GENERAL_PLAN') {
+            const plan = planData.plan || {};
+            const flatRecs = [
+              ...(plan.transport || []),
+              ...(plan.energy || []),
+              ...(plan.diet || []),
+              ...(plan.waste || [])
+            ];
+            const cards = flatRecs.map((rec, index) => mapBackendRecToCard(rec, index));
+            setRecommendations(cards);
+          } else if (planData.type === 'MONTHLY_PLAN') {
+            const recs = planData.plan?.recommendations || [];
+            const cards = recs.map((rec, index) => mapBackendRecToCard(rec, index));
+            setRecommendations(cards);
+            setTopContributors(planData.plan?.topContributors || []);
+          } else {
+            // Fallback to old format if backend returns plain active plan
+            const recs = planData.recommendations || [];
+            if (recs.length > 0) {
+              const cards = recs.map((rec, index) => mapBackendRecToCard(rec, index));
+              setRecommendations(cards);
+            } else {
+              setRecommendations(PRESETS);
+            }
+          }
         } else {
           setRecommendations(PRESETS);
         }
@@ -323,7 +381,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   return (
     <div className="w-full min-h-[calc(100vh-76px)] bg-[#FAFAFA] text-[#1E3322] px-4 py-8 md:px-8 lg:px-12 xl:px-16 font-sans">
       <div className="mx-auto w-full max-w-[1500px]">
-        
+
         {/* Toggle between Recommendations and Plan */}
         {activeTab === 'recommendations' ? (
           <div>
@@ -356,8 +414,8 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                 recommendations.map((rec) => {
                   const isAdded = planItems.some(item => item.id === rec.id);
                   return (
-                    <div 
-                      key={rec.id} 
+                    <div
+                      key={rec.id}
                       className="bg-white border border-gray-100/80 shadow-sm rounded-3xl p-6 flex flex-col justify-between transition-all hover:shadow-md"
                     >
                       <div>
@@ -389,11 +447,10 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                           </p>
                           <button
                             onClick={() => addToPlan(rec)}
-                            className={`mt-3 text-xs font-bold py-2 px-5 rounded-full transition-all border ${
-                              isAdded
-                                ? 'bg-[#E2F0D9] text-[#0A3D25] border-[#C5E0B4]'
-                                : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232] cursor-pointer'
-                            }`}
+                            className={`mt-3 text-xs font-bold py-2 px-5 rounded-full transition-all border ${isAdded
+                              ? 'bg-[#E2F0D9] text-[#0A3D25] border-[#C5E0B4]'
+                              : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232] cursor-pointer'
+                              }`}
                           >
                             {isAdded ? t('added') : t('addToPlan')}
                           </button>
@@ -402,23 +459,23 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                         {/* Icon/Graphic representation */}
                         <div className="w-32 h-24 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100">
                           {rec.visualType === 'bus' && (
-                            <div className="w-full h-full relative bg-emerald-50 flex items-center justify-center">
-                              <span className="text-4xl">🚌</span>
+                            <div className="w-full h-full relative bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                              <Bus className="w-10 h-10" />
                             </div>
                           )}
                           {rec.visualType === 'fork-knife' && (
                             <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center">
-                              <span className="text-2xl">🍽️</span>
+                              <Utensils className="w-6 h-6" />
                             </div>
                           )}
                           {rec.visualType === 'bin' && (
-                            <div className="w-full h-full relative bg-stone-50 flex items-center justify-center">
-                              <span className="text-4xl">🗑️</span>
+                            <div className="w-full h-full relative bg-stone-50 text-stone-500 flex items-center justify-center">
+                              <Trash2 className="w-10 h-10" />
                             </div>
                           )}
                           {rec.visualType === 'lightbulb' && (
                             <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center">
-                              <span className="text-2xl">💡</span>
+                              <Lightbulb className="w-6 h-6" />
                             </div>
                           )}
                         </div>
@@ -485,8 +542,8 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   <span className="text-sm font-black text-white">{progressPercent}%</span>
                 </div>
                 <div className="w-full h-2 bg-[#155A39] rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-[#E2F0D9] rounded-full transition-all duration-500" 
+                  <div
+                    className="h-full bg-[#E2F0D9] rounded-full transition-all duration-500"
                     style={{ width: `${progressPercent}%` }}
                   ></div>
                 </div>
@@ -498,7 +555,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
             {/* Filter buttons block */}
             <div className="flex flex-wrap gap-2.5 mb-8">
-                {[
+              {[
                 { filterKey: 'all', label: t('filterAll') },
                 { filterKey: 'transport', label: t('filterTransport') },
                 { filterKey: 'energy', label: t('filterEnergy') },
@@ -510,11 +567,10 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   <button
                     key={btn.filterKey}
                     onClick={() => setActiveFilter(btn.filterKey)}
-                    className={`text-xs font-bold py-2.5 px-5 rounded-full transition-all border cursor-pointer ${
-                      isActive
-                        ? 'bg-[#0A3D25] text-white border-transparent shadow-sm'
-                        : 'bg-[#F1F4F2] text-gray-500 border-gray-100 hover:border-gray-200'
-                    }`}
+                    className={`text-xs font-bold py-2.5 px-5 rounded-full transition-all border cursor-pointer ${isActive
+                      ? 'bg-[#0A3D25] text-white border-transparent shadow-sm'
+                      : 'bg-[#F1F4F2] text-gray-500 border-gray-100 hover:border-gray-200'
+                      }`}
                   >
                     {btn.label}
                   </button>
@@ -525,8 +581,10 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
             {/* Actions List Grid */}
             <div className="space-y-4">
               {filteredPlanItems.length === 0 ? (
-                <div className="text-center py-12 bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
-                  <span className="text-4xl">🌱</span>
+                <div className="text-center py-12 bg-white border border-gray-100 rounded-3xl p-8 shadow-sm flex flex-col items-center">
+                  <div className="w-16 h-16 bg-[#E2F0D9] text-[#0A3D25] rounded-full flex items-center justify-center mb-2">
+                    <Sprout className="w-8 h-8" />
+                  </div>
                   <p className="text-gray-500 text-sm font-medium mt-3">
                     {t('noActions')}
                   </p>
@@ -543,8 +601,8 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                     {/* Left: Icon and Details */}
                     <div className="flex items-start gap-4 flex-1">
                       {/* Icon */}
-                      <div className="w-12 h-12 rounded-2xl bg-[#E2F0D9] border border-[#C5E0B4]/40 flex items-center justify-center text-xl shrink-0 select-none">
-                        {item.icon}
+                      <div className="w-12 h-12 rounded-2xl bg-[#E2F0D9] text-[#0A3D25] border border-[#C5E0B4]/40 flex items-center justify-center text-xl shrink-0 select-none">
+                        {renderIcon(item.icon)}
                       </div>
 
                       {/* Title & Desc */}
@@ -555,11 +613,10 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                             {item.category}
                           </span>
                           <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                          <span className={`text-[9px] font-extrabold uppercase tracking-wider ${
-                            item.completed 
-                              ? 'text-green-600' 
-                              : 'text-red-500'
-                          }`}>
+                          <span className={`text-[9px] font-extrabold uppercase tracking-wider ${item.completed
+                            ? 'text-green-600'
+                            : 'text-red-500'
+                            }`}>
                             {item.completed ? t('completed') : t('pending')}
                           </span>
                         </div>
@@ -568,7 +625,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                         <h4 className="text-sm font-bold text-gray-800 tracking-tight leading-tight">
                           {item.title}
                         </h4>
-                        
+
                         {/* Description */}
                         <p className="text-xs text-gray-500 mt-1 max-w-xl leading-relaxed">
                           {item.description}
@@ -578,7 +635,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
                     {/* Right: Saving Info & Complete Button */}
                     <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-gray-50">
-                      
+
                       {/* Saving */}
                       <div className="text-left sm:text-right">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
@@ -593,21 +650,20 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => toggleTaskCompleted(item.id)}
-                          className={`text-[11px] font-extrabold py-2 px-4 rounded-xl border transition-all cursor-pointer ${
-                            item.completed
-                              ? 'bg-transparent text-gray-500 border-gray-300 hover:border-gray-400 hover:text-gray-600'
-                              : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232]'
-                          }`}
+                          className={`text-[11px] font-extrabold py-2 px-4 rounded-xl border transition-all cursor-pointer ${item.completed
+                            ? 'bg-transparent text-gray-500 border-gray-300 hover:border-gray-400 hover:text-gray-600'
+                            : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232]'
+                            }`}
                         >
                           {item.completed ? t('completedBtn') : t('markComplete')}
                         </button>
-                        
+
                         <button
                           onClick={() => deletePlanItem(item.id)}
                           className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
                           title={t('deleteAction')}
                         >
-                          🗑️
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
 
