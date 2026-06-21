@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations } from 'next-intl';
-import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 import { Bus, Utensils, Trash2, Lightbulb, Sprout, Leaf } from 'lucide-react';
 
 // Unified recommendations list matching the Smart Recommendations view
@@ -214,7 +213,6 @@ const mapBackendRecToCard = (rec, index) => {
 const RecommendationsView = ({ onNavigateToDashboard }) => {
   const { user } = useAuth();
   const t = useTranslations('Plan');
-  const formatNumber = useNumberFormatter();
   const [activeTab, setActiveTab] = useState('recommendations'); // 'recommendations' or 'plan'
   const [addedIds, setAddedIds] = useState(new Set());
   const [planItems, setPlanItems] = useState([]);
@@ -249,7 +247,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
     setIsLoaded(true);
   }, [user]);
 
-  // Save planItems to localStorage unique to the logged-in user
+  // Save planItems from localStorage unique to the logged-in user
   useEffect(() => {
     if (!user || !isLoaded) return;
     const storageKey = `neokarma_plan_items_${user._id || user.id || 'default'}`;
@@ -296,7 +294,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
             ];
             const cards = flatRecs.map((rec, index) => mapBackendRecToCard(rec, index));
             setRecommendations(cards);
-          } else if (planData.type === 'MONTHLY_PLAN') {
+          } else if (planData.type === 'WEEKLY_PLAN' || planData.type === 'MONTHLY_PLAN') {
             const recs = planData.plan?.recommendations || [];
             const cards = recs.map((rec, index) => mapBackendRecToCard(rec, index));
             setRecommendations(cards);
@@ -367,7 +365,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   const completedCount = completedActions.length;
 
   // Calculate CO2 saved (sum of completed items)
-  const totalCO2Saved = completedActions.reduce((sum, item) => sum + (item.saving || 0), 0);
+  const totalCO2Saved = completedActions.reduce((sum, item) => sum + item.saving, 0).toFixed(1);
 
   // Progress percentage
   const progressPercent = totalActions > 0 ? Math.round((completedCount / totalActions) * 100) : 0;
@@ -385,19 +383,87 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
         {/* Toggle between Recommendations and Plan */}
         {activeTab === 'recommendations' ? (
           <div>
-            {/* Header row */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-              <div>
-                <h1 className="text-[32px] font-extrabold tracking-tight text-[#0A3D25] md:text-[34px]">
-                  {t('smartRecommendations')}
-                </h1>
-                <p className="text-sm text-gray-500 mt-1.5 max-w-xl">
-                  {t('recommendationsSubtitle')}
-                </p>
+            {/* Header row with Circular Meter on the left */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 bg-white border border-gray-100 shadow-sm rounded-3xl p-6">
+              <div className="flex flex-col sm:flex-row items-center gap-6 w-full">
+
+                {/* Left Side: Circular Progress Meter or Badge */}
+                {logsCount >= 30 ? (
+                  /* 30 Days AI Recommendation Enabled Badge */
+                  <div className="relative flex flex-col items-center justify-center w-28 h-28 shrink-0 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 rounded-full shadow-[0_4px_20px_rgba(245,158,11,0.35)] border-2 border-white">
+                    <div className="w-[88px] h-[88px] rounded-full overflow-hidden border border-amber-300">
+                      <img src="/earth_gauge_bg.png" alt="Earth" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="absolute inset-0 rounded-full border-2 border-dashed border-amber-300 animate-spin-slow" />
+                    <span className="absolute -bottom-1.5 bg-[#0A3D25] text-white text-[8px] font-extrabold uppercase py-0.5 px-2 rounded-full border border-emerald-500 shadow-sm whitespace-nowrap tracking-wider font-sans">
+                      Enabled
+                    </span>
+                  </div>
+                ) : (
+                  /* Circular progress bar with Earth image inside */
+                  <div className="relative flex items-center justify-center w-28 h-28 shrink-0 bg-stone-50 border border-stone-100 rounded-full">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 112 112">
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        className="text-stone-200"
+                        strokeWidth="6"
+                        stroke="currentColor"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        className="text-[#0A3D25] transition-all duration-500"
+                        strokeWidth="6"
+                        strokeDasharray="289.03"
+                        strokeDashoffset={289.03 - (Math.min(logsCount, 30) / 30) * 289.03}
+                        strokeLinecap="round"
+                        stroke="currentColor"
+                        fill="transparent"
+                      />
+                    </svg>
+                    {/* Earth Image at center */}
+                    <div className="absolute flex items-center justify-center overflow-hidden w-[88px] h-[88px] rounded-full border border-stone-100 shadow-inner">
+                      <img src="/earth_gauge_bg.png" alt="Earth Gauge" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Right Side: Header Text & Progress Info */}
+                <div className="text-center sm:text-left">
+                  <h1 className="text-[30px] font-extrabold tracking-tight text-[#0A3D25] leading-tight">
+                    {t('smartRecommendations')}
+                  </h1>
+                  <p className="text-xs text-gray-500 mt-1 max-w-xl">
+                    {t('recommendationsSubtitle')}
+                  </p>
+
+                  {/* Status Indicator text under the title */}
+                  <p className="text-xs text-[#0A3D25]/85 font-semibold mt-2.5">
+                    {logsCount >= 30 ? (
+                      <span className="flex items-center gap-1 text-amber-600 font-extrabold justify-center sm:justify-start">
+                        🏆 30-Day Milestone Achieved! AI Recommendations fully enabled.
+                      </span>
+                    ) : logsCount >= 7 ? (
+                      <span className="flex items-center gap-1 text-emerald-600 font-bold justify-center sm:justify-start">
+                        ⚡ {logsCount}/30 days logged — Custom AI recommendations are active! (7+ days baseline unlocked)
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-orange-600 font-medium justify-center sm:justify-start">
+                        ⏳ {logsCount}/30 days logged — AI recommendations unlock in {7 - logsCount} more logging days.
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
+
+              {/* View action plan button on the right */}
               <button
                 onClick={() => setActiveTab('plan')}
-                className="bg-[#0A3D25] hover:bg-[#0D5232] text-white text-sm font-semibold py-2.5 px-6 rounded-full transition-all shadow-sm flex items-center gap-2"
+                className="w-full lg:w-auto bg-[#0A3D25] hover:bg-[#0D5232] text-white text-sm font-semibold py-2.5 px-6 rounded-full transition-all shadow-sm flex items-center justify-center gap-2 shrink-0 self-stretch lg:self-center"
               >
                 View My Action Plan <span className="text-lg">→</span>
               </button>
@@ -440,9 +506,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                             {t('impactReduction')}
                           </p>
                           <p className="text-lg font-extrabold text-gray-800 mt-0.5">
-                            {formatNumber(rec.personalSaving, { maximumFractionDigits: 1 })}
+                            {rec.reduction}
                             <span className="text-xs font-semibold text-gray-400">
-                              {t('unitKgCO2')}{rec.reductionUnit}
+                              {rec.reductionUnit}
                             </span>
                           </p>
                           <button
@@ -528,9 +594,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   Total CO2 Saved
                 </p>
                 <p className="text-3xl font-black mt-2 flex items-baseline gap-1">
-                  {formatNumber(totalCO2Saved, { maximumFractionDigits: 1 })}
+                  {totalCO2Saved}
                   <span className="text-xs font-semibold text-[#A2CBA0] normal-case tracking-normal">
-                    {t('unitKgCO2')} / mo
+                    kg / mo
                   </span>
                 </p>
               </div>
@@ -642,7 +708,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                           {t('potentialSaving')}
                         </p>
                         <p className="text-xs font-black text-gray-800 mt-0.5">
-                          {formatNumber(item.saving || 0, { maximumFractionDigits: 1 })} {t('unitKgCO2')} / mo
+                          {item.saving}kg CO2/mo
                         </p>
                       </div>
 

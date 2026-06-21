@@ -35,14 +35,14 @@ class MitigationPlanService {
       throw new AppError('User not found', 404);
     }
 
-    // Get last 7 days of logs (might be empty)
-    const logs = (await dailyLogRepository.getRecentLogs(userId, 7)) || [];
+    // Get last 30 days of logs for comprehensive analysis
+    const logs = (await dailyLogRepository.getRecentLogs(userId, 30)) || [];
 
     // Calculate period dates
     const today = new Date().toISOString().split('T')[0];
-    const sevenDaysAgo = getDateNDaysAgo(7);
+    const thirtyDaysAgo = getDateNDaysAgo(30);
 
-    // Aggregate 7-day data (real user logs only)
+    // Aggregate 30-day data (real user logs only)
     const aggregatedData = this.prepareUserData(userId.toString(), logs);
 
     let recommendations = [];
@@ -75,7 +75,7 @@ class MitigationPlanService {
     // Create and save new plan
     const planData = {
       userId,
-      periodStart: sevenDaysAgo,
+      periodStart: thirtyDaysAgo,
       periodEnd: today,
       baseEmissionKg: aggregatedData.totalEmissionKg,
       status: 'generated',
@@ -238,8 +238,8 @@ class MitigationPlanService {
   /**
    * Structure weekly plan with aggregated insights
    */
-  async structureWeeklyPlan(userId, plan, logsCount) {
-    const logs = (await dailyLogRepository.getRecentLogs(userId, 7)) || [];
+  async structureMonthlyPlan(userId, plan, logsCount) {
+    const logs = (await dailyLogRepository.getRecentLogs(userId, 30)) || [];
     const aggregatedData = this.prepareUserData(userId.toString(), logs);
 
     const contributors = [
@@ -261,13 +261,13 @@ class MitigationPlanService {
     }));
 
     return {
-      type: 'WEEKLY_PLAN',
+      type: 'MONTHLY_PLAN',
       logsCount,
       plan: {
         topContributors,
         recommendations: plan ? (plan.recommendations || []) : []
       },
-      message: 'Here is your personalized weekly mitigation plan based on your highest emission contributors.'
+      message: 'Here is your personalized AI-powered mitigation plan based on 30 days of your emission data.'
     };
   }
 
@@ -277,22 +277,24 @@ class MitigationPlanService {
   async getOrGeneratePlan(userId) {
     const logsCount = await dailyLogRepository.getLogsCount(userId);
     
-    // Enforce 7-day minimum requirement for personalized AI plans
-    if (logsCount < 7) {
+    // Users need at least 30 days of emission data before AI recommendations kick in
+    // Until then, show general (generic) recommendations
+    if (logsCount < 30) {
       return this.generateGeneralPlan(logsCount);
     }
     
+    // 30+ logs: generate personalized AI-powered plan from user's actual data
     let plan = await mitigationPlanRepository.findActivePlan(userId);
     if (!plan) {
       try {
         plan = await this.generatePlanForUser(userId);
       } catch (err) {
-        console.error('Error auto-generating weekly plan:', err.message);
+        console.error('Error auto-generating monthly plan:', err.message);
         return this.generateGeneralPlan(logsCount);
       }
     }
 
-    return this.structureWeeklyPlan(userId, plan, logsCount);
+    return this.structureMonthlyPlan(userId, plan, logsCount);
   }
 
   /**
@@ -301,7 +303,7 @@ class MitigationPlanService {
   async forceGeneratePlan(userId) {
     const logsCount = await dailyLogRepository.getLogsCount(userId);
     const plan = await this.generatePlanForUser(userId);
-    return this.structureWeeklyPlan(userId, plan, logsCount);
+    return this.structureMonthlyPlan(userId, plan, logsCount);
   }
 
   /**
