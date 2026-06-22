@@ -23,17 +23,8 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('User:', { _id: user._id.toString(), email: user.email, name: user.name, streak: user.streak });
-
   const logs = await DailyLog.find({ userId: user._id }).sort({ date: 1 }).lean();
-  console.log('\nDailyLog count:', logs.length);
-  for (const l of logs) {
-    console.log(JSON.stringify({ _id: l._id.toString(), date: l.date, totalEmissionKg: l.totalEmissionKg, createdAt: l.createdAt, updatedAt: l.updatedAt }, null, 2));
-  }
-
-  // print last 120 days presence
-  const presence = logs.map(l => l.date);
-  console.log('\nDates present:\n', presence.join(', '));
+  // Intentionally not printing verbose log data to stdout to reduce debug noise.
 
   await mongoose.disconnect();
 }

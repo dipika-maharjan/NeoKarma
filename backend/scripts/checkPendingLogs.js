@@ -6,10 +6,7 @@ const { MONGO_URI } = require('../src/config/env');
 (async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log('Connected to MongoDB');
     const docs = await DailyLog.find({ $or: [{ userId: 'offline-test-user' }, { date: '2026-06-18' }, { date: new Date().toISOString().slice(0,10) }] }).lean();
-    console.log('Found documents count:', docs.length);
-    console.log(JSON.stringify(docs, null, 2));
     process.exit(0);
   } catch (err) {
     console.error('Error', err);

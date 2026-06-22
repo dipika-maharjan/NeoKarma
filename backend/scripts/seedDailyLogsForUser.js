@@ -134,16 +134,14 @@ function buildLogEntryForDay(dayIndex, dateStr) {
 
 async function seedDailyLogs() {
   try {
-    console.log(`Seeding ${NUM_DAYS} days (3 Months) of progressive daily logs...`);
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('✓ Connected to MongoDB\n');
 
     const user = await User.findOne({ email: 'guragainaruna@gmail.com' });
     if (!user) {
       throw new Error('User guragainaruna@gmail.com not found. Please create the user first.');
     }
 
-    console.log(`✓ Found user: ${user.name} (${user.email})\n`);
+    // Found user; seeding logs (no verbose output)
     const userId = user._id;
 
     // Generate dates sequentially from 90 days ago up until today
@@ -157,7 +155,7 @@ async function seedDailyLogs() {
       dateEntries.push(formatDate(d));
     }
 
-    console.log(`Will seed logs from ${dateEntries[0]} through ${dateEntries[dateEntries.length - 1]}\n`);
+    // date range generated for seeding
 
     const logEntries = dateEntries.map((dateStr, idx) => buildLogEntryForDay(idx, dateStr));
     const createdLogs = [];
@@ -190,11 +188,11 @@ async function seedDailyLogs() {
       createdLogs.push(log);
     }
 
-    console.log(`✓ Upserted ${createdLogs.length} daily logs successfully.\n`);
+    // Upsert complete
 
     // Calculate and save streak info
     const streak = await calculateStreak(userId);
-    console.log(`Streak calculation:\n   Current: ${streak.current} days\n   Longest: ${streak.longest} days\n`);
+    // Streak calculation completed
 
     try {
       const lastLogDate = dateEntries[dateEntries.length - 1];
@@ -209,7 +207,7 @@ async function seedDailyLogs() {
         }
       }, { new: true, runValidators: true });
 
-      console.log('✓ User streak persisted to database.');
+      // User streak persisted
     } catch (err) {
       console.warn('Could not persist streak to user document:', err.message);
     }
@@ -222,17 +220,7 @@ async function seedDailyLogs() {
     const firstTwoWeeksAvg = createdLogs.slice(0, 14).reduce((sum, log) => sum + log.totalEmissionKg, 0) / 14;
     const lastTwoWeeksAvg = createdLogs.slice(-14).reduce((sum, log) => sum + log.totalEmissionKg, 0) / 14;
 
-    console.log('\n═'.repeat(60));
-    console.log(` 90-Day Seed Summary:`);
-    console.log(` Total Footprint: ${totalCo2.toFixed(2)} kg CO₂`);
-    console.log(` Overall Daily Avg: ${avgCo2.toFixed(2)} kg CO₂`);
-    console.log(` Month 1 Baseline Avg (First 14 days): ${firstTwoWeeksAvg.toFixed(2)} kg CO₂`);
-    console.log(` Month 3 Target Avg (Last 14 days): ${lastTwoWeeksAvg.toFixed(2)} kg CO₂`);
-    console.log(
-      ` Narrative Trend: ${lastTwoWeeksAvg < firstTwoWeeksAvg ? '↓ Improving Lifestyle' : '↑ Worsening'}` +
-      ` (${Math.abs(((firstTwoWeeksAvg - lastTwoWeeksAvg) / firstTwoWeeksAvg) * 100).toFixed(1)}% footprint reduction)`
-    );
-    console.log('═'.repeat(60));
+    // Summary metrics suppressed
 
     process.exit(0);
   } catch (error) {

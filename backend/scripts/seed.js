@@ -173,10 +173,7 @@ const emissionFactorsData = [
 
 async function seedDatabase() {
   try {
-    console.log('Starting emission factor seed...');
-
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('Connected to MongoDB');
 
     const result = await EmissionFactor.bulkWrite(
       emissionFactorsData.map((factor) => ({
@@ -192,21 +189,7 @@ async function seedDatabase() {
       }))
     );
 
-    console.log(
-      `Seed complete: ${result.upsertedCount} new and ${result.modifiedCount} updated emission factors`
-    );
-    console.log('\nSeeded Emission Factors:');
-    console.log('='.repeat(80));
-
-    emissionFactorsData.forEach((factor) => {
-      console.log(
-        `${factor.category.padEnd(15)} | ${factor.subType.padEnd(20)} | ${factor.factorValue} ${factor.unit.padEnd(15)} | ${factor.source}`
-      );
-    });
-
-    console.log('='.repeat(80));
-    console.log('\nSeed completed. All TODO placeholders replaced with researched values.');
-    console.log('See inline `notes` field on each factor for source + reasoning.');
+    // Seed completed; no verbose console output to reduce noise.
 
     process.exit(0);
   } catch (error) {

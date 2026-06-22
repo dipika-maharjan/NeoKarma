@@ -6,25 +6,23 @@
   const password = 'Pass1234!';
 
   try {
-    console.log('Registering user...');
+    // Registering user (silent in CI)
     let res = await fetch(`${base}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'CI Tester', email, password, grade: '8', locationType: 'urban' })
     });
     const regBody = await res.text();
-    console.log('Register status', res.status);
-    console.log(regBody);
+    // response intentionally not logged
 
-    console.log('\nLogging in...');
+    // Logging in (silent)
     res = await fetch(`${base}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
     const loginJson = await res.json();
-    console.log('Login status', res.status);
-    console.log(JSON.stringify(loginJson, null, 2));
+    // login response intentionally not logged
 
     const token = loginJson?.data?.token;
     if (!token) {
@@ -32,25 +30,23 @@
       process.exit(1);
     }
 
-    console.log('\nSubmitting daily log #1...');
+    // submitting daily log #1 (silent)
     res = await fetch(`${base}/api/daily-log`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ transportationMode: 'car', transportationDistanceKm: 5, foodMealType: 'vegetarian', wasteAndPlasticCount: 1, energyUsageHours: 2, energyFirewoodKg: 0 })
     });
     const submit1 = await res.json();
-    console.log('Submit1 status', res.status);
-    console.log(JSON.stringify(submit1, null, 2));
+    // submit1 response intentionally not logged
 
-    console.log('\nSubmitting daily log #2 (duplicate)...');
+    // submitting duplicate daily log #2 (silent)
     res = await fetch(`${base}/api/daily-log`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ transportationMode: 'car', transportationDistanceKm: 5, foodMealType: 'vegetarian', wasteAndPlasticCount: 1, energyUsageHours: 2, energyFirewoodKg: 0 })
     });
     const submit2 = await res.json();
-    console.log('Submit2 status', res.status);
-    console.log(JSON.stringify(submit2, null, 2));
+    // submit2 response intentionally not logged
 
     process.exit(0);
   } catch (err) {

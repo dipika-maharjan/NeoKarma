@@ -45,8 +45,6 @@ async function recomputeForEmail(email) {
   user.streak.participationScore = participationScore;
 
   await user.save();
-
-  console.log('Updated streak for', email, { current, longest, lastLogDate });
   await mongoose.disconnect();
 }
 

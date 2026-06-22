@@ -11,18 +11,15 @@
       body: JSON.stringify({ email, password })
     });
     const loginJson = await loginRes.json();
-    console.log('Login status', loginRes.status);
-    // print token
+    // login response and token suppressed in CI
     const token = loginJson.data?.token;
-    console.log('Token:', token);
 
     const mirrorRes = await fetch(`${base}/api/carbon-mirror`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` }
     });
     const text = await mirrorRes.text();
-    console.log('\nGET /api/carbon-mirror status', mirrorRes.status);
-    console.log(text);
+    // mirror response suppressed in CI
   } catch (err) {
     console.error(err);
   }

@@ -23,12 +23,10 @@ const schoolAdmins = [
 async function seedSchoolAdmins() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('Connected to MongoDB');
 
     for (const admin of schoolAdmins) {
       const existing = await User.findOne({ email: admin.email });
       if (existing) {
-        console.log(`Admin already exists: ${admin.email}`);
         continue;
       }
 
@@ -54,10 +52,7 @@ async function seedSchoolAdmins() {
       created.schoolId = created._id;
       await created.save();
 
-      console.log('DEMO CREDENTIALS — CHANGE IN PRODUCTION');
-      console.log(`Email: ${admin.email}`);
-      console.log(`Password: ${admin.password}`);
-      console.log(`School Admin ID: ${created._id}`);
+      // Demo credentials suppressed to avoid leaking secrets in logs
     }
 
     process.exit(0);
