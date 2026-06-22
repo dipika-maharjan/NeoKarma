@@ -73,23 +73,12 @@ const ProfileAccountPage = () => {
     setStatus({ type: '', message: '' });
 
     const nextName = formData.name.trim();
-    const nextEmail = formData.email.trim().toLowerCase();
     const nextSchoolName = formData.schoolName.trim();
     const nextGrade = formData.grade;
     const nextLocationType = formData.locationType;
 
     if (!nextName) {
       setStatus({ type: 'error', message: t('nameRequired') });
-      return;
-    }
-
-    if (!nextEmail) {
-      setStatus({ type: 'error', message: t('emailRequired') });
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
-      setStatus({ type: 'error', message: t('emailInvalid') });
       return;
     }
 
@@ -106,7 +95,6 @@ const ProfileAccountPage = () => {
     setSaving(true);
     const result = await updateProfile({
       name: nextName,
-      email: nextEmail,
       schoolName: nextSchoolName || '',
       grade: nextGrade,
       locationType: nextLocationType
@@ -248,7 +236,8 @@ const ProfileAccountPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder={tAuth('emailPlaceholder')}
-                  className="h-12 w-full rounded-lg border border-[#cfd7df] bg-white px-4 text-[14px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
+                  disabled
+                  className="h-12 w-full rounded-lg border border-[#cfd7df] bg-gray-100 px-4 text-[14px] text-gray-600 outline-none transition placeholder:text-gray-400 cursor-not-allowed"
                 />
               </div>
 

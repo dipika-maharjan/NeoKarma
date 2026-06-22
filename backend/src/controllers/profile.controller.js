@@ -31,11 +31,10 @@ class ProfileController {
    */
   updateProfile = asyncHandler(async (req, res) => {
     const userId = req.user.userId;
-    const { name, email, grade, locationType, schoolName, extraProfile } = req.body;
+    const { name, grade, locationType, schoolName, extraProfile } = req.body;
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
-    if (email !== undefined) updateData.email = email;
     if (grade !== undefined) updateData.grade = grade;
     if (locationType !== undefined) updateData.locationType = locationType;
     if (schoolName !== undefined) updateData.schoolName = schoolName;
