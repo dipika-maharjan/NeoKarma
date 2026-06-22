@@ -466,15 +466,6 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
           setDailyLogs(planData.dailyLogs || []);
           setMotivationalMessage(planData.message || '');
 
-          // DEBUG: Trace the API response
-          console.log(`📥 API Response from getActivePlan():`, {
-            type: planData.type,
-            logsCount: planData.logsCount,
-            dailyLogsLength: planData.dailyLogs?.length || 0,
-            dailyLogs: planData.dailyLogs,
-            hasMessage: !!planData.message
-          });
-
           if (planData.type === 'GENERAL_PLAN') {
             const plan = planData.plan || {};
             const flatRecs = [
@@ -715,7 +706,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-orange-600 font-medium justify-center sm:justify-start">
-                        ⏳ {logsCount}/30 days logged — AI recommendations unlock in {7 - logsCount} more logging days.
+                        ⏳ {logsCount}/30 days logged AI recommendations unlock in {7 - logsCount} more logging days.
                       </span>
                     )}
                   </p>

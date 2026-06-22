@@ -132,7 +132,8 @@ const ScoreHistoryView = () => {
   const pdfPointsPerLog = scoreConfig?.pdfPointsPerLog ?? 10;
 
   const impactDropDefault = scoreConfig?.impactDropDefault ?? 17;
-  let impactDrop = impactDropDefault;
+  let impactDrop = null;
+  
   if (logsCount >= 2) {
     const sortedLogs = [...historyLogs].sort((a, b) => new Date(a.date) - new Date(b.date));
     const mid = Math.floor(sortedLogs.length / 2);
@@ -148,6 +149,8 @@ const ScoreHistoryView = () => {
     } else {
       impactDrop = 0;
     }
+  } else if (logsCount === 1) {
+    impactDrop = 0;
   }
 
   const sortedHistoryLogs = useMemo(() => {
@@ -315,7 +318,7 @@ const ScoreHistoryView = () => {
               style={{ backgroundImage: "url('/earth_gauge_bg.png')" }}
             />
             <div className="absolute w-[33%] h-[33%] rounded-full bg-white/88 backdrop-blur-[2px] flex flex-col items-center justify-center shadow-[0_12px_32px_rgba(10,61,37,0.12)] border border-white z-10">
-              <span className="text-3xl md:text-4xl font-black text-gray-800 tracking-tight leading-none">{overallScore}</span>
+              <span className="text-xl md:text-2xl font-black text-gray-800 tracking-tight leading-none">{overallScore}</span>
               <span className="text-[8px] font-bold text-[#0A3D25]/80 mt-1.5 uppercase tracking-wide">
                 {gaugeLabel}
               </span>
@@ -393,12 +396,12 @@ const ScoreHistoryView = () => {
             </div>
             <div className="mt-5">
               <h3 className="text-lg font-black text-gray-800 flex items-center gap-1.5">
-                {impactDrop > 0 ? <><ArrowDown size={18} strokeWidth={2.6} /> {impactDrop}%</> : 'Stable'}
+                {impactDrop !== null && impactDrop > 0 ? <><ArrowDown size={18} strokeWidth={2.6} /> {impactDrop}%</> : impactDrop === null ? '0%' : 'Stable'}
               </h3>
               <p className="text-[11px] text-gray-400 mt-1">Emission trend reduction</p>
               <p className="text-[10px] text-emerald-600 font-bold mt-2 flex items-center gap-1.5">
                 <Activity size={12} strokeWidth={2.5} />
-                {impactDrop > 0 ? "You're doing amazing!" : 'Keep logging to build your trend'}
+                {impactDrop === null ? 'Not logged yet' : impactDrop > 0 ? "You're doing amazing!" : 'Keep logging to build your trend'}
               </p>
             </div>
           </div>

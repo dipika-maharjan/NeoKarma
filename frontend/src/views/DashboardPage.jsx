@@ -420,18 +420,17 @@ const DashboardPage = () => {
         {/* Bottom Row Sections */}
         <div className="mt-9 grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[0.55fr_1.55fr]">
           <section className="flex h-full flex-col justify-center items-center overflow-hidden rounded-[10px] border border-[#E0E5E2] bg-white px-6 py-7 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)]">
-            <div className="impact-gauge relative w-52 h-52 rounded-full flex items-center justify-center select-none">
+            <h2 className="text-lg font-bold text-[#0A3D25] mb-4 self-start">
+              {t('impactScore')}
+            </h2>
+            <div className="impact-gauge relative w-40 h-40 rounded-full flex items-center justify-center select-none">
               <div className="absolute inset-0 rounded-full bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)] border border-gray-100" />
               <div className="absolute inset-2.5 rounded-full border border-[#E5EFE9]" />
-              <div
-                className="absolute inset-1.5 rounded-full bg-contain bg-center bg-no-repeat opacity-100 transition-all duration-300"
-                style={{ backgroundImage: "url('/earth_gauge_bg.png')" }}
-              />
-              <div className="absolute w-[33%] h-[33%] rounded-full bg-white/88 backdrop-blur-[2px] flex flex-col items-center justify-center shadow-[0_12px_32px_rgba(10,61,37,0.12)] border border-white z-10">
-                <span className="text-3xl font-black text-gray-800 tracking-tight leading-none">
+              <div className="absolute w-[70%] h-[70%] rounded-full bg-[#0A3D25] backdrop-blur-[2px] flex flex-col items-center justify-center shadow-[0_12px_32px_rgba(10,61,37,0.12)] border border-[#0A3D25] z-10">
+                <span className="text-2xl font-black text-white tracking-tight leading-none">
                   {impactScore_val !== null ? formatNumber(impactScore_val, { maximumFractionDigits: 0 }) : '--'}
                 </span>
-                <span className="text-[8px] font-bold text-[#0A3D25]/80 mt-1.5 uppercase tracking-wide">
+                <span className="text-[8px] font-bold text-white/90 mt-1.5 uppercase tracking-wide">
                   {gaugeLabel}
                 </span>
               </div>
