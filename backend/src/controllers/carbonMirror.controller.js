@@ -18,7 +18,7 @@ class CarbonMirrorController {
    */
   getMirror = asyncHandler(async (req, res) => {
     const userId = req.user.userId;
-    const locale = req.query.locale || 'en'; // Default to English
+    const locale = req.query.locale || req.body.locale || req.cookies?.locale || 'en'; // Default to English
     const today = getTodayStr();
 
     // Get today's log if exists

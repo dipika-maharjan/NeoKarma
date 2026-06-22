@@ -74,14 +74,19 @@ class DailyLogController {
 
     await carbonMirrorService.updateSnapshotAfterLog(userId, date, emissionResult);
 
-    const mirror = await carbonMirrorService.generateMirror(createdLog.totalEmissionKg);
+    const locale = req.query.locale || req.body.locale || req.cookies?.locale || 'en';
+    const mirror = await carbonMirrorService.generateMirror(createdLog.totalEmissionKg, locale);
     const statusCode = isExistingLog ? 200 : 201;
+
+    const localeStr = String(locale).toLowerCase();
+    const isNepali = localeStr.startsWith('ne') || localeStr.startsWith('np');
+    const message = isExistingLog
+      ? (isNepali ? 'यो मितिको लागि दैनिक लग पहिले नै अवस्थित छ, तपाईंको प्रविष्टि सफलतापूर्वक अपडेट भयो।' : 'Daily log already exists for this date, your entry was updated successfully.')
+      : (isNepali ? 'दैनिक लग सफलतापूर्वक सबमिट भयो।' : 'Daily log submitted successfully.');
 
     res.status(statusCode).json({
       success: true,
-      message: isExistingLog
-        ? 'Daily log already exists for this date; your entry was updated successfully.'
-        : 'Daily log submitted successfully.',
+      message,
       data: {
         log: createdLog,
         mirror,

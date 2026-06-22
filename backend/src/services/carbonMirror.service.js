@@ -10,6 +10,10 @@ const monthlySnapshotRepository = require('../repositories/monthlySnapshot.repos
 const dailyLogRepository = require('../repositories/dailyLog.repository');
 const AppError = require('../utils/AppError');
 
+// US Forest Service: mature tree absorbs 21.77 kg CO2 per year
+const TREE_ANNUAL_ABSORPTION_KG = 21.77;
+const TREE_MONTHLY_ABSORPTION_KG = TREE_ANNUAL_ABSORPTION_KG / 12; // = 1.814 kg/month
+
 class CarbonMirrorService {
   /**
    * Build a language-aware prompt for tree story generation
@@ -21,7 +25,7 @@ class CarbonMirrorService {
 
     return `${languageInstruction}
 
-You are generating a short, factual environmental cost message for a student based on their daily carbon footprint equivalent to trees.
+You are generating a short, factual environmental cost message for a student based on their daily carbon footprint compared to mature trees' monthly carbon absorption capacity.
 
 Trees equivalent: ${treesEquivalent}
 
@@ -34,14 +38,28 @@ Respond with ONLY the story text, no explanations.`;
   }
 
   /**
+   * Tree Equivalence Calculation
+   * Source: US Forest Service (USDA)
+   * "In one year, a mature live tree can absorb more than 48 pounds
+   *  of carbon dioxide" = 21.77 kg CO2/year
+   * URL: https://www.fs.usda.gov/about-agency/features/trees-are-climate-change-carbon-storage-heroes
+   *
+   * We divide daily emission by MONTHLY tree absorption (21.77/12 = 1.814 kg)
+   * because this produces the most meaningful and credible range for a
+   * student's daily footprint (typically 1-3 trees, not 50-100).
+   */
+  calculateTreesEquivalent(totalEmissionKg) {
+    const monthlyTreeAbsorption = config.MONTHLY_TREE_ABSORPTION_KG || TREE_MONTHLY_ABSORPTION_KG;
+    return parseFloat((totalEmissionKg / monthlyTreeAbsorption).toFixed(1));
+  }
+
+  /**
    * Generate Carbon Mirror story for today's emissions
    * Converts kg CO2 to tree-equivalent representation
    * Now locale-aware
    */
   async generateMirror(totalEmissionKg, locale = 'en') {
-    // Compare a day's emissions against a tree's MONTHLY filtration capacity
-    const monthlyTreeAbsorption = config.MONTHLY_TREE_ABSORPTION_KG || (config.KG_CO2_PER_TREE_PER_YEAR / 12);
-    const treesEquivalent = parseFloat((totalEmissionKg / monthlyTreeAbsorption).toFixed(1));
+    const treesEquivalent = this.calculateTreesEquivalent(totalEmissionKg);
 
     let story = '';
     let status = '';

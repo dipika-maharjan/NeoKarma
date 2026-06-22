@@ -17,7 +17,7 @@ import { getDashboardSummary } from '@/lib/actions/dashboardActions';
 import { getAppConfig } from '@/lib/actions/configActions';
 import { useAuth } from '@/context/AuthContext';
 import { getTodayLog } from '@/lib/actions/calculatorActions';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const getEmissionValue = (log) => Number(
@@ -49,6 +49,7 @@ const ResultPage = () => {
   const [configError, setConfigError] = useState(null);
   const [distanceEquivalent, setDistanceEquivalent] = useState(null);
   const t = useTranslations('Result');
+  const locale = useLocale();
   const formatNumber = useNumberFormatter();
 
   useEffect(() => {
@@ -78,7 +79,7 @@ const ResultPage = () => {
         }
 
         try {
-          const dash = await getDashboardSummary();
+          const dash = await getDashboardSummary(locale);
           setAverageEmission(dash?.weekly?.averagePerDay ?? null);
         } catch (e) {
           setAverageEmission(null);
@@ -181,9 +182,9 @@ const ResultPage = () => {
   const emissionKg = getEmissionValue(todayLog);
   const breakdown = getBreakdown(todayLog);
   const percentageBelow = averageEmission ? Math.max(0, Math.round(((averageEmission - emissionKg) / averageEmission) * 100)) : null;
-  const dailyTreeAbsorptionKg = appConfig?.dailyTreeAbsorptionKg ?? null;
-  const treesEquivalent = emissionKg && dailyTreeAbsorptionKg
-    ? Math.max(0.1, emissionKg / dailyTreeAbsorptionKg)
+  const monthlyTreeAbsorptionKg = appConfig?.monthlyTreeAbsorptionKg ?? (appConfig?.kgCo2PerTreePerYear ? appConfig.kgCo2PerTreePerYear / 12 : null);
+  const treesEquivalent = emissionKg && monthlyTreeAbsorptionKg
+    ? Math.max(0.1, emissionKg / monthlyTreeAbsorptionKg)
     : null;
   const emissionProgress = averageEmission ? Math.min(100, (emissionKg / averageEmission) * 100) : 0;
 

@@ -8,6 +8,7 @@ const monthlySnapshotRepository = require('../repositories/monthlySnapshot.repos
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { getTodayStr, getDateNDaysAgo } = require('../utils/dateHelpers');
+const { translateSummaryFields } = require('../utils/translationUtils');
 
 class DashboardController {
   /**
@@ -66,32 +67,37 @@ class DashboardController {
       }
     }
 
+    const summaryData = {
+      student: {
+        name: user.name,
+        grade: user.grade,
+        locationType: user.locationType
+      },
+      phase: isPersonalized ? 'personalized' : 'onboarding',
+      daysUntilPersonalized,
+      totalLogsCount,
+      personalizedUnlockedAt: user.personalizedUnlockedAt,
+      streak: user.streak,
+      weekly: {
+        totalDaysLogged: weeklyLogs.length,
+        totalEmissionKg: parseFloat(weeklyTotal.toFixed(3)),
+        averagePerDay: parseFloat(weeklyAverage.toFixed(3))
+      },
+      monthly: {
+        totalDaysLogged: monthlyLogs.length,
+        totalEmissionKg: parseFloat(monthlyTotal.toFixed(3)),
+        averagePerDay: parseFloat(monthlyAverage.toFixed(3)),
+        breakdown: monthlyBreakdown,
+        highestEmissionCategory: highestCategory
+      }
+    };
+
+    const locale = req.query.locale || req.body.locale || req.cookies?.locale || 'en';
+    const responseData = translateSummaryFields(summaryData, locale);
+
     res.status(200).json({
       success: true,
-      data: {
-        student: {
-          name: user.name,
-          grade: user.grade,
-          locationType: user.locationType
-        },
-        phase: isPersonalized ? 'personalized' : 'onboarding',
-        daysUntilPersonalized,
-        totalLogsCount,
-        personalizedUnlockedAt: user.personalizedUnlockedAt,
-        streak: user.streak,
-        weekly: {
-          totalDaysLogged: weeklyLogs.length,
-          totalEmissionKg: parseFloat(weeklyTotal.toFixed(3)),
-          averagePerDay: parseFloat(weeklyAverage.toFixed(3))
-        },
-        monthly: {
-          totalDaysLogged: monthlyLogs.length,
-          totalEmissionKg: parseFloat(monthlyTotal.toFixed(3)),
-          averagePerDay: parseFloat(monthlyAverage.toFixed(3)),
-          breakdown: monthlyBreakdown,
-          highestEmissionCategory: highestCategory
-        }
-      }
+      data: responseData
     });
   });
 }

@@ -70,11 +70,12 @@ class ShareController {
     // Get total logs and current streak
     const logsCount = await dailyLogRepository.countByUser(user._id);
 
-    // Calculate trees equivalent using configured annual absorption per tree
-    // Assuming average of ~2 kg CO2/day
+    // Calculate trees equivalent using configured monthly absorption per tree
+    // Trees are compared against mature tree monthly absorption (kg/year ÷ 12)
     const estimatedTotalCo2 = (logsCount * 2);
-    const kgTreeYear = config.KG_CO2_PER_TREE_PER_YEAR || 21;
-    const treesEquivalent = Math.round(estimatedTotalCo2 / kgTreeYear);
+    const kgTreeYear = config.KG_CO2_PER_TREE_PER_YEAR || 21.77;
+    const monthlyTreeAbsorptionKg = kgTreeYear / 12;
+    const treesEquivalent = Math.round(estimatedTotalCo2 / monthlyTreeAbsorptionKg);
 
     // Format display name (first name + last initial)
     const nameParts = user.name ? user.name.split(' ') : ['User'];

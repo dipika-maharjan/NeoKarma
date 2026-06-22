@@ -53,7 +53,7 @@ const getNepalDateStr = (d = new Date()) => {
   return new Date(nepalMs).toISOString().slice(0, 10);
 };
 
-export const logDailyCarbon = async (payload) => {
+export const logDailyCarbon = async (payload, locale = 'en') => {
   // Attach a date (Nepal local) so server can upsert on (userId, date)
   const todayStr = getNepalDateStr();
   const payloadWithDate = { ...payload, date: payload.date || todayStr };
@@ -66,7 +66,7 @@ export const logDailyCarbon = async (payload) => {
   }
 
   try {
-    const response = await submitDailyLog(payloadWithDate);
+    const response = await submitDailyLog(payloadWithDate, locale);
     // Cache the updated streak if available
     if (response.data?.data?.updatedStreak) {
       cacheStreakData(response.data.data.updatedStreak);

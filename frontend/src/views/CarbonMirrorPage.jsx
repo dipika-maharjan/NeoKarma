@@ -72,7 +72,7 @@ const CarbonMirrorPage = () => {
         let todayLog = null;
         for (let i = 0; i < attempts; i++) {
           try {
-            [summary, todayLog] = await Promise.all([getDashboardSummary(), getTodayLog()]);
+            [summary, todayLog] = await Promise.all([getDashboardSummary(locale), getTodayLog()]);
             break;
           } catch (e) {
             if (i === attempts - 1) throw e;
@@ -90,11 +90,7 @@ const CarbonMirrorPage = () => {
           }
           try {
             const historyResp = await getDailyLogHistory();
-            if (historyResp && historyResp.data) {
-              // Debug: log raw response to assist troubleshooting when chart is empty
-              try {
-                console.info('CarbonMirror: raw history response count=', historyResp.count, 'sample=', historyResp.data.slice(0,6));
-              } catch (e) {}
+              if (historyResp && historyResp.data) {
               // Ensure data is ordered oldest->newest so chart reads left-to-right
               const raw = Array.isArray(historyResp.data) ? historyResp.data.slice() : [];
               raw.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -107,7 +103,6 @@ const CarbonMirrorPage = () => {
               }).filter((p) => p.date && Number.isFinite(p.totalEmissionKg));
 
               if (mapped.length === 0) {
-                console.warn('CarbonMirror: no valid daily history points after mapping', historyResp.data?.slice?.(0,5) || historyResp.data);
                 try {
                   setDebugHistoryRaw(JSON.stringify(historyResp.data?.slice?.(0,12) || historyResp.data, null, 2));
                 } catch (e) {
@@ -125,11 +120,10 @@ const CarbonMirrorPage = () => {
                   const vals = mapped.map(m => m.totalEmissionKg);
                   const min = Math.min(...vals);
                   const max = Math.max(...vals);
-                  console.info('CarbonMirror: mapped values min/max=', min, max);
+                  // min/max calculated for potential debugging, no console output.
                 } catch (e) {}
               }
-
-              console.info('CarbonMirror: mapped points count=', mapped.length, 'sample=', mapped.slice(0,6));
+              // mapped points processed; no verbose logging.
 
               setDailyHistory(mapped);
             }
@@ -263,7 +257,7 @@ const CarbonMirrorPage = () => {
                 setLoading(true);
                 setError(null);
                 try {
-                  const [summary, todayLog] = await Promise.all([getDashboardSummary(), getTodayLog()]);
+                  const [summary, todayLog] = await Promise.all([getDashboardSummary(locale), getTodayLog()]);
                   setPhaseData(summary);
                   setHasLoggedToday(!!todayLog);
                   if (summary?.phase !== 'onboarding') {

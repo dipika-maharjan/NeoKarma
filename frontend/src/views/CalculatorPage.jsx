@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
 import { logDailyCarbon } from '@/lib/actions/calculatorActions';
@@ -19,20 +19,28 @@ import {
   Trash2,
   Zap
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const CalculatorPage = () => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const t = useTranslations('Calculator');
+  const locale = useLocale();
   const formatNumber = useNumberFormatter();
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState({ type: '', message: '' });
   const [submissionMirror, setSubmissionMirror] = useState(null);
   const [submissionStreak, setSubmissionStreak] = useState(null);
+  const statusRef = useRef(null);
   const [emissionFactors, setEmissionFactors] = useState(null);
+
+  useEffect(() => {
+    if (status.message || errors.submit) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [status.message, errors.submit]);
   const [factorsError, setFactorsError] = useState(null);
   const [loadingFactors, setLoadingFactors] = useState(true);
 
@@ -180,14 +188,13 @@ const CalculatorPage = () => {
         ...(formData.extraProfileAnswer !== null && { extraAnswer: formData.extraProfileAnswer })
       };
 
-      const response = await logDailyCarbon(payload);
+      const response = await logDailyCarbon(payload, locale);
       // clear draft on successful submit
       try { sessionStorage.removeItem('calculatorFormDraft'); } catch (e) {}
 
       if (!response) {
         // offline saved fallback
         setStatus({ type: 'success', message: 'Saved locally — will sync when online.' });
-        setSubmitting(false);
         return;
       }
 
@@ -314,6 +321,7 @@ const CalculatorPage = () => {
 
         {status.message && (
           <div
+            ref={statusRef}
             className={`mb-5 rounded-lg border px-4 py-3 text-[13px] font-semibold ${
               status.type === 'success'
                 ? 'border-[#BEE8D3] bg-[#E8F5E9] text-[#0A3D25]'
@@ -327,11 +335,11 @@ const CalculatorPage = () => {
         {submissionMirror && (
           <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="rounded-xl border border-[#E0E5E2] bg-white p-4">
-              <p className="text-sm font-bold text-[#17202A]">Carbon Mirror</p>
+              <p className="text-sm font-bold text-[#17202A]">{t('carbonMirror')}</p>
               <p className="mt-2 text-[15px] text-[#4A5550]">{submissionMirror.story || ''}</p>
             </div>
             <div className="rounded-xl border border-[#E0E5E2] bg-white p-4">
-              <p className="text-sm font-bold text-[#17202A]">Trees Equivalent</p>
+              <p className="text-sm font-bold text-[#17202A]">{t('treesEquivalent')}</p>
               <p className="mt-2 text-[20px] font-extrabold text-[#0A3D25]">{submissionMirror.treesEquivalent ?? submissionMirror.treesEquivalent === 0 ? submissionMirror.treesEquivalent : '--'}</p>
             </div>
           </div>
@@ -398,14 +406,13 @@ const CalculatorPage = () => {
                       key={option.value}
                       type="button"
                       onClick={() => setField('foodMealType', option.value)}
-                      className={`h-[54px] rounded-lg border text-center transition-all ${
+                      className={`flex items-center justify-center h-12 rounded-lg border text-center transition-all ${
                         selected
                           ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25] font-semibold'
                           : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
                       }`}
                     >
-                      <span className="block text-[15px] font-medium">{option.label}</span>
-                      <span className="mt-0.5 block text-[11px] text-[#4A5550] font-normal">{option.estimate}</span>
+                      <span className="text-[15px] font-medium">{option.label}</span>
                     </button>
                   );
                 })}
