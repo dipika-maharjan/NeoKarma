@@ -8,7 +8,7 @@
  *
  * Run: npm run seed
  */
-require('dotenv').config({ path: '.env' });
+require('dotenv').config({ path: '../.env' });
 const mongoose = require('mongoose');
 const EmissionFactor = require('../src/models/EmissionFactor');
 
