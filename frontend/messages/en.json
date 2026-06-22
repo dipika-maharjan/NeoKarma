@@ -256,7 +256,7 @@
     "useLoggedData":"Use logged data to compare real scenarios and see potential savings.",
     "compareChoices":"Compare transport and diet choices",
     "simulationsNote":"Simulations are based on your actual emission factors.",
-    "monthlyTrend":"Monthly Trend",
+    "monthlyTrend":"Monthly Trend of Carbon Emission",
     "trendPlaceholder":"Trend charts will appear once we have enough historical monthly data.",
     "addMoreLogs":"Add more daily logs to build your monthly trend and compare your seasonal progress.",    "trackProgressDefault": "Track your progress month over month.",    "nextMilestone":"Next Milestone",
     "keepImproving":"Keep improving your consistency to lower emissions and grow your forest impact.",
