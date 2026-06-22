@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations } from 'next-intl';
-import { Bus, Utensils, Trash2, Lightbulb, Sprout, Leaf } from 'lucide-react';
+import { Bus, Utensils, Archive, Lightbulb, Sprout, Leaf, Trash2 } from 'lucide-react';
 
 // Unified recommendations list matching the Smart Recommendations view
 const PRESETS = [
@@ -354,14 +354,19 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
     );
   };
 
-  // Delete an item from the plan
-  const deletePlanItem = (id) => {
-    setPlanItems(planItems.filter(item => item.id !== id));
+  // Archive an item from the plan
+  const archivePlanItem = (id) => {
+    setPlanItems(
+      planItems.map((item) =>
+        item.id === id ? { ...item, archived: true } : item
+      )
+    );
   };
 
-  // Calculate Plan metrics
-  const totalActions = planItems.length;
-  const completedActions = planItems.filter(item => item.completed);
+  // Calculate Plan metrics (excluding archived items)
+  const activeItems = planItems.filter(item => !item.archived);
+  const totalActions = activeItems.length;
+  const completedActions = activeItems.filter(item => item.completed);
   const completedCount = completedActions.length;
 
   // Calculate CO2 saved (sum of completed items)
@@ -372,6 +377,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
   // Filtered plan list items
   const filteredPlanItems = planItems.filter((item) => {
+    if (item.archived) return false; // Hide archived items
     if (activeFilter === 'all') return true;
     return item.category === activeFilter;
   });
@@ -725,11 +731,11 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                         </button>
 
                         <button
-                          onClick={() => deletePlanItem(item.id)}
-                          className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
-                          title={t('deleteAction')}
+                          onClick={() => archivePlanItem(item.id)}
+                          className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-amber-600 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                          title={t('archiveAction') || 'Archive Action'}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Archive className="w-4 h-4" />
                         </button>
                       </div>
 

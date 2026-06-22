@@ -333,6 +333,9 @@
     "completedBtn": "पूरा भयो",
     "markComplete": "पुरा रूपमा मार्क गर्नुहोस्",
     "deleteAction": "एक्शन हटाउनुहोस्",
+    "archiveAction": "एक्शन संग्रहण गर्नुहोस्",
+    "trackProgress": "प्रगति",
+    "days": "दिनहरू",
     "unitKgCO2": "किग्रा CO₂"
   },
   "Share": {

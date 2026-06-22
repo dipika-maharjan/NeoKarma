@@ -331,6 +331,9 @@
     "completedBtn": "Completed",
     "markComplete": "Mark as Complete",
     "deleteAction": "Delete Action",
+    "archiveAction": "Archive Action",
+    "trackProgress": "Progress",
+    "days": "days",
     "unitKgCO2": "kg CO₂"
   },
   "Share": {
