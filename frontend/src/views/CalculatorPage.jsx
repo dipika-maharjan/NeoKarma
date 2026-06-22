@@ -36,10 +36,10 @@ const CalculatorPage = () => {
   const [emissionFactors, setEmissionFactors] = useState(null);
 
   useEffect(() => {
-    if (status.message && statusRef.current) {
-      statusRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (status.message || errors.submit) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [status.message]);
+  }, [status.message, errors.submit]);
   const [factorsError, setFactorsError] = useState(null);
   const [loadingFactors, setLoadingFactors] = useState(true);
 
