@@ -412,7 +412,7 @@ const CalculatorPage = () => {
               </div>
             </section>
 
-            <div className="pt-8 text-center lg:pt-7">
+            <div className="hidden lg:block pt-8 text-center lg:pt-7">
               <Button
                 type="submit"
                 variant="primary"
@@ -490,6 +490,20 @@ const CalculatorPage = () => {
                 </div>
               </div>
             </section>
+
+            {/* Button below Energy section on mobile, before Streak */}
+            <div className="pt-6 text-center lg:hidden">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                isLoading={submitting}
+                disabled={submitting}
+                className="mx-auto h-12 w-full max-w-[320px] rounded-full bg-[#0A3D25] text-[15px] font-bold text-white hover:bg-[#072B1A] transition-colors"
+              >
+                {t('calculateEmission')}
+              </Button>
+            </div>
 
             <section className="relative overflow-hidden rounded-xl bg-[#E8F5E9] border border-[#BEE8D3] p-6 text-[#1B5E20]">
               <div className="absolute -bottom-10 -right-10 h-28 w-28 opacity-10 rounded-full bg-[#1B5E20]" />

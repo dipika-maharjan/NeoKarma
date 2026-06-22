@@ -138,9 +138,44 @@ async function seedDailyLogs() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✓ Connected to MongoDB\n');
 
-    const user = await User.findOne({ email: 'guragainaruna@gmail.com' });
+    const targetEmail = (process.argv[2] || 'sudip1@gmail.com').toLowerCase();
+    let user = await User.findOne({ email: targetEmail });
     if (!user) {
-      throw new Error('User guragainaruna@gmail.com not found. Please create the user first.');
+      console.log(`User ${targetEmail} not found. Creating user dynamic record first...`);
+      const bcrypt = require('bcryptjs');
+      const passwordHash = await bcrypt.hash('password123', 10);
+      
+      // Try to find Greenfield International School admin for schoolId linking
+      const schoolAdmin = await User.findOne({ email: 'admin@greenfield.edu.np' });
+      const schoolId = schoolAdmin ? schoolAdmin._id : null;
+      
+      const username = targetEmail.split('@')[0];
+      const displayName = username.charAt(0).toUpperCase() + username.slice(1);
+      
+      user = await User.create({
+        name: displayName,
+        email: targetEmail,
+        passwordHash,
+        role: 'student',
+        schoolId,
+        schoolName: 'Greenfield International School',
+        grade: 10,
+        locationType: targetEmail === 'guragainaruna@gmail.com' ? 'rural' : 'urban',
+        streak: {
+          current: 0,
+          longest: 0,
+          lastLogDate: null,
+          participationScore: 0
+        },
+        practicalMarks: {
+          currentStreak: 0,
+          longestStreak: 0,
+          totalLogDays: 0,
+          marksAwarded: 0,
+          lastSyncedAt: null
+        }
+      });
+      console.log(`✓ Created new student user: ${user.name} (${user.email})`);
     }
 
     console.log(`✓ Found user: ${user.name} (${user.email})\n`);

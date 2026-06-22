@@ -64,7 +64,7 @@ const Footer = () => {
   return (
     <footer className="w-full border-t border-[#CFE2D5] bg-[linear-gradient(180deg,#EEF7F1_0%,#E1EFE6_100%)] px-4 py-7 text-[#1E3322] shadow-[0_-10px_24px_rgba(23,32,42,0.05)] md:px-8 md:py-8 font-sans">
       <div className="max-w-screen-2xl mx-auto">
-        <div className="footer-reveal grid gap-7 md:gap-8 lg:grid-cols-[1.15fr_0.9fr_1fr] lg:items-start">
+        <div className="footer-reveal grid gap-7 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.15fr_0.9fr_1fr] lg:items-start">
           <div className="max-w-xl">
             <span className="text-2xl font-bold tracking-wide text-[#0A3D25]">Neoकर्म</span>
             <p className="mt-2.5 max-w-lg text-sm leading-6 text-[#4E6256]">
@@ -72,7 +72,7 @@ const Footer = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-10 gap-y-6">
+          <div className="grid grid-cols-2 gap-x-6 sm:gap-x-10 gap-y-6">
             {footerColumns.map((column) => (
               <div key={column.titleKey} className="flex flex-col gap-2.5">
                 <span className="text-[11px] font-bold uppercase tracking-widest text-[#0A3D25]">
@@ -93,14 +93,14 @@ const Footer = () => {
             ))}
           </div>
 
-          <div className="max-w-sm lg:justify-self-end lg:border-l lg:border-[#C9D8CF] lg:pl-8">
+          <div className="max-w-sm lg:justify-self-end lg:border-l lg:border-[#C9D8CF] lg:pl-8 md:col-span-2 lg:col-span-1">
             <span className="text-[11px] font-bold uppercase tracking-widest text-[#0A3D25]">
               {t('connectWithUs')}
             </span>
             <p className="mt-2.5 text-sm leading-6 text-[#4E6256]">
               {t('followJourney')}
             </p>
-            <div className="mt-4 flex gap-2.5">
+            <div className="mt-4 flex gap-2.5 flex-wrap">
               {socialLinks.map((link) => (
                 <a
                   key={link.name}
@@ -117,17 +117,19 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-[#C9D8CF] pt-4 text-[12px] text-[#5D6F60] md:flex-row md:items-center md:justify-between">
-          <p>{t('copyright')}</p>
-          <p className="flex max-w-xl items-start gap-2 text-[13px] font-medium leading-6 text-[#4E6256] md:justify-end md:text-right">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#5C8A72]" aria-hidden="true" />
-            <span>
-              {t('studentsCannot')}
-              <span className="block text-center font-semibold text-[#4E6256]">
-                <span className="font-bold text-[#0A3D25]">Neoकर्म</span> {t('helpsSeeIt')}
+        <div className="mt-6 border-t border-[#C9D8CF] pt-4">
+          <div className="grid gap-7 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.15fr_0.9fr_1fr]">
+            <p className="text-[12px] text-[#5D6F60]">{t('copyright')}</p>
+            <div></div>
+            <p className="max-w-xl text-[13px] font-medium leading-6 text-[#4E6256] lg:justify-self-end">
+              <span>
+                {t('studentsCannot')}
+                <span className="block font-semibold text-[#4E6256]">
+                  <span className="font-bold text-[#0A3D25]">Neoकर्म</span> {t('helpsSeeIt')}
+                </span>
               </span>
-            </span>
-          </p>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

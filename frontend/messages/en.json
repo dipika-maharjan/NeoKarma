@@ -181,7 +181,9 @@
     "towardStatus":"Next milestone: {status}",
     "carbonMirrorTitle":"Your Carbon Mirror",
     "carbonMirrorDescription":"See the collective impact of your daily actions on your school and the environment.",
-    "kgCO2Unit":"kg CO₂"
+    "kgCO2Unit":"kg CO₂",
+    "userFallback":"Student",
+    "failedToLoadDashboard":"Unable to load dashboard. Please refresh or try again."
   },
   "Profile": {
     "profileAccount": "Profile / Account",
@@ -329,6 +331,9 @@
     "completedBtn": "Completed",
     "markComplete": "Mark as Complete",
     "deleteAction": "Delete Action",
+    "archiveAction": "Archive Action",
+    "trackProgress": "Progress",
+    "days": "days",
     "unitKgCO2": "kg CO₂"
   },
   "Share": {
