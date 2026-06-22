@@ -151,7 +151,7 @@ class MitigationPlanService {
   /**
    * Check if user has enough activity logs
    */
-  async hasEnoughData(userId, threshold = 7) {
+  async hasEnoughData(userId, threshold = 30) {
     const logsCount = await dailyLogRepository.getLogsCount(userId);
     return logsCount >= threshold;
   }
@@ -240,7 +240,7 @@ class MitigationPlanService {
   }
 
   /**
-   * Structure weekly plan with aggregated insights
+   * Structure monthly plan with aggregated insights
    */
   async structureMonthlyPlan(userId, plan, logsCount) {
     const logs = (await dailyLogRepository.getRecentLogs(userId, 30)) || [];
@@ -277,6 +277,7 @@ class MitigationPlanService {
 
   /**
    * Get or generate the plan (auto routing based on threshold)
+  /**
    * CRITICAL: Always includes dailyLogs for frontend progress tracking
    */
   async getOrGeneratePlan(userId) {
@@ -327,8 +328,18 @@ class MitigationPlanService {
    */
   async forceGeneratePlan(userId) {
     const logsCount = await dailyLogRepository.getLogsCount(userId);
+    const dailyLogs = (await dailyLogRepository.getRecentLogs(userId, 30)) || [];
+
+    if (logsCount < 30) {
+      const planData = this.generateGeneralPlan(logsCount);
+      planData.dailyLogs = dailyLogs;
+      return planData;
+    }
+
     const plan = await this.generatePlanForUser(userId);
-    return this.structureMonthlyPlan(userId, plan, logsCount);
+    const monthlyPlan = await this.structureMonthlyPlan(userId, plan, logsCount);
+    monthlyPlan.dailyLogs = dailyLogs;
+    return monthlyPlan;
   }
 
   /**

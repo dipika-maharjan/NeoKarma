@@ -3,40 +3,158 @@ const AppError = require('../utils/AppError');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const DailyLog = require('../models/DailyLog');
-const Certificate = require('../models/Certificate');
 const ActivityLog = require('../models/ActivityLog');
 const ClassSection = require('../models/ClassSection');
 const streakToMarks = require('../utils/streakToMarks');
 
 class AdminController {
   getDashboard = asyncHandler(async (req, res) => {
-    const schoolId = req.user.schoolId;
-    const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
+    const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const rawDays = req.query.days;
+    const parsedDays = rawDays === 'all' ? 'all' : parseInt(rawDays, 10);
+    const dateFilter = parsedDays === 'all' || Number.isNaN(parsedDays)
+      ? {}
+      : {
+          createdAt: {
+            $gte: new Date(
+              Date.now() - parsedDays * 24 * 60 * 60 * 1000
+            )
+          }
+        };
 
-    const students = await User.find({
+    const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
+      ? new mongoose.Types.ObjectId(adminId)
+      : null;
+    const schoolAdmin = schoolObjectId
+      ? await User.findById(schoolObjectId).select('name schoolName')
+      : null;
+    const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
+    const studentMatch = {
       role: 'student',
-      schoolId
-    }).select('_id name grade section streak practicalMarks');
+      $or: [
+        ...(schoolObjectId ? [{ schoolId: schoolObjectId }] : []),
+        ...(schoolName ? [{ schoolName }] : [])
+      ]
+    };
 
+    const students = await User.find(studentMatch).select('_id name grade section streak practicalMarks');
     const studentIds = students.map((student) => student._id);
+    const totalStudents = students.length;
+
+    if (studentIds.length > 0 && schoolName) {
+      await User.updateMany(
+        {
+          role: 'student',
+          schoolName,
+          $or: [
+            { schoolId: null },
+            { schoolId: { $exists: false } }
+          ]
+        },
+        { $set: { schoolId: schoolObjectId } }
+      );
+    }
+
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    const studentStreaks = students
+      .slice()
+      .sort((a, b) => (b.practicalMarks?.currentStreak || 0) - (a.practicalMarks?.currentStreak || 0))
+      .map((student) => {
+        const lastSyncedAt = student.practicalMarks?.lastSyncedAt || null;
+        const isAtRisk = lastSyncedAt
+          ? new Date(lastSyncedAt) < twoDaysAgo
+          : true;
+        const status = !lastSyncedAt
+          ? 'inactive'
+          : isAtRisk
+            ? 'at_risk'
+            : 'active';
+
+        return {
+          name: student.name,
+          grade: student.grade,
+          section: student.section,
+          currentStreak: student.practicalMarks?.currentStreak || 0,
+          longestStreak: student.practicalMarks?.longestStreak || 0,
+          totalLogDays: student.practicalMarks?.totalLogDays || 0,
+          lastSyncedAt,
+          status,
+          atRisk: isAtRisk
+        };
+      });
+
+    const activityLogs = await ActivityLog.find({
+      studentId: { $in: studentIds },
+      ...dateFilter
+    })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('studentId', 'name grade section');
+
+    let liveActivity = activityLogs.map((entry) => ({
+      type: entry.type,
+      description: entry.description,
+      studentName: entry.studentId?.name || 'Unknown',
+      school: schoolName || '',
+      createdAt: entry.createdAt
+    }));
+
+    if (liveActivity.length === 0) {
+      const recentLogs = await DailyLog.find({
+        userId: { $in: studentIds },
+        ...dateFilter
+      })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate('userId', 'name grade section');
+
+      liveActivity = recentLogs.map((log) => ({
+        type: 'MIRROR',
+        description: `${log.userId?.name || 'Unknown'} (Grade ${log.userId?.grade || 'N/A'}) submitted a carbon log`,
+        studentName: log.userId?.name || 'Unknown',
+        school: schoolName || '',
+        createdAt: log.createdAt
+      }));
+    }
 
     const [
       totalSchools,
-      totalStudents,
       totalReports,
-      totalCertificates,
       emissionAgg,
       schoolPerformance,
       topStudents,
-      liveActivity,
-      impactAgg
+      impactAgg,
+      sourceAgg,
+      ecoActionsAgg
     ] = await Promise.all([
       User.countDocuments({ role: 'school_admin' }),
-      User.countDocuments({ role: 'student', schoolId }),
-      DailyLog.countDocuments({ userId: { $in: studentIds } }),
-      Certificate.countDocuments({ schoolId: schoolObjectId }),
+      DailyLog.countDocuments({
+        userId: { $in: studentIds },
+        ...dateFilter
+      }),
       DailyLog.aggregate([
-        { $match: { userId: { $in: studentIds } } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'student'
+          }
+        },
+        { $unwind: '$student' },
+        {
+          $match: {
+            $and: [
+              {
+                $or: [
+                  { 'student.schoolId': schoolObjectId },
+                  { 'student.schoolName': schoolName }
+                ].filter((condition) => Object.values(condition)[0])
+              },
+              dateFilter
+            ]
+          }
+        },
         {
           $group: {
             _id: null,
@@ -44,70 +162,56 @@ class AdminController {
           }
         }
       ]),
-      User.aggregate([
-        { $match: { role: 'school_admin' } },
+      DailyLog.aggregate([
         {
           $lookup: {
             from: 'users',
-            localField: '_id',
-            foreignField: 'schoolId',
-            as: 'students'
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'student'
+          }
+        },
+        { $unwind: '$student' },
+        {
+          $match: {
+            $and: [
+              {
+                $or: [
+                  { 'student.schoolId': schoolObjectId },
+                  { 'student.schoolName': schoolName }
+                ].filter((condition) => Object.values(condition)[0])
+              },
+              dateFilter
+            ]
           }
         },
         {
-          $addFields: {
-            studentIds: {
-              $map: {
-                input: '$students',
-                as: 'student',
-                in: '$$student._id'
-              }
-            }
+          $group: {
+            _id: { grade: '$student.grade' },
+            studentCount: { $addToSet: '$student._id' },
+            avgEmissionKg: { $avg: '$totalEmissionKg' },
+            totalLogs: { $sum: 1 }
           }
         },
-        {
-          $lookup: {
-            from: 'dailylogs',
-            localField: 'studentIds',
-            foreignField: 'userId',
-            as: 'logs'
-          }
-        },
+        { $sort: { avgEmissionKg: -1 } },
+        { $limit: 10 },
         {
           $project: {
-            schoolName: 1,
-            studentCount: { $size: '$students' },
-            avgEmissionKg: {
-              $round: [
-                {
-                  $cond: [
-                    { $gt: [{ $size: '$logs' }, 0] },
-                    { $avg: '$logs.totalEmissionKg' },
-                    0
-                  ]
-                },
-                1
+            _id: 0,
+            className: {
+              $concat: [
+                'Grade ',
+                { $toString: '$_id.grade' }
               ]
             },
-            avgScore: {
-              $round: [
-                {
-                  $cond: [
-                    { $gt: [{ $size: '$students' }, 0] },
-                    { $avg: '$students.practicalMarks.marksAwarded' },
-                    0
-                  ]
-                },
-                0
-              ]
-            }
+            studentCount: { $size: '$studentCount' },
+            avgEmissionKg: { $round: ['$avgEmissionKg', 1] },
+            totalLogs: 1
           }
-        },
-        { $sort: { avgScore: -1, studentCount: -1 } },
-        { $limit: 10 }
+        }
       ]),
       User.find(
-        { role: 'student', schoolId },
+        studentMatch,
         {
           name: 1,
           grade: 1,
@@ -119,34 +223,47 @@ class AdminController {
         .sort({ 'practicalMarks.marksAwarded': -1 })
         .limit(3)
         .populate('schoolId', 'schoolName'),
-      ActivityLog.find({ schoolId })
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .populate('studentId', 'name grade section')
-        .populate('schoolId', 'schoolName'),
       DailyLog.aggregate([
-        { $match: { userId: { $in: studentIds } } },
+        { $match: { userId: { $in: studentIds }, ...dateFilter } },
         {
           $group: {
             _id: null,
             totalLogs: { $sum: 1 },
-            transportLogs: {
+            targetMetLogs: {
               $sum: {
-                $cond: [{ $gt: ['$breakdown.transportKg', 0] }, 1, 0]
+                $cond: [{ $lte: ['$totalEmissionKg', 3] }, 1, 0]
               }
             },
-            meatFreeLogs: {
+            ecoTransportLogs: {
               $sum: {
                 $cond: [
-                  { $in: ['$food.mealType', ['vegetarian', 'vegan']] },
+                  { $in: ['$transportation.mode', ['walk', 'bicycle']] },
                   1,
                   0
                 ]
               }
             },
-            targetMetLogs: {
+            vegDayLogs: {
               $sum: {
-                $cond: [{ $lte: ['$totalEmissionKg', 3] }, 1, 0]
+                $cond: [
+                  { $in: ['$food.mealType', ['vegan', 'vegetarian']] },
+                  1,
+                  0
+                ]
+              }
+            },
+            noPlasticLogs: {
+              $sum: {
+                $cond: [
+                  {
+                    $or: [
+                      { $eq: ['$wasteAndPlastic.plasticItemCount', 0] },
+                      { $eq: ['$wasteAndPlastic.plasticItemCount', null] }
+                    ]
+                  },
+                  1,
+                  0
+                ]
               }
             }
           }
@@ -155,9 +272,91 @@ class AdminController {
           $project: {
             _id: 0,
             totalLogs: 1,
-            transportLogs: 1,
-            meatFreeLogs: 1,
-            targetMetLogs: 1
+            targetMetLogs: 1,
+            ecoTransportLogs: 1,
+            vegDayLogs: 1,
+            noPlasticLogs: 1
+          }
+        }
+      ]),
+      DailyLog.aggregate([
+        { $match: { userId: { $in: studentIds }, ...dateFilter } },
+        {
+          $group: {
+            _id: null,
+            avgTransport: { $avg: '$breakdown.transportKg' },
+            avgFood: { $avg: '$breakdown.foodKg' },
+            avgWaste: { $avg: '$breakdown.wasteKg' },
+            avgEnergy: { $avg: '$breakdown.energyKg' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            avgTransport: { $round: [{ $ifNull: ['$avgTransport', 0] }, 2] },
+            avgFood: { $round: [{ $ifNull: ['$avgFood', 0] }, 2] },
+            avgWaste: { $round: [{ $ifNull: ['$avgWaste', 0] }, 2] },
+            avgEnergy: { $round: [{ $ifNull: ['$avgEnergy', 0] }, 2] }
+          }
+        }
+      ]),
+      DailyLog.aggregate([
+        { $match: { userId: { $in: studentIds }, ...dateFilter } },
+        {
+          $group: {
+            _id: null,
+            totalLogs: { $sum: 1 },
+            walkedOrCycled: {
+              $sum: {
+                $cond: [
+                  { $in: ['$transportation.mode', ['walk', 'bicycle']] },
+                  1,
+                  0
+                ]
+              }
+            },
+            vegLunch: {
+              $sum: {
+                $cond: [
+                  { $in: ['$food.mealType', ['vegan', 'vegetarian']] },
+                  1,
+                  0
+                ]
+              }
+            },
+            noPlastic: {
+              $sum: {
+                $cond: [
+                  {
+                    $or: [
+                      { $eq: ['$wasteAndPlastic.plasticItemCount', 0] },
+                      { $eq: ['$wasteAndPlastic.plasticItemCount', null] }
+                    ]
+                  },
+                  1,
+                  0
+                ]
+              }
+            },
+            noFoodWaste: {
+              $sum: {
+                $cond: [
+                  { $lte: ['$food.foodWasteGrams', 0] },
+                  1,
+                  0
+                ]
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            totalLogs: 1,
+            walkedOrCycled: 1,
+            vegLunch: 1,
+            noPlastic: 1,
+            noFoodWaste: 1
           }
         }
       ])
@@ -167,39 +366,173 @@ class AdminController {
       (emissionAgg[0]?.avgEmission || 0).toFixed(1)
     );
 
+    const gradeDistribution = await DailyLog.aggregate([
+      {
+        $match: {
+          userId: { $in: studentIds },
+          ...dateFilter
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'student'
+        }
+      },
+      { $unwind: '$student' },
+      {
+        $group: {
+          _id: '$student.grade',
+          avgEmission: { $avg: '$totalEmissionKg' },
+          totalLogs: { $sum: 1 },
+          vegDays: {
+            $sum: {
+              $cond: [
+                { $in: ['$food.mealType', ['vegan', 'vegetarian']] },
+                1,
+                0
+              ]
+            }
+          },
+          ecoTransportDays: {
+            $sum: {
+              $cond: [
+                { $in: ['$transportation.mode', ['walk', 'bicycle']] },
+                1,
+                0
+              ]
+            }
+          },
+          avgTransport: { $avg: '$breakdown.transportKg' },
+          avgFood: { $avg: '$breakdown.foodKg' },
+          avgEnergy: { $avg: '$breakdown.energyKg' },
+          studentCount: { $addToSet: '$student._id' }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          grade: { $toString: '$_id' },
+          avgEmission: { $round: [{ $ifNull: ['$avgEmission', 0] }, 2] },
+          totalLogs: 1,
+          vegDays: 1,
+          ecoTransportDays: 1,
+          avgTransport: { $round: [{ $ifNull: ['$avgTransport', 0] }, 2] },
+          avgFood: { $round: [{ $ifNull: ['$avgFood', 0] }, 2] },
+          avgEnergy: { $round: [{ $ifNull: ['$avgEnergy', 0] }, 2] },
+          studentCount: { $size: '$studentCount' }
+        }
+      }
+    ]);
+
+    const weeklyActivity = await DailyLog.aggregate([
+      {
+        $match: {
+          userId: { $in: studentIds },
+          ...dateFilter
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          logCount: { $sum: 1 },
+          avgEmission: { $avg: '$totalEmissionKg' }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          date: '$_id',
+          logCount: 1,
+          avgEmission: { $round: ['$avgEmission', 1] }
+        }
+      }
+    ]);
+
     const ranked = schoolPerformance.map((school, index) => ({
       ...school,
       rank: index + 1
     }));
 
-    const impactRow = impactAgg[0] || {
-      totalLogs: 0,
-      transportLogs: 0,
-      meatFreeLogs: 0,
-      targetMetLogs: 0
+    const sourceRow = sourceAgg[0] || {
+      avgTransport: 0,
+      avgFood: 0,
+      avgWaste: 0,
+      avgEnergy: 0
     };
 
-    const targetMetPct = impactRow.totalLogs
-      ? Math.round((impactRow.targetMetLogs / impactRow.totalLogs) * 100)
+    const ecoActionRow = ecoActionsAgg[0] || {
+      totalLogs: 0,
+      walkedOrCycled: 0,
+      vegLunch: 0,
+      noPlastic: 0,
+      noFoodWaste: 0
+    };
+
+    const emissionSources = [
+      { category: 'Transport', value: sourceRow.avgTransport, color: '#f59e0b' },
+      { category: 'Lunch', value: sourceRow.avgFood, color: '#1a7a4a' },
+      { category: 'Waste', value: sourceRow.avgWaste, color: '#c0392b' },
+      { category: 'Energy', value: sourceRow.avgEnergy, color: '#3b82f6' }
+    ];
+
+    const ecoActions = {
+      walkedOrCycledPct:
+        ecoActionRow.totalLogs > 0
+          ? Math.round((ecoActionRow.walkedOrCycled / ecoActionRow.totalLogs) * 100)
+          : 0,
+      vegLunchPct:
+        ecoActionRow.totalLogs > 0
+          ? Math.round((ecoActionRow.vegLunch / ecoActionRow.totalLogs) * 100)
+          : 0,
+      noPlasticPct:
+        ecoActionRow.totalLogs > 0
+          ? Math.round((ecoActionRow.noPlastic / ecoActionRow.totalLogs) * 100)
+          : 0,
+      noFoodWastePct:
+        ecoActionRow.totalLogs > 0
+          ? Math.round((ecoActionRow.noFoodWaste / ecoActionRow.totalLogs) * 100)
+          : 0
+    };
+
+    const impactRow = impactAgg[0] || {
+      totalLogs: 0,
+      targetMetLogs: 0,
+      ecoTransportLogs: 0,
+      vegDayLogs: 0,
+      noPlasticLogs: 0
+    };
+
+    const totalLogs = impactRow.totalLogs || 0;
+    const targetMetPct = totalLogs
+      ? Math.round((impactRow.targetMetLogs / totalLogs) * 100)
       : 0;
-    const transportReduxPct = impactRow.totalLogs
-      ? Math.round((impactRow.transportLogs / impactRow.totalLogs) * 100)
+    const ecoTransportPct = totalLogs
+      ? Math.round((impactRow.ecoTransportLogs / totalLogs) * 100)
       : 0;
-    const meatFreeDaysPct = impactRow.totalLogs
-      ? Math.round((impactRow.meatFreeLogs / impactRow.totalLogs) * 100)
+    const vegDaysPct = totalLogs
+      ? Math.round((impactRow.vegDayLogs / totalLogs) * 100)
       : 0;
-    const remainingPct = Math.max(
-      0,
-      100 - transportReduxPct - meatFreeDaysPct
-    );
+    const noPlasticPct = totalLogs
+      ? Math.round((impactRow.noPlasticLogs / totalLogs) * 100)
+      : 0;
 
     res.status(200).json({
+      schoolName: schoolName || '',
+      adminName: schoolAdmin?.name || schoolName || 'Admin',
+      studentsEnrolled: totalStudents,
       stats: {
         totalSchools,
         totalStudents,
         avgEmissionKg,
-        totalReports,
-        totalCertificates
+        totalReports
       },
       schoolPerformance: ranked,
       topStudents: topStudents.map((student) => ({
@@ -209,51 +542,285 @@ class AdminController {
         section: student.section,
         score: student.practicalMarks?.marksAwarded || 0
       })),
-      liveActivity: liveActivity.map((entry) => ({
-        type: entry.type,
-        description: entry.description,
-        school: entry.schoolId?.schoolName || '',
-        createdAt: entry.createdAt
+      gradeDistribution,
+      weeklyActivity: weeklyActivity.map((w) => ({
+        date: w.date,
+        logs: w.logCount,
+        avgEmission: w.avgEmission || 0
       })),
+      ecoActions,
+      studentStreaks,
+      liveActivity,
+      emissionSources,
       systemImpact: {
         targetMetPct,
-        transportReduxPct,
-        meatFreeDaysPct,
-        remainingPct
+        ecoTransportPct,
+        vegDaysPct,
+        noPlasticPct
       }
     });
   });
 
   getStudents = asyncHandler(async (req, res) => {
-    const { grade, section, sortBy = 'streak' } = req.query;
-    const filter = {
+    const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
+      ? new mongoose.Types.ObjectId(adminId)
+      : null;
+    const schoolAdmin = schoolObjectId
+      ? await User.findById(schoolObjectId).select('name schoolName')
+      : null;
+    const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
+
+    const studentMatch = {
       role: 'student',
-      schoolId: req.user.schoolId
+      $or: [
+        ...(schoolObjectId ? [{ schoolId: schoolObjectId }] : []),
+        ...(schoolName ? [{ schoolName }] : [])
+      ]
     };
 
-    if (grade) filter.grade = Number(grade);
-    if (section) filter.section = section;
+    const students = await User.find(studentMatch, {
+      name: 1,
+      email: 1,
+      grade: 1,
+      section: 1,
+      schoolName: 1,
+      locationType: 1,
+      isActive: 1,
+      createdAt: 1,
+      'practicalMarks.currentStreak': 1,
+      'practicalMarks.longestStreak': 1,
+      'practicalMarks.totalLogDays': 1,
+      'practicalMarks.lastSyncedAt': 1
+    }).sort({ grade: 1, name: 1 });
 
-    const sortOptions = {
-      streak: { 'streak.current': -1, 'streak.longest': -1 },
-      emissions: { 'practicalMarks.marksAwarded': -1 }
+    const studentIds = students.map((student) => student._id);
+
+    const logStats = await DailyLog.aggregate([
+      { $match: { userId: { $in: studentIds } } },
+      {
+        $group: {
+          _id: '$userId',
+          count: { $sum: 1 },
+          avgEmission: { $avg: '$totalEmissionKg' },
+          lastLog: { $max: '$createdAt' }
+        }
+      }
+    ]);
+
+    const logMap = {};
+    logStats.forEach((entry) => {
+      logMap[entry._id.toString()] = {
+        count: entry.count,
+        avgEmission: parseFloat((entry.avgEmission || 0).toFixed(2)),
+        lastLog: entry.lastLog
+      };
+    });
+
+    const oneDayAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+    res.status(200).json(
+      students.map((student) => {
+        const studentId = student._id.toString();
+        const lastLog = logMap[studentId]?.lastLog || null;
+        const status = !lastLog
+          ? 'inactive'
+          : new Date(lastLog) >= oneDayAgo
+            ? 'active'
+            : new Date(lastLog) >= twoDaysAgo
+              ? 'at_risk'
+              : 'inactive';
+
+        return {
+          _id: student._id,
+          name: student.name,
+          email: student.email,
+          grade: student.grade,
+          section: student.section,
+          schoolName: student.schoolName,
+          locationType: student.locationType,
+          joinedAt: student.createdAt,
+          totalLogs: logMap[studentId]?.count || 0,
+          avgEmission: logMap[studentId]?.avgEmission || 0,
+          lastLogAt: lastLog,
+          currentStreak: student.practicalMarks?.currentStreak || 0,
+          longestStreak: student.practicalMarks?.longestStreak || 0,
+          totalLogDays: student.practicalMarks?.totalLogDays || 0
+        };
+      })
+    );
+  });
+
+  getReports = asyncHandler(async (req, res) => {
+    const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const rawDays = req.query.days;
+    const parsedDays = rawDays === 'all' ? 'all' : parseInt(rawDays, 10);
+    const dateFilter = parsedDays === 'all' || Number.isNaN(parsedDays)
+      ? {}
+      : {
+          createdAt: {
+            $gte: new Date(
+              Date.now() - parsedDays * 24 * 60 * 60 * 1000
+            )
+          }
+        };
+
+    const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
+      ? new mongoose.Types.ObjectId(adminId)
+      : null;
+    const schoolAdmin = schoolObjectId
+      ? await User.findById(schoolObjectId).select('name schoolName')
+      : null;
+    const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
+
+    const studentMatch = {
+      role: 'student',
+      $or: [
+        ...(schoolObjectId ? [{ schoolId: schoolObjectId }] : []),
+        ...(schoolName ? [{ schoolName }] : [])
+      ]
     };
 
-    const students = await User.find(filter)
-      .sort(sortOptions[sortBy] || sortOptions.streak)
-      .select('-passwordHash');
+    const students = await User.find(studentMatch, { _id: 1 });
+    const studentIds = students.map((student) => student._id);
+
+    const logs = await DailyLog.find({
+      userId: { $in: studentIds },
+      ...dateFilter
+    })
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name grade section');
+
+    const transportModes = await DailyLog.aggregate([
+      { $match: { userId: { $in: studentIds }, ...dateFilter } },
+      {
+        $group: {
+          _id: '$transportation.mode',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          mode: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$_id', 'walk'] }, then: 'Walk' },
+                { case: { $eq: ['$_id', 'bicycle'] }, then: 'Bicycle' },
+                { case: { $eq: ['$_id', 'bus'] }, then: 'Bus' },
+                { case: { $eq: ['$_id', 'motorbike'] }, then: 'Motorbike' },
+                { case: { $eq: ['$_id', 'car'] }, then: 'Car' }
+              ],
+              default: 'Other'
+            }
+          },
+          count: 1,
+          isEco: {
+            $in: ['$_id', ['walk', 'bicycle']]
+          }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    const emissionTrend = await DailyLog.aggregate([
+      {
+        $match: {
+          userId: { $in: studentIds },
+          ...dateFilter
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt'
+            }
+          },
+          avgEmission: { $avg: '$totalEmissionKg' },
+          totalLogs: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          date: '$_id',
+          avgEmission: { $round: ['$avgEmission', 2] },
+          totalLogs: 1
+        }
+      }
+    ]);
+
+    const categoryBreakdown = await DailyLog.aggregate([
+      { $match: { userId: { $in: studentIds }, ...dateFilter } },
+      {
+        $group: {
+          _id: null,
+          avgTransport: { $avg: '$breakdown.transportKg' },
+          avgFood: { $avg: '$breakdown.foodKg' },
+          avgWaste: { $avg: '$breakdown.wasteKg' },
+          avgEnergy: { $avg: '$breakdown.energyKg' },
+          totalLogs: { $sum: 1 },
+          meatFreeDays: {
+            $sum: {
+              $cond: [{ $in: ['$food.mealType', ['vegetarian', 'vegan']] }, 1, 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    const breakdown = categoryBreakdown[0] || {
+      avgTransport: 0,
+      avgFood: 0,
+      avgWaste: 0,
+      avgEnergy: 0,
+      totalLogs: 0,
+      meatFreeDays: 0
+    };
 
     res.status(200).json({
-      success: true,
-      data: students
+      totalLogs: logs.length,
+      emissionTrend,
+      transportModes,
+      categoryBreakdown: {
+        transport: parseFloat((breakdown.avgTransport || 0).toFixed(2)),
+        food: parseFloat((breakdown.avgFood || 0).toFixed(2)),
+        waste: parseFloat((breakdown.avgWaste || 0).toFixed(2)),
+        energy: parseFloat((breakdown.avgEnergy || 0).toFixed(2)),
+        meatFreeDays: breakdown.meatFreeDays,
+        totalLogs: breakdown.totalLogs
+      },
+      recentLogs: logs.slice(0, 50).map((log) => ({
+        studentName: log.userId?.name || 'Unknown',
+        grade: log.userId?.grade,
+        section: log.userId?.section,
+        date: log.createdAt,
+        totalEmissionKg: log.totalEmissionKg || 0,
+        meatFreeDay: ['vegetarian', 'vegan'].includes(log.food?.mealType),
+        transportEmission: log.breakdown?.transportKg || 0
+      }))
     });
   });
 
   getStudentById = asyncHandler(async (req, res) => {
+    const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
+      ? new mongoose.Types.ObjectId(adminId)
+      : null;
+    const schoolAdmin = schoolObjectId
+      ? await User.findById(schoolObjectId).select('name schoolName')
+      : null;
+    const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
+
     const student = await User.findOne({
       _id: req.params.id,
       role: 'student',
-      schoolId: req.user.schoolId
+      $or: [
+        ...(schoolObjectId ? [{ schoolId: schoolObjectId }] : []),
+        ...(schoolName ? [{ schoolName }] : [])
+      ]
     }).select('-passwordHash');
 
     if (!student) {

@@ -80,7 +80,7 @@ class DailyLogController {
     res.status(statusCode).json({
       success: true,
       message: isExistingLog
-        ? 'Daily log already exists for this date; your entry was updated successfully.'
+        ? 'Daily log already exists for this date, your entry was updated successfully.'
         : 'Daily log submitted successfully.',
       data: {
         log: createdLog,

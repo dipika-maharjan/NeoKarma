@@ -4,6 +4,20 @@ import type { NextRequest } from 'next/server';
 import { routing } from '@/i18n/routing';
 
 const PUBLIC = ['/', '/login', '/register'];
+const PROTECTED_PREFIXES = [
+  '/admin',
+  '/dashboard',
+  '/calculator',
+  '/carbon-mirror',
+  '/plan',
+  '/result',
+  '/score',
+  '/share',
+  '/profile'
+];
+
+const isProtectedRoute = (path: string) =>
+  PROTECTED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 
 // Create i18n middleware from next-intl - let it handle locale detection
 const handleI18n = createMiddleware(routing);
@@ -35,11 +49,11 @@ export function middleware(req: NextRequest) {
   }
 
   // Handle auth redirects
-  if (!token && !PUBLIC.includes(pathname)) {
-    return NextResponse.redirect(new URL('/', req.url));
+  if (!token && isProtectedRoute(pathname)) {
+    return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  if (token && (pathname === '/login' || pathname === '/')) {
+  if (token && (pathname === '/login' || pathname === '/register' || pathname === '/')) {
     const dest = role === 'school_admin' ? '/admin/dashboard' : '/dashboard';
     return NextResponse.redirect(new URL(dest, req.url));
   }

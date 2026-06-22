@@ -16,12 +16,14 @@ import { Menu, X } from 'lucide-react';
 const Navbar = () => {
   const pathname = usePathname();
   const { user, isAuthenticated } = useAuth();
-  const isAdmin = user?.role === 'admin' || getCookie('role') === 'admin';
+  const role = user?.role || getCookie('role');
+  const isAdmin = role === 'school_admin' || role === 'admin';
   const t = useTranslations('Navbar');
   const [scrolled, setScrolled] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(user?.streak?.current || 0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const formatNumber = useNumberFormatter();
+
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);

@@ -5,7 +5,7 @@ import LayoutShell from "@/components/layout/LayoutShell";
 import OfflineSyncProvider from '@/components/OfflineSyncProvider';
 import OfflineBanner from '@/components/OfflineBanner';
 import { NextIntlClientProvider } from 'next-intl';
-import { getI18nConfig } from '@/i18n/request';
+import getI18nConfig from '@/i18n/request';
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",

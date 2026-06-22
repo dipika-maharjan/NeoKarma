@@ -5,6 +5,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/user.repository');
+const User = require('../models/User');
 const config = require('../config/env');
 const AppError = require('../utils/AppError');
 
@@ -13,7 +14,7 @@ class AuthService {
    * Register a new student
    */
   async registerStudent(userData) {
-    const { name, email, password, grade, locationType, schoolName, extraProfile } = userData;
+    const { name, email, password, grade, section, locationType, schoolName, extraProfile } = userData;
 
     // Check if user already exists
     const existingUser = await userRepository.findByEmail(email);
@@ -25,14 +26,25 @@ class AuthService {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    const schoolAdmin = await User.findOne({
+      role: 'school_admin',
+      schoolName
+    });
+
+    if (!schoolAdmin) {
+      throw new AppError('School not found. Please select a valid school.', 400);
+    }
+
     // Create user
     const user = await userRepository.create({
       name,
       email: email.toLowerCase().trim(),
       passwordHash,
       grade,
+      section,
       locationType,
       schoolName: schoolName || null,
+      schoolId: schoolAdmin._id,
       extraProfile: extraProfile || null,
       role: 'student',
       streak: {

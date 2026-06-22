@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -18,32 +18,19 @@ const getCookie = (name) => {
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
-  const role = getCookie('role');
+  const { user, isAuthenticated, logout } = useAuth();
+  const role = user?.role || getCookie('role');
   const isAdmin = role === 'school_admin';
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const adminLinks = [
     { label: 'Dashboard', href: '/admin/dashboard' },
-    { label: 'Schools', href: '/admin/classes' },
     { label: 'Students', href: '/admin/students' },
-    { label: 'Reports', href: '/admin/reports' },
+    { label: 'Reports', href: '/admin/reports' }
   ];
-
-  const studentLinks = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Calculator', href: '/calculator' },
-    { label: 'Daily Log', href: '/daily-log' },
-    { label: 'Carbon Mirror', href: '/carbon-mirror' },
-    { label: 'Streaks', href: '/streaks' },
-  ];
-
-  const links = isAdmin ? adminLinks : studentLinks;
 
   const handleLogout = () => {
-    document.cookie = 'token=; max-age=0; path=/';
-    document.cookie = 'role=; max-age=0; path=/';
-    localStorage.removeItem('token');
+    logout();
     router.replace('/');
   };
 
@@ -57,7 +44,7 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden items-center gap-2 md:flex">
-          {links.map((item) => {
+          {adminLinks.map((item) => {
             const isActive = pathname === item.href;
             return (
               <button
@@ -77,12 +64,8 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <span
-            className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase ${
-              isAdmin ? 'bg-[#E8F5E9] text-[#0A3D25]' : 'bg-[#EAF2FF] text-[#185FA5]'
-            }`}
-          >
-            {isAdmin ? 'Admin Portal' : 'Student'}
+          <span className="rounded-full bg-[#E8F5E9] px-3 py-1 text-[10px] font-semibold uppercase text-[#0A3D25]">
+            Admin Portal
           </span>
 
           {isAuthenticated && user ? (
@@ -116,7 +99,7 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className="space-y-2 border-t border-gray-100 bg-white px-4 py-4 animate-[fadeIn_0.2s_ease-in] md:hidden">
-          {links.map((item) => {
+          {adminLinks.map((item) => {
             const isActive = pathname === item.href;
             return (
               <button
