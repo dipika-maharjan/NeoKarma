@@ -82,46 +82,31 @@ async function calculateStreak(userId) {
  * - Month 3 (Days 60-89): Sustainable habits (optimized phase)
  */
 function buildLogEntryForDay(dayIndex, dateStr) {
-  let transportCycle, mealCycle;
-  let plasticItemCount, foodWasteGrams, energyHours, segregated;
+  // Create a steadily progressive improvement pattern across NUM_DAYS
+  const progress = NUM_DAYS > 1 ? dayIndex / (NUM_DAYS - 1) : 0; // 0.0 .. 1.0
+
+  // Transport progression from high-impact to low-impact
+  const transportStages = ['car', 'motorbike', 'bus', 'motorbike', 'bicycle', 'walk'];
+  const transportIndex = Math.min(transportStages.length - 1, Math.floor(progress * (transportStages.length - 1)));
+  const transportMode = transportStages[transportIndex];
+
+  // Meal progression from high-impact to low-impact
+  const mealStages = ['non-vegetarian', 'mixed', 'vegetarian', 'vegan'];
+  const mealIndex = Math.min(mealStages.length - 1, Math.floor(progress * (mealStages.length - 1)));
+  const mealType = mealStages[mealIndex];
 
   // Distances matched to transportation modes
   const distanceByMode = { walk: 1.5, bicycle: 4, bus: 8, motorbike: 6, car: 12 };
-
-  if (dayIndex < 30) {
-    // --- MONTH 1: Heavy carbon footprint ---
-    transportCycle = ['car', 'motorbike', 'bus', 'car', 'motorbike', 'walk', 'bus'];
-    mealCycle = ['non-vegetarian', 'mixed', 'non-vegetarian', 'mixed', 'vegetarian', 'non-vegetarian', 'mixed'];
-    
-    plasticItemCount = dayIndex % 3 === 0 ? 3 : 2;
-    foodWasteGrams = dayIndex % 2 === 0 ? 80 : 40;
-    energyHours = 6;
-    segregated = false;
-
-  } else if (dayIndex < 60) {
-    // --- MONTH 2: Making conscious changes ---
-    transportCycle = ['bus', 'motorbike', 'bicycle', 'bus', 'walk', 'car', 'bicycle'];
-    mealCycle = ['mixed', 'vegetarian', 'mixed', 'non-vegetarian', 'vegetarian', 'mixed', 'vegan'];
-    
-    plasticItemCount = dayIndex % 4 === 0 ? 1 : 2;
-    foodWasteGrams = dayIndex % 3 === 0 ? 40 : 0;
-    energyHours = 4;
-    segregated = dayIndex % 2 === 0; // starts recycling half the time
-
-  } else {
-    // --- MONTH 3: Highly sustainable eco-champ ---
-    transportCycle = ['walk', 'bicycle', 'bus', 'walk', 'bicycle', 'bus', 'car']; // car only once a week max
-    mealCycle = ['vegetarian', 'vegan', 'vegetarian', 'mixed', 'vegan', 'vegetarian', 'vegan'];
-    
-    plasticItemCount = dayIndex % 5 === 0 ? 1 : 0; // mostly zero plastic
-    foodWasteGrams = dayIndex % 7 === 0 ? 20 : 0; // minimal waste
-    energyHours = 3;
-    segregated = true; // completely locked in green habits
-  }
-
-  const transportMode = transportCycle[dayIndex % transportCycle.length];
-  const mealType = mealCycle[dayIndex % mealCycle.length];
   const distanceKm = distanceByMode[transportMode] ?? 5;
+
+  // Waste/plastic and food waste decrease linearly as progress increases
+  const plasticItemCount = Math.max(0, Math.round(3 * (1 - progress))); // 3 -> 0
+  const foodWasteGrams = Math.max(0, Math.round(80 * (1 - progress))); // 80g -> 0g
+
+  // Energy usage trends downward from 6 to 3 hours
+  const energyHours = Math.max(1, Math.round(6 - 3 * progress));
+
+  const segregated = progress >= 0.6; // becomes consistently segregating later in the timeline
 
   return {
     date: dateStr,
