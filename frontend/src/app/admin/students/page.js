@@ -3,9 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  AlertTriangle,
   ArrowUpDown,
-  CheckCircle2,
   Download,
   Search,
   Users,
@@ -75,11 +73,7 @@ export default function AdminStudentsPage() {
       const matchesStatus =
         statusFilter === 'all'
           ? true
-          : statusFilter === 'at-risk'
-            ? student.atRisk
-            : statusFilter === 'active'
-              ? !student.atRisk
-              : true;
+          : student.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
   }, [students, query, statusFilter]);
@@ -90,13 +84,10 @@ export default function AdminStudentsPage() {
     return filteredStudents.slice(start, start + PAGE_SIZE);
   }, [filteredStudents, page]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [query, statusFilter]);
-
   const summary = useMemo(() => {
-    const activeCount = students.filter((student) => !student.atRisk).length;
-    const atRiskCount = students.filter((student) => student.atRisk).length;
+    const activeCount = students.filter((student) => student.status === 'active').length;
+    const atRiskCount = students.filter((student) => student.status === 'at_risk').length;
+    const inactiveCount = students.filter((student) => student.status === 'inactive').length;
     const avgEmission =
       students.length > 0
         ? students.reduce((sum, item) => sum + Number(item.avgEmission || 0), 0) /
@@ -107,6 +98,7 @@ export default function AdminStudentsPage() {
       totalStudents: students.length,
       activeStudents: activeCount,
       atRiskStudents: atRiskCount,
+      inactiveStudents: inactiveCount,
       avgEmission
     };
   }, [students]);
@@ -162,7 +154,7 @@ export default function AdminStudentsPage() {
               accent: 'bg-[#eef8f1]'
             },
             {
-              label: 'Active learners',
+              label: 'Active',
               value: formatInt(summary.activeStudents),
               accent: 'bg-[#eef6ff]'
             },
@@ -172,9 +164,9 @@ export default function AdminStudentsPage() {
               accent: 'bg-[#fff7ed]'
             },
             {
-              label: 'Avg emission',
-              value: `${formatNumber(summary.avgEmission)} kg`,
-              accent: 'bg-[#f5f3ff]'
+              label: 'Inactive',
+              value: formatInt(summary.inactiveStudents),
+              accent: 'bg-[#f5f5f5]'
             }
           ].map((item) => (
             <div key={item.label} className="rounded-2xl bg-white p-5 shadow-sm">
@@ -193,7 +185,10 @@ export default function AdminStudentsPage() {
               <Search size={16} className="text-[#6b7280]" />
               <input
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setPage(1);
+                }}
                 placeholder="Search students"
                 className="w-full outline-none md:w-72"
               />
@@ -201,12 +196,16 @@ export default function AdminStudentsPage() {
             <div className="flex items-center gap-2">
               <select
                 value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
+                onChange={(event) => {
+                  setStatusFilter(event.target.value);
+                  setPage(1);
+                }}
                 className="rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm outline-none"
               >
                 <option value="all">All students</option>
                 <option value="active">Active</option>
-                <option value="at-risk">At risk</option>
+                <option value="at_risk">At risk</option>
+                <option value="inactive">Inactive</option>
               </select>
             </div>
           </div>
@@ -226,55 +225,78 @@ export default function AdminStudentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eef0ee] bg-white">
-                  {paginatedStudents.map((student) => (
-                    <tr key={student._id} className="hover:bg-[#f9fbfa]">
-                      <td className="px-4 py-3">
-                        <div>
-                          <p className="font-semibold text-[#111827]">{student.name}</p>
-                          <p className="text-xs text-[#6b7280]">{student.email}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="rounded-full bg-[#f5f7f6] px-2.5 py-1 text-xs font-medium text-[#0A3D25]">
-                          Grade {student.grade || '—'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-[#111827]">{student.currentStreak} day{student.currentStreak === 1 ? '' : 's'}</td>
-                      <td className="px-4 py-3 text-[#111827]">{formatInt(student.totalLogs)}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color:
-                              student.avgEmission === 0
-                                ? '#aaa'
-                                : student.avgEmission <= 2
-                                  ? '#1a7a4a'
-                                  : student.avgEmission <= 4
-                                    ? '#f59e0b'
-                                    : '#c0392b'
-                          }}
-                        >
-                          {student.avgEmission === 0
-                            ? 'No logs'
-                            : `${student.avgEmission} kg`}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {student.atRisk ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#fff7ed] px-2.5 py-1 text-xs font-semibold text-[#b45309]">
-                            <AlertTriangle size={12} /> At risk
+                  {paginatedStudents.map((student) => {
+                    const statusConfig = {
+                      active: {
+                        label: '● Active',
+                        bg: '#e6f4ed',
+                        color: '#1a7a4a'
+                      },
+                      at_risk: {
+                        label: '⚠ At risk',
+                        bg: '#fff8ed',
+                        color: '#92600a'
+                      },
+                      inactive: {
+                        label: '○ Inactive',
+                        bg: '#f5f5f5',
+                        color: '#888'
+                      }
+                    };
+
+                    const cfg = statusConfig[student.status] || statusConfig.inactive;
+
+                    return (
+                      <tr key={student._id} className="hover:bg-[#f9fbfa]">
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="font-semibold text-[#111827]">{student.name}</p>
+                            <p className="text-xs text-[#6b7280]">{student.email}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="rounded-full bg-[#f5f7f6] px-2.5 py-1 text-xs font-medium text-[#0A3D25]">
+                            Grade {student.grade || '—'}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f1] px-2.5 py-1 text-xs font-semibold text-[#0A3D25]">
-                            <CheckCircle2 size={12} /> Active
+                        </td>
+                        <td className="px-4 py-3 text-[#111827]">{student.currentStreak} day{student.currentStreak === 1 ? '' : 's'}</td>
+                        <td className="px-4 py-3 text-[#111827]">{formatInt(student.totalLogs)}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color:
+                                student.avgEmission === 0
+                                  ? '#aaa'
+                                  : student.avgEmission <= 2
+                                    ? '#1a7a4a'
+                                    : student.avgEmission <= 4
+                                      ? '#f59e0b'
+                                      : '#c0392b'
+                            }}
+                          >
+                            {student.avgEmission === 0
+                              ? 'No logs'
+                              : `${student.avgEmission} kg`}
                           </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-[#111827]">{formatDate(student.lastLogAt)}</td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span style={{
+                            padding: '3px 10px',
+                            borderRadius: 20,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            background: cfg.bg,
+                            color: cfg.color
+                          }}>
+                            {cfg.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-[#111827]">{formatDate(student.lastLogAt)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

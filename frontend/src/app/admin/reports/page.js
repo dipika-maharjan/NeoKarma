@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Download,
   FileText,
   Leaf,
   TrendingUp,
-  Users,
   Wind
 } from 'lucide-react';
 import {
@@ -22,7 +21,6 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import apiClient from '@/lib/api/axios';
 import { useAuth } from '@/context/AuthContext';
 
 const formatNumber = (value) =>
@@ -47,9 +45,7 @@ const exportCsv = (rows) => {
     'Student',
     'Grade',
     'Date',
-    'Total Emission (kg)',
-    'Meat-Free',
-    'Transport Emission (kg)'
+    'Total Emission (kg)'
   ];
   const csvContent = [
     headers.join(','),
@@ -58,9 +54,7 @@ const exportCsv = (rows) => {
         row.studentName,
         row.grade || '',
         row.date ? new Date(row.date).toISOString().slice(0, 10) : '',
-        row.totalEmissionKg || 0,
-        row.meatFreeDay ? 'Yes' : 'No',
-        row.transportEmission || 0
+        row.totalEmissionKg || 0
       ]
         .map((value) => `"${String(value).replaceAll('"', '""')}"`)
         .join(',')
@@ -89,41 +83,124 @@ function Pagination({
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
 
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+    .reduce((acc, p, idx, arr) => {
+      if (idx > 0 && p - arr[idx - 1] > 1) {
+        acc.push('...');
+      }
+      acc.push(p);
+      return acc;
+    }, []);
+
   return (
-    <div className="mt-4 flex items-center justify-between border-t border-[#eef0ee] pt-3">
-      <span className="text-xs text-[#6b7280]">
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 14,
+        paddingTop: 14,
+        borderTop: '1px solid #f0f0f0'
+      }}
+    >
+      <span
+        style={{
+          fontSize: 12,
+          color: '#aaa',
+          fontWeight: 400
+        }}
+      >
         {start}–{end} of {total} {label}
       </span>
-      <div className="flex items-center gap-1">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 3
+        }}
+      >
         <button
           type="button"
           onClick={() => onChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          className="rounded-md border border-[#e5e7eb] px-2.5 py-1 text-xs font-semibold text-[#111827] disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-[#d1d5db]"
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 6,
+            border: '1px solid #e8e8e8',
+            background: '#fff',
+            color: page === 1 ? '#ddd' : '#555',
+            fontSize: 14,
+            cursor: page === 1 ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 500
+          }}
         >
-          ←
+          ‹
         </button>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => onChange(p)}
-            className={`min-w-7 rounded-md border px-2 py-1 text-xs font-semibold ${
-              page === p
-                ? 'border-[#1a7a4a] bg-[#1a7a4a] text-white'
-                : 'border-[#e5e7eb] bg-white text-[#111827]'
-            }`}
-          >
-            {p}
-          </button>
-        ))}
+        {pages.map((p, i) =>
+          p === '...' ? (
+            <span
+              key={`ellipsis-${i}`}
+              style={{
+                width: 30,
+                height: 30,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 12,
+                color: '#aaa'
+              }}
+            >
+              •••
+            </span>
+          ) : (
+            <button
+              key={p}
+              type="button"
+              onClick={() => onChange(p)}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 6,
+                border: page === p ? 'none' : '1px solid #e8e8e8',
+                background: page === p ? '#1a7a4a' : '#fff',
+                color: page === p ? '#fff' : '#555',
+                fontSize: 12,
+                fontWeight: page === p ? 700 : 400,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {p}
+            </button>
+          )
+        )}
         <button
           type="button"
           onClick={() => onChange(Math.min(totalPages, page + 1))}
           disabled={page === totalPages}
-          className="rounded-md border border-[#e5e7eb] px-2.5 py-1 text-xs font-semibold text-[#111827] disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-[#d1d5db]"
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 6,
+            border: '1px solid #e8e8e8',
+            background: '#fff',
+            color: page === totalPages ? '#ddd' : '#555',
+            fontSize: 14,
+            cursor: page === totalPages ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 500
+          }}
         >
-          →
+          ›
         </button>
       </div>
     </div>
@@ -135,9 +212,18 @@ export default function AdminReportsPage() {
   const { isAuthenticated } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [timeframe, setTimeframe] = useState('30');
   const [logsPage, setLogsPage] = useState(1);
+  const isFirstLoad = useRef(true);
   const LOGS_PAGE_SIZE = 8;
+  const timeframeLabel = {
+    7: 'Last 7 days',
+    30: 'Last 30 days',
+    90: 'Last 3 months',
+    all: 'All time'
+  }[timeframe] || 'Last 30 days';
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -147,18 +233,37 @@ export default function AdminReportsPage() {
 
     const fetchReports = async () => {
       try {
-        setLoading(true);
-        const response = await apiClient.get('/admin/reports');
-        setData(response.data);
+        if (isFirstLoad.current) {
+          setLoading(true);
+        } else {
+          setRefreshing(true);
+        }
+        setError('');
+
+        const token = localStorage.getItem('token') || '';
+        const response = await fetch(`/api/admin/reports?days=${timeframe}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load reports.');
+        }
+
+        const reportData = await response.json();
+        setData(reportData);
       } catch (err) {
         setError(err?.message || 'Failed to load reports.');
       } finally {
         setLoading(false);
+        setRefreshing(false);
+        isFirstLoad.current = false;
       }
     };
 
     fetchReports();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, timeframe]);
 
   const chartData = useMemo(
     () => (data?.emissionTrend || []).map((entry) => ({ ...entry })),
@@ -166,16 +271,11 @@ export default function AdminReportsPage() {
   );
   const recentLogs = data?.recentLogs || [];
   const logsTotalPages = Math.max(1, Math.ceil(recentLogs.length / LOGS_PAGE_SIZE));
+  const safeLogsPage = Math.min(logsPage, logsTotalPages);
   const paginatedLogs = recentLogs.slice(
-    (logsPage - 1) * LOGS_PAGE_SIZE,
-    logsPage * LOGS_PAGE_SIZE
+    (safeLogsPage - 1) * LOGS_PAGE_SIZE,
+    safeLogsPage * LOGS_PAGE_SIZE
   );
-
-  useEffect(() => {
-    if (logsPage > logsTotalPages) {
-      setLogsPage(1);
-    }
-  }, [logsPage, logsTotalPages]);
 
   if (loading) {
     return (
@@ -220,18 +320,49 @@ export default function AdminReportsPage() {
                 School analytics
               </p>
               <h1 className="mt-1 text-2xl font-bold text-[#0A3D25]">Reports</h1>
+              <p className="mt-1 text-xs text-[#6b7280]">{timeframeLabel}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => exportCsv(data.recentLogs || [])}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0A3D25] px-4 py-2 text-sm font-semibold text-white"
-            >
-              <Download size={16} /> Export CSV
-            </button>
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1 rounded-xl bg-[#f5f7f6] p-1">
+                {[
+                  { label: '7 Days', value: '7' },
+                  { label: '30 Days', value: '30' },
+                  { label: '3 Months', value: '90' },
+                  { label: 'All Time', value: 'all' }
+                ].map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setTimeframe(t.value)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                      timeframe === t.value
+                        ? 'bg-[#0A3D25] text-white'
+                        : 'text-[#6b7280] hover:bg-white'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => exportCsv(data.recentLogs || [])}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#0A3D25] px-4 py-2 text-sm font-semibold text-white"
+              >
+                <Download size={16} /> Export CSV
+              </button>
+            </div>
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-5">
+        <section
+          className="grid gap-4 md:grid-cols-5"
+          style={{
+            opacity: refreshing ? 0.5 : 1,
+            transition: 'opacity 0.2s',
+            pointerEvents: refreshing ? 'none' : 'auto'
+          }}
+        >
           {[
             {
               label: 'Total logs',
@@ -318,14 +449,13 @@ export default function AdminReportsPage() {
             </div>
             <div className="overflow-hidden rounded-2xl border border-[#eef0ee]">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-[#eef0ee] text-sm">
+                <table className="min-w-full text-sm">
                   <thead className="bg-[#f9faf9] text-[#6b7280]">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold">Student</th>
-                      <th className="px-4 py-3 text-left font-semibold">Class</th>
-                      <th className="px-4 py-3 text-left font-semibold">Date</th>
-                      <th className="px-4 py-3 text-left font-semibold">Emission</th>
-                      <th className="px-4 py-3 text-left font-semibold">Transport</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Student</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Grade</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Emission</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#eef0ee] bg-white">
@@ -335,7 +465,6 @@ export default function AdminReportsPage() {
                         <td className="px-4 py-3 text-[#6b7280]">{row.grade || '—'}</td>
                         <td className="px-4 py-3 text-[#6b7280]">{formatDate(row.date)}</td>
                         <td className="px-4 py-3 font-semibold text-[#0A3D25]">{formatNumber(row.totalEmissionKg)}kg</td>
-                        <td className="px-4 py-3 text-[#6b7280]">{formatNumber(row.transportEmission)}kg</td>
                       </tr>
                     ))}
                   </tbody>
@@ -343,7 +472,7 @@ export default function AdminReportsPage() {
               </div>
             </div>
             <Pagination
-              page={logsPage}
+              page={safeLogsPage}
               totalPages={logsTotalPages}
               total={recentLogs.length}
               pageSize={LOGS_PAGE_SIZE}
@@ -404,18 +533,6 @@ export default function AdminReportsPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-2">
-                <Users size={18} className="text-[#0A3D25]" />
-                <p className="text-sm font-semibold text-[#111827]">Meat-free days</p>
-              </div>
-              <h2 className="mt-2 text-3xl font-bold text-[#0A3D25]">
-                {formatInt(breakdown.meatFreeDays || 0)}
-              </h2>
-              <p className="mt-1 text-sm text-[#6b7280]">
-                {breakdown.totalLogs || 0} total log entries recorded
-              </p>
-            </div>
           </div>
         </section>
       </div>

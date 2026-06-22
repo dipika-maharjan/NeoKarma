@@ -10,6 +10,18 @@ const streakToMarks = require('../utils/streakToMarks');
 class AdminController {
   getDashboard = asyncHandler(async (req, res) => {
     const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const rawDays = req.query.days;
+    const parsedDays = rawDays === 'all' ? 'all' : parseInt(rawDays, 10);
+    const dateFilter = parsedDays === 'all' || Number.isNaN(parsedDays)
+      ? {}
+      : {
+          createdAt: {
+            $gte: new Date(
+              Date.now() - parsedDays * 24 * 60 * 60 * 1000
+            )
+          }
+        };
+
     const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
       ? new mongoose.Types.ObjectId(adminId)
       : null;
@@ -47,21 +59,33 @@ class AdminController {
     const studentStreaks = students
       .slice()
       .sort((a, b) => (b.practicalMarks?.currentStreak || 0) - (a.practicalMarks?.currentStreak || 0))
-      .map((student) => ({
-        name: student.name,
-        grade: student.grade,
-        section: student.section,
-        currentStreak: student.practicalMarks?.currentStreak || 0,
-        longestStreak: student.practicalMarks?.longestStreak || 0,
-        totalLogDays: student.practicalMarks?.totalLogDays || 0,
-        lastSyncedAt: student.practicalMarks?.lastSyncedAt || null,
-        atRisk: student.practicalMarks?.lastSyncedAt
-          ? new Date(student.practicalMarks.lastSyncedAt) < twoDaysAgo
-          : true
-      }));
+      .map((student) => {
+        const lastSyncedAt = student.practicalMarks?.lastSyncedAt || null;
+        const isAtRisk = lastSyncedAt
+          ? new Date(lastSyncedAt) < twoDaysAgo
+          : true;
+        const status = !lastSyncedAt
+          ? 'inactive'
+          : isAtRisk
+            ? 'at_risk'
+            : 'active';
+
+        return {
+          name: student.name,
+          grade: student.grade,
+          section: student.section,
+          currentStreak: student.practicalMarks?.currentStreak || 0,
+          longestStreak: student.practicalMarks?.longestStreak || 0,
+          totalLogDays: student.practicalMarks?.totalLogDays || 0,
+          lastSyncedAt,
+          status,
+          atRisk: isAtRisk
+        };
+      });
 
     const activityLogs = await ActivityLog.find({
-      studentId: { $in: studentIds }
+      studentId: { $in: studentIds },
+      ...dateFilter
     })
       .sort({ createdAt: -1 })
       .limit(10)
@@ -77,7 +101,8 @@ class AdminController {
 
     if (liveActivity.length === 0) {
       const recentLogs = await DailyLog.find({
-        userId: { $in: studentIds }
+        userId: { $in: studentIds },
+        ...dateFilter
       })
         .sort({ createdAt: -1 })
         .limit(10)
@@ -103,7 +128,10 @@ class AdminController {
       ecoActionsAgg
     ] = await Promise.all([
       User.countDocuments({ role: 'school_admin' }),
-      DailyLog.countDocuments({ userId: { $in: studentIds } }),
+      DailyLog.countDocuments({
+        userId: { $in: studentIds },
+        ...dateFilter
+      }),
       DailyLog.aggregate([
         {
           $lookup: {
@@ -116,10 +144,15 @@ class AdminController {
         { $unwind: '$student' },
         {
           $match: {
-            $or: [
-              { 'student.schoolId': schoolObjectId },
-              { 'student.schoolName': schoolName }
-            ].filter((condition) => Object.values(condition)[0])
+            $and: [
+              {
+                $or: [
+                  { 'student.schoolId': schoolObjectId },
+                  { 'student.schoolName': schoolName }
+                ].filter((condition) => Object.values(condition)[0])
+              },
+              dateFilter
+            ]
           }
         },
         {
@@ -141,10 +174,15 @@ class AdminController {
         { $unwind: '$student' },
         {
           $match: {
-            $or: [
-              { 'student.schoolId': schoolObjectId },
-              { 'student.schoolName': schoolName }
-            ].filter((condition) => Object.values(condition)[0])
+            $and: [
+              {
+                $or: [
+                  { 'student.schoolId': schoolObjectId },
+                  { 'student.schoolName': schoolName }
+                ].filter((condition) => Object.values(condition)[0])
+              },
+              dateFilter
+            ]
           }
         },
         {
@@ -186,7 +224,7 @@ class AdminController {
         .limit(3)
         .populate('schoolId', 'schoolName'),
       DailyLog.aggregate([
-        { $match: { userId: { $in: studentIds } } },
+        { $match: { userId: { $in: studentIds }, ...dateFilter } },
         {
           $group: {
             _id: null,
@@ -242,7 +280,7 @@ class AdminController {
         }
       ]),
       DailyLog.aggregate([
-        { $match: { userId: { $in: studentIds } } },
+        { $match: { userId: { $in: studentIds }, ...dateFilter } },
         {
           $group: {
             _id: null,
@@ -263,7 +301,7 @@ class AdminController {
         }
       ]),
       DailyLog.aggregate([
-        { $match: { userId: { $in: studentIds } } },
+        { $match: { userId: { $in: studentIds }, ...dateFilter } },
         {
           $group: {
             _id: null,
@@ -331,7 +369,8 @@ class AdminController {
     const gradeDistribution = await DailyLog.aggregate([
       {
         $match: {
-          userId: { $in: studentIds }
+          userId: { $in: studentIds },
+          ...dateFilter
         }
       },
       {
@@ -388,13 +427,11 @@ class AdminController {
       }
     ]);
 
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
     const weeklyActivity = await DailyLog.aggregate([
       {
         $match: {
           userId: { $in: studentIds },
-          createdAt: { $gte: sevenDaysAgo }
+          ...dateFilter
         }
       },
       {
@@ -580,34 +617,58 @@ class AdminController {
       };
     });
 
+    const oneDayAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
     const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
 
     res.status(200).json(
-      students.map((student) => ({
-        _id: student._id,
-        name: student.name,
-        email: student.email,
-        grade: student.grade,
-        section: student.section,
-        schoolName: student.schoolName,
-        locationType: student.locationType,
-        isActive: student.isActive,
-        joinedAt: student.createdAt,
-        totalLogs: logMap[student._id.toString()]?.count || 0,
-        avgEmission: logMap[student._id.toString()]?.avgEmission || 0,
-        lastLogAt: logMap[student._id.toString()]?.lastLog || null,
-        currentStreak: student.practicalMarks?.currentStreak || 0,
-        longestStreak: student.practicalMarks?.longestStreak || 0,
-        totalLogDays: student.practicalMarks?.totalLogDays || 0,
-        atRisk: student.practicalMarks?.lastSyncedAt
-          ? new Date(student.practicalMarks.lastSyncedAt) < twoDaysAgo
-          : true
-      }))
+      students.map((student) => {
+        const studentId = student._id.toString();
+        const lastLog = logMap[studentId]?.lastLog || null;
+        const status = !lastLog
+          ? 'inactive'
+          : new Date(lastLog) >= oneDayAgo
+            ? 'active'
+            : new Date(lastLog) >= twoDaysAgo
+              ? 'at_risk'
+              : 'inactive';
+
+        return {
+          _id: student._id,
+          name: student.name,
+          email: student.email,
+          grade: student.grade,
+          section: student.section,
+          schoolName: student.schoolName,
+          locationType: student.locationType,
+          isActive: student.isActive,
+          joinedAt: student.createdAt,
+          totalLogs: logMap[studentId]?.count || 0,
+          avgEmission: logMap[studentId]?.avgEmission || 0,
+          lastLogAt: lastLog,
+          status,
+          currentStreak: student.practicalMarks?.currentStreak || 0,
+          longestStreak: student.practicalMarks?.longestStreak || 0,
+          totalLogDays: student.practicalMarks?.totalLogDays || 0,
+          atRisk: status === 'at_risk'
+        };
+      })
     );
   });
 
   getReports = asyncHandler(async (req, res) => {
     const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const rawDays = req.query.days;
+    const parsedDays = rawDays === 'all' ? 'all' : parseInt(rawDays, 10);
+    const dateFilter = parsedDays === 'all' || Number.isNaN(parsedDays)
+      ? {}
+      : {
+          createdAt: {
+            $gte: new Date(
+              Date.now() - parsedDays * 24 * 60 * 60 * 1000
+            )
+          }
+        };
+
     const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
       ? new mongoose.Types.ObjectId(adminId)
       : null;
@@ -628,13 +689,14 @@ class AdminController {
     const studentIds = students.map((student) => student._id);
 
     const logs = await DailyLog.find({
-      userId: { $in: studentIds }
+      userId: { $in: studentIds },
+      ...dateFilter
     })
       .sort({ createdAt: -1 })
       .populate('userId', 'name grade section');
 
     const transportModes = await DailyLog.aggregate([
-      { $match: { userId: { $in: studentIds } } },
+      { $match: { userId: { $in: studentIds }, ...dateFilter } },
       {
         $group: {
           _id: '$transportation.mode',
@@ -664,13 +726,11 @@ class AdminController {
       { $sort: { count: -1 } }
     ]);
 
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
     const emissionTrend = await DailyLog.aggregate([
       {
         $match: {
           userId: { $in: studentIds },
-          createdAt: { $gte: thirtyDaysAgo }
+          ...dateFilter
         }
       },
       {
@@ -696,7 +756,7 @@ class AdminController {
     ]);
 
     const categoryBreakdown = await DailyLog.aggregate([
-      { $match: { userId: { $in: studentIds } } },
+      { $match: { userId: { $in: studentIds }, ...dateFilter } },
       {
         $group: {
           _id: null,

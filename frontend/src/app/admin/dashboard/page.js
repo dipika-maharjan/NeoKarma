@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Activity,
@@ -26,7 +26,6 @@ import {
   Cell,
   LabelList
 } from 'recharts';
-import apiClient from '@/lib/api/axios';
 import { useAuth } from '@/context/AuthContext';
 
 const formatNumber = (value) =>
@@ -75,7 +74,6 @@ const cardStyle = {
   display: 'flex',
   flexDirection: 'column',
   minWidth: 0,
-  height: '100%',
   boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)'
 };
 
@@ -92,73 +90,124 @@ function Pagination({
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
 
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+    .reduce((acc, p, idx, arr) => {
+      if (idx > 0 && p - arr[idx - 1] > 1) {
+        acc.push('...');
+      }
+      acc.push(p);
+      return acc;
+    }, []);
+
   return (
     <div
       style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 12,
-        paddingTop: 12,
-        borderTop: '1px solid #f5f5f5'
+        marginTop: 14,
+        paddingTop: 14,
+        borderTop: '1px solid #f0f0f0'
       }}
     >
-      <span style={{ fontSize: 11, color: '#888' }}>
+      <span
+        style={{
+          fontSize: 12,
+          color: '#aaa',
+          fontWeight: 400
+        }}
+      >
         {start}–{end} of {total} {label}
       </span>
-      <div style={{ display: 'flex', gap: 4 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 3
+        }}
+      >
         <button
           onClick={() => onChange(Math.max(1, page - 1))}
           disabled={page === 1}
           style={{
-            padding: '4px 10px',
+            width: 30,
+            height: 30,
             borderRadius: 6,
-            border: '1px solid #e0e0e0',
-            background: page === 1 ? '#f5f5f5' : '#fff',
-            color: page === 1 ? '#ccc' : '#111',
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: page === 1 ? 'not-allowed' : 'pointer'
+            border: '1px solid #e8e8e8',
+            background: '#fff',
+            color: page === 1 ? '#ddd' : '#555',
+            fontSize: 14,
+            cursor: page === 1 ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 500
           }}
         >
-          ←
+          ‹
         </button>
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-          <button
-            key={p}
-            onClick={() => onChange(p)}
-            style={{
-              padding: '4px 8px',
-              borderRadius: 6,
-              border: '1px solid #e0e0e0',
-              background: page === p ? '#1a7a4a' : '#fff',
-              color: page === p ? '#fff' : '#111',
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: 'pointer',
-              minWidth: 28
-            }}
-          >
-            {p}
-          </button>
-        ))}
+        {pages.map((p, i) =>
+          p === '...' ? (
+            <span
+              key={`ellipsis-${i}`}
+              style={{
+                width: 30,
+                height: 30,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 12,
+                color: '#aaa'
+              }}
+            >
+              •••
+            </span>
+          ) : (
+            <button
+              key={p}
+              onClick={() => onChange(p)}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 6,
+                border: page === p ? 'none' : '1px solid #e8e8e8',
+                background: page === p ? '#1a7a4a' : '#fff',
+                color: page === p ? '#fff' : '#555',
+                fontSize: 12,
+                fontWeight: page === p ? 700 : 400,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s'
+              }}
+            >
+              {p}
+            </button>
+          )
+        )}
 
         <button
           onClick={() => onChange(Math.min(totalPages, page + 1))}
           disabled={page === totalPages}
           style={{
-            padding: '4px 10px',
+            width: 30,
+            height: 30,
             borderRadius: 6,
-            border: '1px solid #e0e0e0',
-            background: page === totalPages ? '#f5f5f5' : '#fff',
-            color: page === totalPages ? '#ccc' : '#111',
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: page === totalPages ? 'not-allowed' : 'pointer'
+            border: '1px solid #e8e8e8',
+            background: '#fff',
+            color: page === totalPages ? '#ddd' : '#555',
+            fontSize: 14,
+            cursor: page === totalPages ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 500
           }}
         >
-          →
+          ›
         </button>
       </div>
     </div>
@@ -171,13 +220,22 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [timeframe, setTimeframe] = useState('30');
   const [activeChart, setActiveChart] = useState('grades'); // 'grades' | 'sources' | 'eco'
   const [classPage, setClassPage] = useState(1);
   const [streakPage, setStreakPage] = useState(1);
   const [activityPage, setActivityPage] = useState(1);
+  const isFirstLoad = useRef(true);
   const CLASS_PAGE_SIZE = 5;
   const STREAK_PAGE_SIZE = 5;
   const ACTIVITY_PAGE_SIZE = 4;
+  const timeframeLabel = {
+    7: 'Last 7 days',
+    30: 'Last 30 days',
+    90: 'Last 3 months',
+    all: 'All time'
+  }[timeframe] || 'Last 30 days';
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -187,23 +245,37 @@ export default function AdminDashboardPage() {
 
     const fetchDashboard = async () => {
       try {
-        setLoading(true);
-        const response = await apiClient.get('/admin/dashboard');
-        const dashboardData = response.data || null;
-        console.log('Dashboard data:', dashboardData);
-        console.log('Total students:', dashboardData?.stats?.totalStudents);
-        console.log('Total reports:', dashboardData?.stats?.totalReports);
-        console.log('Student streaks:', dashboardData?.studentStreaks);
-        setData(dashboardData);
+        if (isFirstLoad.current) {
+          setLoading(true);
+        } else {
+          setRefreshing(true);
+        }
+        setError('');
+
+        const token = localStorage.getItem('token') || '';
+        const response = await fetch(`/api/admin/dashboard?days=${timeframe}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load dashboard data.');
+        }
+
+        const dashboardData = await response.json();
+        setData(dashboardData || null);
       } catch (err) {
         setError(err?.message || 'Failed to load dashboard data.');
       } finally {
         setLoading(false);
+        setRefreshing(false);
+        isFirstLoad.current = false;
       }
     };
 
     fetchDashboard();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, timeframe]);
 
   if (loading) {
     return (
@@ -372,17 +444,54 @@ export default function AdminDashboardPage() {
                 Welcome back, {adminName || 'Admin'}
               </p>
             </div>
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.1)',
-                padding: '10px 14px',
-                borderRadius: 999,
-                fontSize: 13,
-                fontWeight: 700,
-                color: '#fff'
-              }}
-            >
-              {formatInt(studentsEnrolled ?? stats.totalStudents)} students enrolled
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 4,
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: 10,
+                  padding: 4
+                }}
+              >
+                {[
+                  { label: '7 Days', value: '7' },
+                  { label: '30 Days', value: '30' },
+                  { label: '3 Months', value: '90' },
+                  { label: 'All Time', value: 'all' }
+                ].map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setTimeframe(t.value)}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: 6,
+                      border: 'none',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      background: timeframe === t.value ? '#fff' : 'transparent',
+                      color: timeframe === t.value ? '#1a7a4a' : 'rgba(255, 255, 255, 0.8)',
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  padding: '10px 14px',
+                  borderRadius: 999,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: '#fff'
+                }}
+              >
+                {formatInt(studentsEnrolled ?? stats.totalStudents)} students enrolled
+              </div>
             </div>
           </div>
         </section>
@@ -428,14 +537,14 @@ export default function AdminDashboardPage() {
           ))}
         </section>
 
-        <section style={{ ...cardStyle, height: '100%' }}>
+        <section style={{ ...cardStyle, padding: '16px 20px' }}>
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
               gap: 16,
-              marginBottom: 24,
+              marginBottom: 12,
               flexWrap: 'wrap'
             }}
           >
@@ -455,6 +564,9 @@ export default function AdminDashboardPage() {
               <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111', margin: 0 }}>
                 Emission Analytics
               </h3>
+              <p style={{ fontSize: 11, color: '#888', margin: '6px 0 0' }}>
+                {timeframeLabel}
+              </p>
             </div>
             <div
               style={{
@@ -491,145 +603,179 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           </div>
-          <div style={{ width: '100%', height: 320 }}>
+          <div
+            style={{
+              width: '100%',
+              opacity: refreshing ? 0.5 : 1,
+              transition: 'opacity 0.2s',
+              pointerEvents: refreshing ? 'none' : 'auto'
+            }}
+          >
             {activeChart === 'grades' && (
               (data.gradeDistribution || []).length === 0 ? (
                 <div
                   style={{
-                    height: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: '#888',
-                    fontSize: 13
+                    fontSize: 13,
+                    padding: '24px 0'
                   }}
                 >
                   No emission data yet. Students need to submit logs.
                 </div>
               ) : (
-                <div>
-                  <p
-                    style={{
-                      fontSize: 12,
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 32
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{
+                      fontSize: 11,
                       color: '#888',
-                      marginBottom: 12
-                    }}
-                  >
-                    Average CO₂ emission per grade (kg). Lower is better.
-                  </p>
-                  <ResponsiveContainer width="100%" height={260}>
-                    <BarChart
-                      data={data.gradeDistribution || []}
-                      margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-                      barCategoryGap="40%"
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                      <XAxis
-                        dataKey="grade"
-                        tickFormatter={(value) => `Grade ${value}`}
-                        tick={{ fontSize: 12, fill: '#888' }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        tickFormatter={(value) => `${value} kg`}
-                        tick={{ fontSize: 12, fill: '#888' }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: 10,
-                          border: '1px solid #eef0ee',
-                          fontSize: 12
-                        }}
-                        formatter={(value) => [`${value} kg CO₂`, 'Avg Emission']}
-                        labelFormatter={(label) => `Grade ${label}`}
-                      />
-                      <Bar
-                        dataKey="avgEmission"
-                        radius={[6, 6, 0, 0]}
-                        name="Avg Emission"
+                      marginBottom: 8
+                    }}>
+                      Average CO₂ per grade. Lower is better.
+                    </p>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart
+                        data={data.gradeDistribution}
+                        margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
+                        barCategoryGap="3%"
+                        barSize={50}
                       >
-                        {(data.gradeDistribution || []).map((entry, index) => (
-                          <Cell
-                            key={index}
-                            fill={
-                              entry.avgEmission <= 2
-                                ? '#1a7a4a'
-                                : entry.avgEmission <= 3.5
-                                  ? '#f59e0b'
-                                  : '#c0392b'
-                            }
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 20,
-                      justifyContent: 'center',
-                      marginTop: 12
-                    }}
-                  >
-                    <div
-                      style={{
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="#f0f0f0"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="grade"
+                          tickFormatter={v => `Gr.${v}`}
+                          tick={{ fontSize: 11, fill: '#999' }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tickFormatter={v => `${v} kg`}
+                          domain={[0, 'auto']}
+                          tickCount={5}
+                          tick={{ fontSize: 11, fill: '#999' }}
+                          axisLine={false}
+                          tickLine={false}
+                          width={36}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            borderRadius: 8,
+                            border: '1px solid #eef0ee',
+                            fontSize: 12,
+                            padding: '6px 10px',
+                            boxShadow: 'none'
+                          }}
+                          formatter={v => [`${v} kg CO₂`, 'Avg Emission']}
+                          labelFormatter={l => `Grade ${l}`}
+                          cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                        />
+                        <Bar
+                          dataKey="avgEmission"
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={28}
+                          isAnimationActive={true}
+                        >
+                          {data.gradeDistribution.map((entry, i) => (
+                            <Cell
+                              key={i}
+                              fill={
+                                entry.avgEmission <= 2   ? '#1a7a4a' :
+                                entry.avgEmission <= 3.5 ? '#f59e0b' :
+                                '#c0392b'
+                              }
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div style={{
+                    width: 200,
+                    flexShrink: 0
+                  }}>
+                    <p style={{
+                      fontSize: 11,
+                      color: '#888',
+                      marginBottom: 12,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.4px'
+                    }}>
+                      Performance key
+                    </p>
+                    {[
+                      {
+                        color: '#1a7a4a',
+                        label: 'Good',
+                        sub: 'Under 2 kg CO₂'
+                      },
+                      {
+                        color: '#f59e0b',
+                        label: 'Moderate',
+                        sub: '2 – 3.5 kg CO₂'
+                      },
+                      {
+                        color: '#c0392b',
+                        label: 'Needs attention',
+                        sub: 'Above 3.5 kg CO₂'
+                      }
+                    ].map(l => (
+                      <div key={l.label} style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 6,
-                        fontSize: 12,
-                        color: '#555'
-                      }}
-                    >
-                      <div
-                        style={{
+                        gap: 10,
+                        marginBottom: 12
+                      }}>
+                        <div style={{
                           width: 10,
                           height: 10,
                           borderRadius: '50%',
-                          background: '#1a7a4a'
-                        }}
-                      />
-                      Good (under 2kg)
-                    </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        fontSize: 12,
-                        color: '#555'
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: '50%',
-                          background: '#f59e0b'
-                        }}
-                      />
-                      Moderate (2–3.5kg)
-                    </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        fontSize: 12,
-                        color: '#555'
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: '50%',
-                          background: '#c0392b'
-                        }}
-                      />
-                      High (above 3.5kg)
+                          background: l.color,
+                          flexShrink: 0
+                        }}/>
+                        <div>
+                          <div style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#111'
+                          }}>
+                            {l.label}
+                          </div>
+                          <div style={{
+                            fontSize: 11,
+                            color: '#888'
+                          }}>
+                            {l.sub}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{
+                      marginTop: 16,
+                      padding: '10px 12px',
+                      background: '#f8faf8',
+                      borderRadius: 8,
+                      borderLeft: '3px solid #1a7a4a'
+                    }}>
+                      <p style={{
+                        fontSize: 11,
+                        color: '#555',
+                        lineHeight: 1.5,
+                        margin: 0
+                      }}>
+                        Grade 12 has the lowest avg emission.
+                        Grade 8 needs the most improvement.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -639,47 +785,195 @@ export default function AdminDashboardPage() {
               sourceBreakdown.length === 0 ? (
                 <div
                   style={{
-                    height: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: '#888',
-                    fontSize: 13
+                    fontSize: 13,
+                    padding: '24px 0'
                   }}
                 >
                   No source data yet.
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={sourceBreakdown}
-                    margin={{ top: 18, right: 20, left: 0, bottom: 0 }}
-                    barCategoryGap="30%"
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                    <XAxis dataKey="category" tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 10,
-                        border: '1px solid #eef0ee',
-                        fontSize: 12
-                      }}
-                      formatter={(value) => [`${Number(value || 0).toFixed(2)} kg`, 'Avg Emission']}
-                    />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Avg Emission">
-                      {sourceBreakdown.map((entry, index) => (
-                        <Cell key={`${entry.category}-${index}`} fill={entry.color} />
-                      ))}
-                      <LabelList
-                        dataKey="value"
-                        position="top"
-                        formatter={(value) => `${Number(value || 0).toFixed(2)} kg`}
-                        style={{ fill: '#111827', fontSize: 11, fontWeight: 600 }}
-                      />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 32
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{
+                      fontSize: 11,
+                      color: '#888',
+                      marginBottom: 16
+                    }}>
+                      Average emission per log entry by source
+                    </p>
+                    {[
+                      {
+                        label: 'Transport',
+                        value: data.emissionSources?.find(
+                          s => s.category === 'Transport'
+                        )?.value || 0,
+                        color: '#f59e0b',
+                        icon: '🚌'
+                      },
+                      {
+                        label: 'Lunch',
+                        value: data.emissionSources?.find(
+                          s => s.category === 'Lunch'
+                        )?.value || 0,
+                        color: '#1a7a4a',
+                        icon: '🥗'
+                      },
+                      {
+                        label: 'Waste',
+                        value: data.emissionSources?.find(
+                          s => s.category === 'Waste'
+                        )?.value || 0,
+                        color: '#c0392b',
+                        icon: '🗑'
+                      },
+                      {
+                        label: 'Energy',
+                        value: data.emissionSources?.find(
+                          s => s.category === 'Energy'
+                        )?.value || 0,
+                        color: '#3b82f6',
+                        icon: '⚡'
+                      }
+                    ].map(s => {
+                      const total = data.emissionSources
+                        ?.reduce((sum, x) => sum + x.value, 0) || 1
+                      const pct = Math.round(
+                        (s.value / total) * 100
+                      )
+                      return (
+                        <div key={s.label} style={{
+                          marginBottom: 14
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: 5
+                          }}>
+                            <span style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: '#111',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 6
+                            }}>
+                              {s.icon} {s.label}
+                            </span>
+                            <span style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: s.color
+                            }}>
+                              {s.value} kg
+                            </span>
+                          </div>
+                          <div style={{
+                            width: '100%',
+                            height: 8,
+                            background: '#f0f0f0',
+                            borderRadius: 4,
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              width: `${pct}%`,
+                              height: '100%',
+                              background: s.color,
+                              borderRadius: 4,
+                              transition: 'width 0.6s ease'
+                            }}/>
+                          </div>
+                          <div style={{
+                            fontSize: 10,
+                            color: '#aaa',
+                            marginTop: 3
+                          }}>
+                            {pct}% of total emission
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div style={{
+                    width: 180,
+                    flexShrink: 0
+                  }}>
+                    <div style={{
+                      background: '#f8faf8',
+                      borderRadius: 10,
+                      padding: '14px 16px',
+                      marginBottom: 12
+                    }}>
+                      <p style={{
+                        fontSize: 10,
+                        color: '#888',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.4px',
+                        marginBottom: 4
+                      }}>
+                        Avg total per log
+                      </p>
+                      <p style={{
+                        fontSize: 24,
+                        fontWeight: 800,
+                        color: '#111',
+                        margin: 0
+                      }}>
+                        {(data.emissionSources?.reduce(
+                          (sum, s) => sum + s.value, 0
+                        ) || 0).toFixed(1)} kg
+                      </p>
+                      <p style={{
+                        fontSize: 11,
+                        color: '#888',
+                        marginTop: 2
+                      }}>
+                        CO₂ per student per day
+                      </p>
+                    </div>
+                    <div style={{
+                      background: '#fff8ed',
+                      borderRadius: 10,
+                      padding: '12px 14px',
+                      border: '1px solid #fcd34d'
+                    }}>
+                      <p style={{
+                        fontSize: 10,
+                        color: '#92600a',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.4px',
+                        marginBottom: 4
+                      }}>
+                        Biggest source
+                      </p>
+                      <p style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: '#92600a',
+                        margin: 0
+                      }}>
+                        🚌 Transport
+                      </p>
+                      <p style={{
+                        fontSize: 11,
+                        color: '#b45309',
+                        marginTop: 2
+                      }}>
+                        Focus area for reduction
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )
             )}
             {activeChart === 'eco' && (
@@ -733,7 +1027,7 @@ export default function AdminDashboardPage() {
                       <div
                         style={{
                           width: `${item.pct}%`,
-                          height: '100%',
+                          height: 10,
                           background: item.color,
                           borderRadius: 5,
                           transition: 'width 0.6s ease'
@@ -809,7 +1103,33 @@ export default function AdminDashboardPage() {
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
               <div style={{ marginBottom: 14 }}>
                 <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>System impact</p>
-                <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>Target met</h3>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginTop: 6
+                }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>
+                    Target met
+                  </h3>
+                  <div
+                    title="% of log entries where total daily emission was under 3 kg CO₂. Based on Nepal national school sustainability guidelines."
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                      background: '#f0f0f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 10,
+                      color: '#888',
+                      cursor: 'help',
+                      flexShrink: 0
+                    }}
+                  >?
+                  </div>
+                </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
                 <svg width="130" height="130" viewBox="0 0 130 130">
@@ -860,41 +1180,32 @@ export default function AdminDashboardPage() {
             gap: 24
           }}
         >
-          <section className="dashboard-bottom-left" style={{ ...cardStyle, gridColumn: 'span 6' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: '0 0 16px' }}>
-                Activity Feed
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minHeight: 0 }}>
+          <section className="dashboard-bottom-left col-span-6 flex" style={{ ...cardStyle, gridColumn: 'span 6' }}>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <h3 className="mb-4 text-[15px] font-bold text-[#111]">Activity Feed</h3>
+              <div className="flex flex-1 flex-col">
                 {activityFeed.length === 0 ? (
-                  <div
-                    style={{
-                      padding: '24px',
-                      textAlign: 'center',
-                      color: '#888',
-                      fontSize: 13
-                    }}
-                  >
+                  <div className="px-6 py-6 text-center text-sm text-[#888]">
                     No activity yet. Students need to submit carbon logs.
                   </div>
                 ) : (
                   <>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+                    <div className="flex flex-1 flex-col gap-2.5">
                       {paginatedActivity.map((entry, index) => {
                         const style = feedStyle[entry.type] || feedStyle.MIRROR;
                         const FeedIcon = style.icon;
                         return (
-                          <div key={`${entry.type}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid #f2f4f1' }}>
-                            <div style={{ width: 38, height: 38, borderRadius: '50%', background: style.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <div key={`${entry.type}-${index}`} className="flex items-center gap-3 border-b border-[#f2f4f1] py-3 last:border-b-0">
+                            <div className="inline-flex shrink-0 items-center justify-center rounded-full p-2" style={{ background: style.bg }}>
                               <FeedIcon size={14} color={style.color} />
                             </div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: 600, color: '#111827' }}>{entry.description}</div>
-                              <div style={{ fontSize: 12, color: '#6b7280' }}>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-[#111827]">{entry.description}</div>
+                              <div className="text-xs text-[#6b7280]">
                                 {timeAgo(entry.createdAt)} · {entry.school}
                               </div>
                             </div>
-                            <span style={{ background: style.bg, color: style.color, borderRadius: 999, fontSize: 12, padding: '5px 9px', fontWeight: 700 }}>
+                            <span className="rounded-full px-2.5 py-1 text-[12px] font-bold" style={{ background: style.bg, color: style.color }}>
                               {entry.type}
                             </span>
                           </div>
@@ -902,84 +1213,83 @@ export default function AdminDashboardPage() {
                       })}
                     </div>
 
-                    <div style={{ marginTop: 'auto', paddingTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
-                      <Pagination
-                        page={activityPage}
-                        totalPages={activityTotalPages}
-                        total={activityFeed.length}
-                        pageSize={ACTIVITY_PAGE_SIZE}
-                        label="activities"
-                        onChange={setActivityPage}
-                      />
-                    </div>
+                    <Pagination
+                      page={activityPage}
+                      totalPages={activityTotalPages}
+                      total={activityFeed.length}
+                      pageSize={ACTIVITY_PAGE_SIZE}
+                      label="activities"
+                      onChange={setActivityPage}
+                    />
                   </>
                 )}
               </div>
             </div>
           </section>
 
-          <section className="dashboard-bottom-right" style={{ ...cardStyle, gridColumn: 'span 6' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: '0 0 16px' }}>
-                Student Streaks
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0 }}>
+          <section className="dashboard-bottom-right col-span-6 flex" style={{ ...cardStyle, gridColumn: 'span 6' }}>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <h3 className="mb-4 text-[15px] font-bold text-[#111]">Student Streaks</h3>
+              <div className="flex flex-1 flex-col">
                 {streakRows.length === 0 ? (
-                  <div
-                    style={{
-                      padding: '20px',
-                      textAlign: 'center',
-                      color: '#888',
-                      fontSize: 13
-                    }}
-                  >
+                  <div className="px-5 py-5 text-center text-sm text-[#888]">
                     No students found for this school.
                   </div>
                 ) : (
                   <>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
-                      {paginatedStreaks.map((student) => (
-                        <div
-                          key={`${student.name}-${student.grade}-${student.section || ''}`}
-                          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f5f5f5' }}
-                        >
-                          <div style={{ width: 36, height: 36, borderRadius: 999, background: student.atRisk ? '#fef2f2' : '#e6f4ed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: student.atRisk ? '#c0392b' : '#1a7a4a', flexShrink: 0 }}>
-                            {initials(student.name || '')}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}>
-                              {student.name}
-                              {student.atRisk && (
-                                <span style={{ fontSize: 10, background: '#fef2f2', color: '#c0392b', padding: '1px 6px', borderRadius: 10, fontWeight: 600 }}>
-                                  At risk
-                                </span>
-                              )}
+                    <div className="flex flex-1 flex-col gap-3">
+                      {paginatedStreaks.map((student) => {
+                        const isAtRisk = student.status === 'at_risk' || student.atRisk;
+
+                        return (
+                          <div
+                            key={`${student.name}-${student.grade}-${student.section || ''}`}
+                            className="flex items-center gap-3 border-b border-[#f5f5f5] pb-3 last:border-b-0 last:pb-0"
+                          >
+                            <div
+                              className="inline-flex shrink-0 items-center justify-center rounded-full px-2.5 py-1.5 text-[12px] font-bold"
+                              style={{
+                                background: isAtRisk ? '#fef2f2' : '#e6f4ed',
+                                color: isAtRisk ? '#c0392b' : '#1a7a4a'
+                              }}
+                            >
+                              {initials(student.name || '')}
                             </div>
-                            <div style={{ fontSize: 12, color: '#6b7280' }}>
-                              {student.grade}{student.section ? ` • ${student.section}` : ''}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#111]">
+                                {student.name}
+                                {isAtRisk && (
+                                  <span className="rounded-full bg-[#fef2f2] px-1.5 py-0.5 text-[10px] font-semibold text-[#c0392b]">
+                                    At risk
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-[#6b7280]">
+                                {student.grade}{student.section ? ` • ${student.section}` : ''}
+                              </div>
+                              <div className="mt-1 text-[11px] text-[#888]">
+                                {formatInt(student.totalLogDays)} logs total
+                              </div>
                             </div>
-                            <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
-                              {formatInt(student.totalLogDays)} logs total
+                            <div className="flex-shrink-0 text-right">
+                              <div className={`text-sm font-extrabold ${student.currentStreak > 0 ? 'text-[#1a7a4a]' : 'text-[#888]'}`}>
+                                {student.currentStreak} days
+                              </div>
+                              <div className="mt-1 text-[10px] text-[#aaa]">best: {student.longestStreak} days</div>
                             </div>
                           </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 800, color: student.currentStreak > 0 ? '#1a7a4a' : '#888' }}>{student.currentStreak} days</div>
-                            <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>best: {student.longestStreak} days</div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
-                    <div style={{ marginTop: 'auto', paddingTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
-                      <Pagination
-                        page={streakPage}
-                        totalPages={streakTotalPages}
-                        total={streakRows.length}
-                        pageSize={STREAK_PAGE_SIZE}
-                        label="students"
-                        onChange={setStreakPage}
-                      />
-                    </div>
+                    <Pagination
+                      page={streakPage}
+                      totalPages={streakTotalPages}
+                      total={streakRows.length}
+                      pageSize={STREAK_PAGE_SIZE}
+                      label="students"
+                      onChange={setStreakPage}
+                    />
                   </>
                 )}
               </div>

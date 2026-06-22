@@ -154,6 +154,61 @@ async function seed() {
 
   const allLogs = [];
 
+  // Weekday patterns — students emit more
+  // on weekdays (school days) and less on weekends
+  function getDayMultiplier(dayOffset) {
+    const date = new Date()
+    date.setDate(date.getDate() - dayOffset)
+    const dayOfWeek = date.getDay()
+    // 0=Sunday, 6=Saturday
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return 0.5  // weekend — much lower
+    }
+    return 1.0    // weekday — normal
+  }
+
+  // Weekly spikes — simulate events
+  // Week 1: high (exam week, more car usage)
+  // Week 2: drop (awareness drive)
+  // Week 3: spike (festival, firewood)
+  // Week 4: recovery (normal)
+  function getWeekMultiplier(dayOffset) {
+    if (dayOffset >= 25) return 1.4  // week 1 high
+    if (dayOffset >= 18) return 0.7  // week 2 low
+    if (dayOffset >= 11) return 1.5  // week 3 spike
+    if (dayOffset >= 4)  return 0.9  // week 4 recovery
+    return 1.1                       // this week normal
+  }
+
+  // Updated emission profiles with wider ranges
+  const EMISSION_PROFILE = {
+    8:  {
+      transport: [0.5, 5.5],
+      food: [0.4, 2.5],
+      energy: [0.2, 2.0]
+    },
+    9:  {
+      transport: [0.4, 4.5],
+      food: [0.3, 2.2],
+      energy: [0.2, 1.8]
+    },
+    10: {
+      transport: [0.3, 4.0],
+      food: [0.3, 2.0],
+      energy: [0.1, 1.5]
+    },
+    11: {
+      transport: [0.2, 3.5],
+      food: [0.2, 1.8],
+      energy: [0.1, 1.3]
+    },
+    12: {
+      transport: [0.1, 3.0],
+      food: [0.2, 1.5],
+      energy: [0.1, 1.0]
+    }
+  }
+
   for (const student of students) {
     const logCount = randomInt(5, 28);
     const chosenOffsets = new Set();
@@ -163,27 +218,57 @@ async function seed() {
     }
 
     for (const dayOffset of chosenOffsets) {
-      const logDate = daysAgo(dayOffset);
-      const meatFreeDay = Math.random() > 0.4;
-      const mealType = meatFreeDay
-        ? pickRandom(['vegetarian', 'vegan'])
-        : pickRandom(['mixed', 'non-vegetarian']);
+      const dayMult = getDayMultiplier(dayOffset)
+      const weekMult = getWeekMultiplier(dayOffset)
+      const combined = dayMult * weekMult
 
+      const profile = EMISSION_PROFILE[student.grade]
+        || EMISSION_PROFILE[10]
+
+      // Apply combined multiplier to base ranges
+      const transportEmission = parseFloat(
+        (randomBetween(...profile.transport)
+          * combined).toFixed(2)
+      )
+      const foodEmission = parseFloat(
+        (randomBetween(...profile.food)
+          * combined).toFixed(2)
+      )
+      const energyEmission = parseFloat(
+        (randomBetween(...profile.energy)
+          * combined).toFixed(2)
+      )
+
+      const meatFreeDay = Math.random() > (
+        combined > 1.2 ? 0.6 : 0.3
+      )  // less likely to be meat-free on high days
+
+      const usedPlastic = Math.random() > (
+        combined > 1.2 ? 0.3 : 0.6
+      )  // more plastic on high emission days
+
+      const wastedFood = Math.random() > 0.5
+
+      const wasteEmission = parseFloat(
+        ((usedPlastic ? 0.15 : 0)
+          + (wastedFood ? 0.4 : 0)).toFixed(2)
+      )
+
+      let totalEmissionKg = parseFloat(
+        (transportEmission + foodEmission
+          + energyEmission + wasteEmission).toFixed(2)
+      )
+
+      // Cap at realistic max
+      totalEmissionKg = Math.min(totalEmissionKg, 8.0)
+
+      const logDate = daysAgo(dayOffset);
       const transportationMode = pickRandom(['walk', 'bicycle', 'bus', 'motorbike', 'car']);
       const transportationDistanceKm = randomBetween(0.5, 8);
       const foodWasteGrams = randomInt(0, 60);
       const plasticItemCount = randomInt(0, 8);
       const usageHours = randomBetween(0.5, 6);
       const firewoodKg = randomBetween(0, 2);
-
-      const emissionResult = await emissionCalculationService.calculateEmissions({
-        transportationMode,
-        transportationDistanceKm,
-        foodMealType: mealType,
-        wasteAndPlasticCount: plasticItemCount,
-        energyUsageHours: usageHours,
-        energyFirewoodKg: firewoodKg
-      });
 
       allLogs.push({
         userId: student._id,
@@ -193,7 +278,9 @@ async function seed() {
           distanceKm: transportationDistanceKm
         },
         food: {
-          mealType,
+          mealType: meatFreeDay
+            ? pickRandom(['vegetarian', 'vegan'])
+            : pickRandom(['mixed', 'non-vegetarian']),
           foodWasteGrams
         },
         wasteAndPlastic: {
@@ -208,8 +295,13 @@ async function seed() {
           questionKey: null,
           value: null
         },
-        breakdown: emissionResult.breakdown,
-        totalEmissionKg: emissionResult.totalEmissionKg,
+        breakdown: {
+          transportKg: transportEmission,
+          foodKg: foodEmission,
+          wasteKg: wasteEmission,
+          energyKg: energyEmission
+        },
+        totalEmissionKg,
         createdAt: logDate
       });
     }
