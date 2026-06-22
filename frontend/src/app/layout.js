@@ -30,11 +30,12 @@ export default async function RootLayout({ children }) {
     <html
       lang={locale}
       className={`${newsreader.variable} ${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="min-h-full flex flex-col bg-[#FAFAFA]">
+      <body className="min-h-full flex flex-col bg-[#FAFAFA]" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AuthProvider>
             <OfflineSyncProvider>

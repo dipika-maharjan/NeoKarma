@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getDashboardSummary } from '@/lib/actions/dashboardActions';
 import { getStreak } from '@/lib/actions/streakActions';
-import { getTodayLog, getCachedStreak } from '@/lib/actions/calculatorActions';
+import { getTodayLog, getCachedStreak, getDailyLogHistory } from '@/lib/actions/calculatorActions';
 import { getScoreConfig } from '@/lib/actions/scoreConfigActions';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -26,6 +26,8 @@ const DashboardPage = () => {
   const [todayLog, setTodayLog] = useState(null);
   const [scoreConfig, setScoreConfig] = useState(null);
   const [error, setError] = useState(null);
+  const [historyLogs, setHistoryLogs] = useState([]);
+  const [planItems, setPlanItems] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,10 +39,11 @@ const DashboardPage = () => {
       try {
         const cachedStreak = getCachedStreak();
         
-        const [dashData, today, config] = await Promise.all([
-          getDashboardSummary(locale),
+        const [dashData, today, config, historyResponse] = await Promise.all([
+          getDashboardSummary(),
           getTodayLog(),
-          getScoreConfig()
+          getScoreConfig(),
+          getDailyLogHistory()
         ]);
         
         let streakInfo = cachedStreak;
@@ -54,6 +57,10 @@ const DashboardPage = () => {
         if (config) {
           setScoreConfig(config);
         }
+        
+        if (historyResponse && historyResponse.data) {
+          setHistoryLogs(historyResponse.data);
+        }
       } catch (err) {
         console.error('Error loading dashboard:', err);
         setError(t('failedToLoadDashboard'));
@@ -64,6 +71,17 @@ const DashboardPage = () => {
 
     if (isAuthenticated) {
       fetchData();
+      
+      // Load plan items from localStorage
+      const storageKey = `neokarma_plan_items_${user?._id || user?.id || 'default'}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          setPlanItems(JSON.parse(stored));
+        } catch (e) {
+          console.error('Error parsing stored plan items:', e);
+        }
+      }
     }
   }, [isAuthenticated, router, locale, t]);
 
@@ -99,15 +117,55 @@ const DashboardPage = () => {
       ? t('monthlyReductionPositive')
       : t('monthlyReductionNeutral')
     : '';
-  const impactScore = Number.isFinite(streakData?.participationScore)
-    ? Math.min(100, Math.max(0, Math.round(streakData.participationScore)))
+  const impactScore = (() => {
+    if (!streakData || !scoreConfig) return null;
+    
+    const currentStreak = streakData.current || 0;
+    const streakMultiplier = scoreConfig?.streakMultiplier ?? 5;
+    const streakMaxPts = scoreConfig?.streakMaxPoints ?? 25;
+    const streakPts = Math.min(currentStreak * streakMultiplier, streakMaxPts);
+
+    const totalActions = planItems.length;
+    const completedActions = planItems.filter((item) => item.completed);
+    const completedCount = completedActions.length;
+    const actionsWeight = scoreConfig?.actionsWeight ?? 35;
+    const actionsDefaultPts = scoreConfig?.actionsDefaultPoints ?? 15;
+    const actionsPts = totalActions > 0
+      ? Math.round((completedCount / totalActions) * actionsWeight)
+      : actionsDefaultPts;
+
+    const logsCount = historyLogs.length;
+    const consistencyMultiplier = scoreConfig?.consistencyMultiplier ?? 2.5;
+    const consistencyMaxPts = scoreConfig?.consistencyMaxPoints ?? 25;
+    const consistencyPts = Math.min(logsCount * consistencyMultiplier, consistencyMaxPts);
+
+    const completenessThreshold = scoreConfig?.completenessThreshold ?? 3;
+    const completenessHighPts = scoreConfig?.completenessHighPoints ?? 15;
+    const completenessLowMultiplier = scoreConfig?.completenessLowMultiplier ?? 5;
+    const completenessLowMaxPts = scoreConfig?.completenessLowMaxPoints ?? 15;
+    const completenessPts = currentStreak >= completenessThreshold
+      ? completenessHighPts
+      : Math.min(currentStreak * completenessLowMultiplier, completenessLowMaxPts);
+
+    const overallMaxScore = scoreConfig?.overallMaxScore ?? 100;
+    const overallScore = Math.min(streakPts + actionsPts + consistencyPts + completenessPts, overallMaxScore);
+    
+    return overallScore;
+  })();
+  
+  const impactScore_val = Number.isFinite(impactScore)
+    ? Math.min(100, Math.max(0, Math.round(impactScore)))
     : null;
+  
+  const gaugeLabel = impactScore_val !== null
+    ? impactScore_val >= 80 ? 'Excellent' : impactScore_val >= 50 ? 'Good impact' : 'Keep going'
+    : 'Keep going';
   const goldThreshold = scoreConfig?.goldThreshold ?? 800;
   const silverThreshold = scoreConfig?.silverThreshold ?? 600;
-  const scoreStatus = impactScore !== null
-    ? impactScore >= goldThreshold ? tStatus('gold') : impactScore >= silverThreshold ? tStatus('silver') : tStatus('bronze')
+  const scoreStatus = impactScore_val !== null
+    ? impactScore_val >= goldThreshold ? tStatus('gold') : impactScore_val >= silverThreshold ? tStatus('silver') : tStatus('bronze')
     : tStatus('none');
-  const scorePercent = impactScore !== null ? Math.min(100, Math.max(0, impactScore)) : 0;
+  const scorePercent = impactScore_val !== null ? Math.min(100, Math.max(0, impactScore_val)) : 0;
   const nextMilestone = impactScore !== null
     ? impactScore >= silverThreshold ? t('goldLabel') : t('silverLabel')
     : t('silverLabel');
@@ -362,25 +420,35 @@ const DashboardPage = () => {
 
         {/* Bottom Row Sections */}
         <div className="mt-9 grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[0.55fr_1.55fr]">
-          <section className="flex h-full flex-col justify-center overflow-hidden rounded-[10px] border border-[#E0E5E2] bg-white px-6 py-7 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)]">
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <p className="mb-3 text-[12px] font-bold tracking-wide text-[#4A5550]">{t('impactScore')}</p>
-              <div
-                className="relative flex h-[96px] w-[96px] items-center justify-center rounded-full p-[7px]"
-                style={{
-                  background: `conic-gradient(#0A3D25 ${scorePercent * 3.6}deg, #E3ECE7 0deg)`
-                }}
-              >
-                <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
-                  <span className="text-[28px] font-extrabold text-[#17202A]">
-                    {impactScore !== null ? formatNumber(impactScore, { maximumFractionDigits: 0 }) : '--'}
-                  </span>
-                </div>
+          <section className="flex h-full flex-col justify-center items-center overflow-hidden rounded-[10px] border border-[#E0E5E2] bg-white px-6 py-7 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,23,42,0.1)]">
+            <h2 className="text-lg font-bold text-[#0A3D25] mb-4 self-start">
+              {t('impactScore')}
+            </h2>
+            <div className="impact-gauge relative w-40 h-40 rounded-full flex items-center justify-center select-none">
+              <div className="absolute inset-0 rounded-full bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)] border border-gray-100" />
+              <div className="absolute inset-2.5 rounded-full border border-[#E5EFE9]" />
+              <div className="absolute w-[70%] h-[70%] rounded-full bg-[#0A3D25] backdrop-blur-[2px] flex flex-col items-center justify-center shadow-[0_12px_32px_rgba(10,61,37,0.12)] border border-[#0A3D25] z-10">
+                <span className="text-2xl font-black text-white tracking-tight leading-none">
+                  {impactScore_val !== null ? formatNumber(impactScore_val, { maximumFractionDigits: 0 }) : '--'}
+                </span>
+                <span className="text-[8px] font-bold text-white/90 mt-1.5 uppercase tracking-wide">
+                  {gaugeLabel}
+                </span>
               </div>
-              <p className="mt-4 text-[16px] font-extrabold text-[#17202A]">{scoreStatus}</p>
-              <p className="mt-0.5 text-[12px] font-medium text-[#6A756F]">
-                {t('towardStatus', { status: nextMilestone })}
-              </p>
+              <svg className="absolute w-full h-full transform -rotate-90 z-20 pointer-events-none" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="46" className="stroke-[#E9F1ED] fill-none" strokeWidth="3" />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="46"
+                  className="score-meter-ring stroke-[#0A3D25] fill-none"
+                  strokeWidth="4"
+                  pathLength="100"
+                  strokeDasharray="100"
+                  strokeDashoffset={scorePercent !== null ? 100 - scorePercent : 100}
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
           </section>
 

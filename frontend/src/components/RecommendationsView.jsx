@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations } from 'next-intl';
-import { useNumberFormatter } from '@/lib/utils/numberFormatter';
-import { Bus, Utensils, Trash2, Lightbulb, Sprout, Leaf } from 'lucide-react';
+import { Bus, Utensils, Archive, Lightbulb, Sprout, Leaf, Trash2 } from 'lucide-react';
+import { useRecommendationProgress } from '@/hooks/useRecommendationProgress';
+import ProgressTrackerWrapper from './ProgressTrackerWrapper';
 
 // Unified recommendations list matching the Smart Recommendations view
 const PRESETS = [
@@ -20,7 +21,14 @@ const PRESETS = [
     reductionUnit: '/month',
     visualType: 'bus',
     personalSaving: 42.0,
-    actionDesc: 'Switching to school buses twice a week reduces individual car usage significantly.'
+    actionDesc: 'Switching to school buses twice a week reduces individual car usage significantly.',
+    trackingConfig: {
+      field: 'transportation.mode',
+      value: 'bus',
+      goal: 5,
+      period: 'week',
+      operator: '=='
+    }
   },
   {
     id: 'food',
@@ -33,7 +41,14 @@ const PRESETS = [
     reductionUnit: '/month',
     visualType: 'fork-knife',
     personalSaving: 20.0,
-    actionDesc: 'Try a vegetarian meal once or twice a week during canteen school lunches.'
+    actionDesc: 'Try a vegetarian meal once or twice a week during canteen school lunches.',
+    trackingConfig: {
+      field: 'food.mealType',
+      value: 'vegetarian',
+      goal: 2,
+      period: 'week',
+      operator: '=='
+    }
   },
   {
     id: 'waste',
@@ -46,7 +61,14 @@ const PRESETS = [
     reductionUnit: '/mo',
     visualType: 'bin',
     personalSaving: 19.0,
-    actionDesc: 'Reducing contamination in recycling bins saves energy and reduces landfill waste significantly.'
+    actionDesc: 'Reducing contamination in recycling bins saves energy and reduces landfill waste significantly.',
+    trackingConfig: {
+      field: 'wasteAndPlastic.segregated',
+      value: true,
+      goal: 7,
+      period: 'week',
+      operator: '=='
+    }
   },
   {
     id: 'energy',
@@ -59,7 +81,14 @@ const PRESETS = [
     reductionUnit: '/mo',
     visualType: 'lightbulb',
     personalSaving: 12.0,
-    actionDesc: 'Developing the habit of turning off electrical appliances when leaving the room.'
+    actionDesc: 'Developing the habit of turning off electrical appliances when leaving the room.',
+    trackingConfig: {
+      field: 'energy.usageHours',
+      value: 2,
+      goal: 5,
+      period: 'week',
+      operator: '<='
+    }
   },
   {
     id: 'lunch',
@@ -72,7 +101,154 @@ const PRESETS = [
     reductionUnit: '/mo',
     visualType: 'fork-knife',
     personalSaving: 18.5,
-    actionDesc: 'Commit to using zero single-use plastics and zero food waste every Friday.'
+    actionDesc: 'Commit to using zero single-use plastics and zero food waste every Friday.',
+    trackingConfig: {
+      field: 'food.foodWasteGrams',
+      value: 20,
+      goal: 1,
+      period: 'week',
+      operator: '<'
+    }
+  },
+  {
+    id: 'walk-cycle',
+    category: 'transport',
+    badge: 'HIGH IMPACT',
+    badgeColor: 'bg-red-50 text-red-500 border border-red-100',
+    title: 'Walk or Cycle for Short Trips',
+    description: 'Active commute for distances under 2km significantly reduces carbon emissions and improves health.',
+    reduction: '-350 kg CO2',
+    reductionUnit: '/month',
+    visualType: 'bus',
+    personalSaving: 35.0,
+    actionDesc: 'Walk or cycle for trips within 2km to reduce fossil fuel dependence.',
+    trackingConfig: {
+      field: 'transportation.mode',
+      value: 'walk',
+      goal: 3,
+      period: 'week',
+      operator: '=='
+    }
+  },
+  {
+    id: 'reduce-food-waste',
+    category: 'food',
+    badge: 'MEDIUM IMPACT',
+    badgeColor: 'bg-green-50 text-green-600 border border-green-100',
+    title: 'Reduce Food Waste',
+    description: 'Minimizing leftover food reduces methane emissions from landfills and saves resources.',
+    reduction: '-240 kg CO2',
+    reductionUnit: '/month',
+    visualType: 'fork-knife',
+    personalSaving: 24.0,
+    actionDesc: 'Serve appropriate portions and consume meals completely to minimize food waste.',
+    trackingConfig: {
+      field: 'food.foodWasteGrams',
+      value: 40,
+      goal: 7,
+      period: 'week',
+      operator: '<='
+    }
+  },
+  {
+    id: 'local-seasonal',
+    category: 'food',
+    badge: 'EASY WIN',
+    badgeColor: 'bg-blue-50 text-blue-500 border border-blue-100',
+    title: 'Choose Local & Seasonal Foods',
+    description: 'Local and seasonal produce reduces transportation emissions and supports local farming.',
+    reduction: '-170 kg CO2',
+    reductionUnit: '/month',
+    visualType: 'sprout',
+    personalSaving: 17.0,
+    actionDesc: 'Prefer locally grown and seasonal produce to reduce food transportation carbon footprint.',
+    trackingConfig: {
+      field: 'food.foodWasteGrams',
+      value: 30,
+      goal: 6,
+      period: 'week',
+      operator: '<'
+    }
+  },
+  {
+    id: 'natural-daylight',
+    category: 'energy',
+    badge: 'MEDIUM IMPACT',
+    badgeColor: 'bg-yellow-50 text-yellow-600 border border-yellow-100',
+    title: 'Maximize Natural Daylight',
+    description: 'Study near windows during the day to utilize Nepal\'s abundant sunshine year-round.',
+    reduction: '-160 kg CO2',
+    reductionUnit: '/month',
+    visualType: 'lightbulb',
+    personalSaving: 16.0,
+    actionDesc: 'Open curtains and study near windows to reduce artificial lighting requirements.',
+    trackingConfig: {
+      field: 'energy.usageHours',
+      value: 1,
+      goal: 5,
+      period: 'week',
+      operator: '<'
+    }
+  },
+  {
+    id: 'natural-ventilation',
+    category: 'energy',
+    badge: 'EASY WIN',
+    badgeColor: 'bg-blue-50 text-blue-500 border border-blue-100',
+    title: 'Use Natural Ventilation',
+    description: 'Rely on natural air flow instead of air conditioning for most of the year in Nepal.',
+    reduction: '-130 kg CO2',
+    reductionUnit: '/month',
+    visualType: 'lightbulb',
+    personalSaving: 13.0,
+    actionDesc: 'Open windows for ventilation instead of using AC for most months of the year.',
+    trackingConfig: {
+      field: 'energy.usageHours',
+      value: 3,
+      goal: 4,
+      period: 'week',
+      operator: '<='
+    }
+  },
+  {
+    id: 'reusable-bottles',
+    category: 'waste',
+    badge: 'EASY WIN',
+    badgeColor: 'bg-blue-50 text-blue-500 border border-blue-100',
+    title: 'Swap to Reusable Bottles',
+    description: 'Using refillable water bottles eliminates single-use plastic waste significantly.',
+    reduction: '-104 kg CO2',
+    reductionUnit: '/month',
+    visualType: 'bin',
+    personalSaving: 10.4,
+    actionDesc: 'Use a reusable water bottle and fill from taps instead of buying bottled water.',
+    trackingConfig: {
+      field: 'wasteAndPlastic.plasticItemCount',
+      value: 1,
+      goal: 7,
+      period: 'week',
+      operator: '<='
+    }
+  },
+  {
+    id: 'reduce-plastics',
+    category: 'waste',
+    badge: 'MEDIUM IMPACT',
+    badgeColor: 'bg-[#E2F0D9] text-[#0A3D25] border border-[#C5E0B4]',
+    title: 'Reduce Single-Use Plastics',
+    description: 'Eliminating single-use plastics reduces waste and prevents environmental contamination.',
+    reduction: '-140 kg CO2',
+    reductionUnit: '/month',
+    visualType: 'bin',
+    personalSaving: 14.0,
+    actionDesc: 'Avoid single-use plastic bags, straws, and packaging by using sustainable alternatives.',
+    trackingConfig: {
+      field: 'wasteAndPlastic.plasticItemCount',
+      value: 2,
+      goal: 7,
+      period: 'week',
+      operator: '<'
+    }
   }
 ];
 
@@ -214,7 +390,6 @@ const mapBackendRecToCard = (rec, index) => {
 const RecommendationsView = ({ onNavigateToDashboard }) => {
   const { user } = useAuth();
   const t = useTranslations('Plan');
-  const formatNumber = useNumberFormatter();
   const [activeTab, setActiveTab] = useState('recommendations'); // 'recommendations' or 'plan'
   const [addedIds, setAddedIds] = useState(new Set());
   const [planItems, setPlanItems] = useState([]);
@@ -230,6 +405,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   const [logsCount, setLogsCount] = useState(0);
   const [motivationalMessage, setMotivationalMessage] = useState('');
   const [topContributors, setTopContributors] = useState([]);
+  const [dailyLogs, setDailyLogs] = useState([]);
 
   // Load planItems from localStorage unique to the logged-in user
   useEffect(() => {
@@ -241,15 +417,18 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
         setPlanItems(JSON.parse(stored));
       } catch (e) {
         console.error('Error parsing stored plan items:', e);
-        setPlanItems(INITIAL_PLAN_ITEMS);
+        // Initialize with empty plan, not pre-filled items
+        setPlanItems([]);
       }
     } else {
-      setPlanItems(INITIAL_PLAN_ITEMS);
+      // FIX: Start with empty action plan for new users
+      // Users must explicitly add recommendations from the recommendations tab
+      setPlanItems([]);
     }
     setIsLoaded(true);
   }, [user]);
 
-  // Save planItems to localStorage unique to the logged-in user
+  // Save planItems from localStorage unique to the logged-in user
   useEffect(() => {
     if (!user || !isLoaded) return;
     const storageKey = `neokarma_plan_items_${user._id || user.id || 'default'}`;
@@ -284,6 +463,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
         if (planData) {
           setPlanType(planData.type || null);
           setLogsCount(planData.logsCount || 0);
+          setDailyLogs(planData.dailyLogs || []);
           setMotivationalMessage(planData.message || '');
 
           if (planData.type === 'GENERAL_PLAN') {
@@ -296,7 +476,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
             ];
             const cards = flatRecs.map((rec, index) => mapBackendRecToCard(rec, index));
             setRecommendations(cards);
-          } else if (planData.type === 'MONTHLY_PLAN') {
+          } else if (planData.type === 'WEEKLY_PLAN' || planData.type === 'MONTHLY_PLAN') {
             const recs = planData.plan?.recommendations || [];
             const cards = recs.map((rec, index) => mapBackendRecToCard(rec, index));
             setRecommendations(cards);
@@ -340,7 +520,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
       description: rec.actionDesc || rec.description,
       saving: rec.personalSaving || 15.0,
       completed: false,
-      icon: rec.visualType === 'bus' ? '🚌' : rec.visualType === 'fork-knife' ? '🍽️' : rec.visualType === 'bin' ? '🗑️' : '💡'
+      icon: rec.visualType === 'bus' ? '🚌' : rec.visualType === 'fork-knife' ? '🍽️' : rec.visualType === 'bin' ? '🗑️' : '💡',
+      // CRITICAL: Copy trackingConfig for dynamic progress tracking
+      trackingConfig: rec.trackingConfig || undefined
     };
 
     setPlanItems([newItem, ...planItems]);
@@ -356,24 +538,93 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
     );
   };
 
-  // Delete an item from the plan
-  const deletePlanItem = (id) => {
-    setPlanItems(planItems.filter(item => item.id !== id));
+  // Archive an item from the plan
+  const archivePlanItem = (id) => {
+    setPlanItems(
+      planItems.map((item) =>
+        item.id === id ? { ...item, archived: true } : item
+      )
+    );
   };
 
-  // Calculate Plan metrics
-  const totalActions = planItems.length;
-  const completedActions = planItems.filter(item => item.completed);
+  // Calculate Plan metrics (excluding archived items)
+  const activeItems = planItems.filter(item => !item.archived);
+
+  // Helper to calculate if an item should be marked as completed based on tracking progress
+  const getItemCompletionStatus = (item) => {
+    if (!dailyLogs || dailyLogs.length === 0) return item.completed || false;
+    
+    // Calculate progress using the same logic as the tracking hook
+    let percentage = 0;
+    
+    if (item.trackingConfig) {
+      // Dynamic tracking config
+      const fieldPath = item.trackingConfig.field;
+      const operator = item.trackingConfig.operator;
+      const value = item.trackingConfig.value;
+      
+      const matchingDays = dailyLogs.filter((log) => {
+        const logValue = getFieldValueForTracking(log, fieldPath);
+        if (operator === '==') return logValue === value;
+        if (operator === '>=') return logValue >= value;
+        if (operator === '<=') return logValue <= value;
+        if (operator === 'includes') return Array.isArray(logValue) && logValue.includes(value);
+        return false;
+      }).length;
+      
+      const goal = item.trackingConfig.goal || 20;
+      percentage = Math.min((matchingDays / goal) * 100, 100);
+    } else if (item.category) {
+      // Category-based tracking
+      const monthlyGoals = { transport: 20, food: 8, energy: 20, waste: 28 };
+      let current = 0;
+      const target = monthlyGoals[item.category] || 20;
+      
+      if (item.category === 'food') {
+        current = dailyLogs.filter(log => 
+          log.food?.mealType === 'vegetarian' || log.food?.mealType === 'vegan'
+        ).length;
+      } else if (item.category === 'energy') {
+        current = dailyLogs.filter(log => log.energy?.usageHours <= 2).length;
+      } else if (item.category === 'transport') {
+        current = dailyLogs.filter(log => {
+          const mode = log.transportation?.mode;
+          return mode === 'bus' || mode === 'walk' || mode === 'bicycle';
+        }).length;
+      } else if (item.category === 'waste') {
+        current = dailyLogs.filter(log => log.wasteAndPlastic?.segregated === true).length;
+      }
+      
+      percentage = Math.min((current / target) * 100, 100);
+    }
+    
+    // Mark as completed if progress >= 100%
+    return percentage >= 100;
+  };
+
+  // Helper to get nested field value
+  const getFieldValueForTracking = (obj, fieldPath) => {
+    if (!obj || !fieldPath) return undefined;
+    const parts = fieldPath.split('.');
+    let current = obj;
+    for (const part of parts) {
+      current = current?.[part];
+    }
+    return current;
+  };
+  const totalActions = activeItems.length;
+  const completedActions = activeItems.filter(item => item.completed);
   const completedCount = completedActions.length;
 
   // Calculate CO2 saved (sum of completed items)
-  const totalCO2Saved = completedActions.reduce((sum, item) => sum + (item.saving || 0), 0);
+  const totalCO2Saved = completedActions.reduce((sum, item) => sum + item.saving, 0).toFixed(1);
 
   // Progress percentage
   const progressPercent = totalActions > 0 ? Math.round((completedCount / totalActions) * 100) : 0;
 
   // Filtered plan list items
   const filteredPlanItems = planItems.filter((item) => {
+    if (item.archived) return false; // Hide archived items
     if (activeFilter === 'all') return true;
     return item.category === activeFilter;
   });
@@ -385,19 +636,87 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
         {/* Toggle between Recommendations and Plan */}
         {activeTab === 'recommendations' ? (
           <div>
-            {/* Header row */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-              <div>
-                <h1 className="text-[32px] font-extrabold tracking-tight text-[#0A3D25] md:text-[34px]">
-                  {t('smartRecommendations')}
-                </h1>
-                <p className="text-sm text-gray-500 mt-1.5 max-w-xl">
-                  {t('recommendationsSubtitle')}
-                </p>
+            {/* Header row with Circular Meter on the left */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 bg-white border border-gray-100 shadow-sm rounded-3xl p-6">
+              <div className="flex flex-col sm:flex-row items-center gap-6 w-full">
+
+                {/* Left Side: Circular Progress Meter or Badge */}
+                {logsCount >= 30 ? (
+                  /* 30 Days AI Recommendation Enabled Badge */
+                  <div className="relative flex flex-col items-center justify-center w-28 h-28 shrink-0 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 rounded-full shadow-[0_4px_20px_rgba(245,158,11,0.35)] border-2 border-white">
+                    <div className="w-[88px] h-[88px] rounded-full overflow-hidden border border-amber-300">
+                      <img src="/earth_gauge_bg.png" alt="Earth" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="absolute inset-0 rounded-full border-2 border-dashed border-amber-300 animate-spin-slow" />
+                    <span className="absolute -bottom-1.5 bg-[#0A3D25] text-white text-[8px] font-extrabold uppercase py-0.5 px-2 rounded-full border border-emerald-500 shadow-sm whitespace-nowrap tracking-wider font-sans">
+                      Enabled
+                    </span>
+                  </div>
+                ) : (
+                  /* Circular progress bar with Earth image inside */
+                  <div className="relative flex items-center justify-center w-28 h-28 shrink-0 bg-stone-50 border border-stone-100 rounded-full">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 112 112">
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        className="text-stone-200"
+                        strokeWidth="6"
+                        stroke="currentColor"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        className="text-[#0A3D25] transition-all duration-500"
+                        strokeWidth="6"
+                        strokeDasharray="289.03"
+                        strokeDashoffset={289.03 - (Math.min(logsCount, 30) / 30) * 289.03}
+                        strokeLinecap="round"
+                        stroke="currentColor"
+                        fill="transparent"
+                      />
+                    </svg>
+                    {/* Earth Image at center */}
+                    <div className="absolute flex items-center justify-center overflow-hidden w-[88px] h-[88px] rounded-full border border-stone-100 shadow-inner">
+                      <img src="/earth_gauge_bg.png" alt="Earth Gauge" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Right Side: Header Text & Progress Info */}
+                <div className="text-center sm:text-left">
+                  <h1 className="text-[30px] font-extrabold tracking-tight text-[#0A3D25] leading-tight">
+                    {t('smartRecommendations')}
+                  </h1>
+                  <p className="text-xs text-gray-500 mt-1 max-w-xl">
+                    {t('recommendationsSubtitle')}
+                  </p>
+
+                  {/* Status Indicator text under the title */}
+                  <p className="text-xs text-[#0A3D25]/85 font-semibold mt-2.5">
+                    {logsCount >= 30 ? (
+                      <span className="flex items-center gap-1 text-amber-600 font-extrabold justify-center sm:justify-start">
+                        🏆 30-Day Milestone Achieved! AI Recommendations fully enabled.
+                      </span>
+                    ) : logsCount >= 7 ? (
+                      <span className="flex items-center gap-1 text-emerald-600 font-bold justify-center sm:justify-start">
+                        ⚡ {logsCount}/30 days logged — Custom AI recommendations are active! (7+ days baseline unlocked)
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-orange-600 font-medium justify-center sm:justify-start">
+                        ⏳ {logsCount}/30 days logged AI recommendations unlock in {7 - logsCount} more logging days.
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
+
+              {/* View action plan button on the right */}
               <button
                 onClick={() => setActiveTab('plan')}
-                className="bg-[#0A3D25] hover:bg-[#0D5232] text-white text-sm font-semibold py-2.5 px-6 rounded-full transition-all shadow-sm flex items-center gap-2"
+                className="w-full lg:w-auto bg-[#0A3D25] hover:bg-[#0D5232] text-white text-sm font-semibold py-2.5 px-6 rounded-full transition-all shadow-sm flex items-center justify-center gap-2 shrink-0 self-stretch lg:self-center"
               >
                 View My Action Plan <span className="text-lg">→</span>
               </button>
@@ -440,9 +759,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                             {t('impactReduction')}
                           </p>
                           <p className="text-lg font-extrabold text-gray-800 mt-0.5">
-                            {formatNumber(rec.personalSaving, { maximumFractionDigits: 1 })}
+                            {rec.reduction}
                             <span className="text-xs font-semibold text-gray-400">
-                              {t('unitKgCO2')}{rec.reductionUnit}
+                              {rec.reductionUnit}
                             </span>
                           </p>
                           <button
@@ -528,9 +847,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   Total CO2 Saved
                 </p>
                 <p className="text-3xl font-black mt-2 flex items-baseline gap-1">
-                  {formatNumber(totalCO2Saved, { maximumFractionDigits: 1 })}
+                  {totalCO2Saved}
                   <span className="text-xs font-semibold text-[#A2CBA0] normal-case tracking-normal">
-                    {t('unitKgCO2')} / mo
+                    kg / mo
                   </span>
                 </p>
               </div>
@@ -593,86 +912,79 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   </p>
                 </div>
               ) : (
-                filteredPlanItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white border border-gray-100/80 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:shadow-md"
-                  >
-                    {/* Left: Icon and Details */}
-                    <div className="flex items-start gap-4 flex-1">
-                      {/* Icon */}
-                      <div className="w-12 h-12 rounded-2xl bg-[#E2F0D9] text-[#0A3D25] border border-[#C5E0B4]/40 flex items-center justify-center text-xl shrink-0 select-none">
-                        {renderIcon(item.icon)}
-                      </div>
-
-                      {/* Title & Desc */}
-                      <div>
-                        {/* Status Label Row */}
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[9px] font-extrabold text-[#0A3D25] uppercase tracking-wider">
-                            {item.category}
-                          </span>
-                          <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                          <span className={`text-[9px] font-extrabold uppercase tracking-wider ${item.completed
-                            ? 'text-green-600'
-                            : 'text-red-500'
-                            }`}>
-                            {item.completed ? t('completed') : t('pending')}
-                          </span>
+                filteredPlanItems.map((item) => {
+                  const isCompleted = getItemCompletionStatus(item);
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-white border border-gray-100/80 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:shadow-md"
+                    >
+                      {/* Left: Icon and Details */}
+                      <div className="flex items-start gap-4 flex-1">
+                        {/* Icon */}
+                        <div className="w-12 h-12 rounded-2xl bg-[#E2F0D9] text-[#0A3D25] border border-[#C5E0B4]/40 flex items-center justify-center text-xl shrink-0 select-none">
+                          {renderIcon(item.icon)}
                         </div>
 
-                        {/* Title */}
-                        <h4 className="text-sm font-bold text-gray-800 tracking-tight leading-tight">
-                          {item.title}
-                        </h4>
+                        {/* Title & Desc */}
+                        <div>
+                          {/* Status Label Row */}
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[9px] font-extrabold text-[#0A3D25] uppercase tracking-wider">
+                              {item.category}
+                            </span>
+                            <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                            <span className={`text-[9px] font-extrabold uppercase tracking-wider ${isCompleted
+                              ? 'text-green-600'
+                              : 'text-red-500'
+                              }`}>
+                              {isCompleted ? t('completed') : t('pending')}
+                            </span>
+                          </div>
 
-                        {/* Description */}
-                        <p className="text-xs text-gray-500 mt-1 max-w-xl leading-relaxed">
-                          {item.description}
-                        </p>
+                          {/* Title */}
+                          <h4 className="text-sm font-bold text-gray-800 tracking-tight leading-tight">
+                            {item.title}
+                          </h4>
+
+                          {/* Description */}
+                          <p className="text-xs text-gray-500 mt-1 max-w-xl leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right: Saving Info & Complete Button */}
+                      <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-gray-50">
+
+                        {/* Saving */}
+                        <div className="text-left sm:text-right">
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                            {t('potentialSaving')}
+                          </p>
+                          <p className="text-xs font-black text-gray-800 mt-0.5">
+                            {item.saving}kg CO2/mo
+                          </p>
+                        </div>
+
+                        {/* Complete toggle & Trash actions */}
+                        <div className="flex items-center gap-4">
+                          <ProgressTrackerWrapper item={item} dailyLogs={dailyLogs} />
+                          <button
+                            onClick={() => archivePlanItem(item.id)}
+                            className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-amber-600 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                            title={t('archiveAction') || 'Archive Action'}
+                          >
+                            <Archive className="w-4 h-4" />
+                          </button>
+                        </div>
+
                       </div>
                     </div>
-
-                    {/* Right: Saving Info & Complete Button */}
-                    <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-gray-50">
-
-                      {/* Saving */}
-                      <div className="text-left sm:text-right">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                          {t('potentialSaving')}
-                        </p>
-                        <p className="text-xs font-black text-gray-800 mt-0.5">
-                          {formatNumber(item.saving || 0, { maximumFractionDigits: 1 })} {t('unitKgCO2')} / mo
-                        </p>
-                      </div>
-
-                      {/* Complete toggle & Trash actions */}
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => toggleTaskCompleted(item.id)}
-                          className={`text-[11px] font-extrabold py-2 px-4 rounded-xl border transition-all cursor-pointer ${item.completed
-                            ? 'bg-transparent text-gray-500 border-gray-300 hover:border-gray-400 hover:text-gray-600'
-                            : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232]'
-                            }`}
-                        >
-                          {item.completed ? t('completedBtn') : t('markComplete')}
-                        </button>
-
-                        <button
-                          onClick={() => deletePlanItem(item.id)}
-                          className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
-                          title={t('deleteAction')}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
-
           </div>
         )}
 
