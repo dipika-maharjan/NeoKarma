@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ProfileDropdown from './ProfileDropdown';
+import { Menu, X } from 'lucide-react';
 
 const getCookie = (name) => {
   if (typeof document === 'undefined') return '';
@@ -20,6 +21,7 @@ const Navbar = () => {
   const { user, isAuthenticated } = useAuth();
   const role = getCookie('role');
   const isAdmin = role === 'school_admin';
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const adminLinks = [
     { label: 'Dashboard', href: '/admin/dashboard' },
@@ -88,7 +90,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-[#0A3D25] hover:text-[#0A3D25]"
+                className="hidden sm:inline-block rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-[#0A3D25] hover:text-[#0A3D25]"
               >
                 Logout
               </button>
@@ -100,7 +102,53 @@ const Navbar = () => {
             </Link>
           )}
         </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="cursor-pointer rounded-full p-2 text-[#0A3D25] transition-colors hover:bg-[#E9EDE4] md:hidden"
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileOpen && (
+        <div className="space-y-2 border-t border-gray-100 bg-white px-4 py-4 animate-[fadeIn_0.2s_ease-in] md:hidden">
+          {links.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => {
+                  router.push(item.href);
+                  setMobileOpen(false);
+                }}
+                className={`block w-full py-2 text-left text-sm transition-colors ${
+                  isActive
+                    ? 'bg-[#E8F5E9] font-semibold text-[#0A3D25]'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-[#0A3D25]'
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+          <hr className="border-gray-100 my-2" />
+          <button
+            type="button"
+            onClick={() => {
+              handleLogout();
+              setMobileOpen(false);
+            }}
+            className="block w-full py-2 text-left text-sm rounded-md text-gray-600 hover:bg-gray-50 hover:text-[#0A3D25]"
+          >
+            Logout
+          </button>
+        </div>
+      )}
     </nav>
   );
 };

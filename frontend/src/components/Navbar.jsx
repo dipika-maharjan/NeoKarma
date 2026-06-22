@@ -11,6 +11,7 @@ import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
 import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
+import { Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -19,6 +20,7 @@ const Navbar = () => {
   const t = useTranslations('Navbar');
   const [scrolled, setScrolled] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(user?.streak?.current || 0);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const formatNumber = useNumberFormatter();
 
   useEffect(() => {
@@ -114,10 +116,8 @@ const Navbar = () => {
         </div>
 
         {/* Right: Streak Metrics Status & Profile Action Wrapper */}
-        <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4">
           <LanguageToggle />
-          {/* Offline ready badge hidden for demos */}
-          
           {isAuthenticated && user ? (
             <>
               {/* Day Streak Pill Layout (merged): show compact pill and hover details */}
@@ -149,10 +149,84 @@ const Navbar = () => {
               {t('signIn')}
             </Link>
           )}
-
         </div>
 
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="cursor-pointer rounded-full p-2 text-[#0A3D25] transition-colors hover:bg-[#E9EDE4] md:hidden"
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileOpen && (
+        <div className="space-y-3 border-t border-[#DCE9E0] bg-white px-4 py-4 animate-[fadeIn_0.2s_ease-in] md:hidden">
+          {[
+            { key: 'dashboard', label: t('dashboard'), path: '/dashboard' },
+            { key: 'calculator', label: t('calculator'), path: '/calculator' },
+            { key: 'mirror', label: t('mirror'), path: '/carbon-mirror' },
+            { key: 'plan', label: t('plan'), path: '/plan' },
+            { key: 'score', label: t('score'), path: '/score' }
+          ].map(({ key, label, path }) => (
+            <Link
+              key={key}
+              href={path}
+              onClick={() => setMobileOpen(false)}
+              className="block py-2 text-sm font-medium text-[#52665B] no-underline transition-colors hover:text-[#0A3D25]"
+            >
+              {label}
+            </Link>
+          ))}
+
+          {/* Mobile Streak & Profile Section */}
+          <div className="border-t border-[#DCE9E0] pt-3 mt-3 space-y-3">
+            {isAuthenticated && user ? (
+              <>
+                {/* Profile Dropdown */}
+                <div className="pt-1">
+                  <ProfileDropdown />
+                </div>
+
+                {/* Streak Counter */}
+                <div className="flex items-center gap-3 bg-white border border-[#DCE9E0] rounded-lg p-3">
+                  <div className="bg-[#F0F7F2] p-2.5 rounded">
+                    <img src={streakIcon.src || streakIcon} alt="Streak" className="w-5 h-5 object-contain" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-xs text-[#5D7066]">Streak Activity</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-bold text-[#0A3D25]">{currentStreak} Days</span>
+                      <svg className="w-4 h-4 text-[#43A047]" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Language Toggle */}
+                <div className="flex items-center justify-between bg-white border border-[#DCE9E0] rounded-lg px-3 py-2.5">
+                  <span className="text-xs font-semibold text-[#5D7066]">Language</span>
+                  <LanguageToggle />
+                </div>
+              </>
+            ) : (
+              <>
+                <LanguageToggle />
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="block w-full py-2.5 text-center text-sm font-semibold text-white bg-[#0A3D25] rounded-lg no-underline hover:bg-[#072B1A] transition-colors"
+                >
+                  {t('signIn')}
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
