@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
 import { logDailyCarbon } from '@/lib/actions/calculatorActions';
@@ -32,7 +32,14 @@ const CalculatorPage = () => {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [submissionMirror, setSubmissionMirror] = useState(null);
   const [submissionStreak, setSubmissionStreak] = useState(null);
+  const statusRef = useRef(null);
   const [emissionFactors, setEmissionFactors] = useState(null);
+
+  useEffect(() => {
+    if (status.message || errors.submit) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [status.message, errors.submit]);
   const [factorsError, setFactorsError] = useState(null);
   const [loadingFactors, setLoadingFactors] = useState(true);
 
@@ -187,7 +194,6 @@ const CalculatorPage = () => {
       if (!response) {
         // offline saved fallback
         setStatus({ type: 'success', message: 'Saved locally — will sync when online.' });
-        setSubmitting(false);
         return;
       }
 
@@ -314,6 +320,7 @@ const CalculatorPage = () => {
 
         {status.message && (
           <div
+            ref={statusRef}
             className={`mb-5 rounded-lg border px-4 py-3 text-[13px] font-semibold ${
               status.type === 'success'
                 ? 'border-[#BEE8D3] bg-[#E8F5E9] text-[#0A3D25]'

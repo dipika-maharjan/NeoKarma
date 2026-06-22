@@ -1,3 +1,3 @@
 import apiClient from './axios';
 
-export const fetchDashboardSummary = () => apiClient.get('/dashboard/summary');
+export const fetchDashboardSummary = (locale = 'en') => apiClient.get('/dashboard/summary', { params: { locale } });

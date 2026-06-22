@@ -52,7 +52,6 @@ class MitigationPlanService {
     try {
       recommendations = await externalAiProvider.generateRecommendations(aggregatedData, user);
       source = 'external-ai';
-      console.log(`✅ Plan generated using external AI provider`);
     } catch (aiError) {
       console.warn(`⚠️ External AI provider failed: ${aiError.message}. Falling back to rule-based...`);
 
@@ -60,7 +59,6 @@ class MitigationPlanService {
       try {
         recommendations = await fallbackRuleProvider.generateRecommendations(aggregatedData, user);
         source = 'fallback-rule-based';
-        console.log(`✅ Plan generated using fallback rule-based provider`);
       } catch (fallbackError) {
         throw new AppError(
           `Plan generation failed: ${fallbackError.message}`,
@@ -366,7 +364,6 @@ class MitigationPlanService {
     
     // Run every day at midnight (0 0 * * *)
     cron.schedule('0 0 * * *', async () => {
-      console.log('⏰ Running scheduled daily mitigation plan generation check...');
       try {
         const users = await this.findUsersNeedingPlanGeneration();
         let generatedCount = 0;
@@ -378,13 +375,12 @@ class MitigationPlanService {
             console.error(`❌ Failed to automatically generate plan for user ${user._id}:`, err.message);
           }
         }
-        console.log(`⏰ Scheduled mitigation plan generation check finished. Generated ${generatedCount} plans.`);
+        // Scheduled mitigation plan generation finished
       } catch (err) {
         console.error('❌ Scheduled daily mitigation plan check failed:', err.message);
       }
     });
     
-    console.log('🗓️ Mitigation plan cron scheduler initialized successfully.');
   }
 }
 

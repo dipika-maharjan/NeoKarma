@@ -181,7 +181,9 @@
     "towardStatus":"Next milestone: {status}",
     "carbonMirrorTitle":"Your Carbon Mirror",
     "carbonMirrorDescription":"See the collective impact of your daily actions on your school and the environment.",
-    "kgCO2Unit":"kg CO₂"
+    "kgCO2Unit":"kg CO₂",
+    "userFallback":"Student",
+    "failedToLoadDashboard":"Failed to load dashboard. Please try again."
   },
   "Profile": {
     "profileAccount": "Profile / Account",
@@ -256,7 +258,7 @@
     "useLoggedData":"Use logged data to compare real scenarios and see potential savings.",
     "compareChoices":"Compare transport and diet choices",
     "simulationsNote":"Simulations are based on your actual emission factors.",
-    "monthlyTrend":"Monthly Trend",
+    "monthlyTrend":"Monthly Trend of Carbon Emission",
     "trendPlaceholder":"Trend charts will appear once we have enough historical monthly data.",
     "addMoreLogs":"Add more daily logs to build your monthly trend and compare your seasonal progress.",    "trackProgressDefault": "Track your progress month over month.",    "nextMilestone":"Next Milestone",
     "keepImproving":"Keep improving your consistency to lower emissions and grow your forest impact.",
