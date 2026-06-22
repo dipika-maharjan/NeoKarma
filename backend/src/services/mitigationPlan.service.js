@@ -2,7 +2,7 @@
  * Mitigation Plan Service
  * Orchestrates plan generation using AI provider abstraction
  * Attempts external AI first, falls back to rule-based on failure
- * Aggregates 30 days of data and triggers generation
+ * Aggregates 7 days of data and triggers generation
  */
 const mitigationPlanRepository = require('../repositories/mitigationPlan.repository');
 const dailyLogRepository = require('../repositories/dailyLog.repository');
@@ -11,6 +11,17 @@ const externalAiProvider = require('./ai/externalAiProvider');
 const fallbackRuleProvider = require('./ai/fallbackRuleProvider');
 const { getDateNDaysAgo } = require('../utils/dateHelpers');
 const AppError = require('../utils/AppError');
+
+// Seeded random helper for consistent dummy data generation
+function seededRandom(seedStr, offset = 0) {
+  let h = 0xdeadbeef;
+  for (let i = 0; i < seedStr.length; i++) {
+    h = Math.imul(h ^ seedStr.charCodeAt(i), 2654435761);
+  }
+  h = Math.imul(h ^ (h >>> 16), 2246822507) ^ Math.imul(offset, 2246822507);
+  h ^= h >>> 13;
+  return ((h >>> 0) / 4294967296);
+}
 
 class MitigationPlanService {
   /**
@@ -24,18 +35,15 @@ class MitigationPlanService {
       throw new AppError('User not found', 404);
     }
 
-    // Get last 30 days of logs
-    const logs = await dailyLogRepository.getRecentLogs(userId, 30);
-    if (!logs || logs.length === 0) {
-      throw new AppError('Insufficient data. Please log your activities for at least a few days.', 400);
-    }
+    // Get last 7 days of logs (might be empty)
+    const logs = (await dailyLogRepository.getRecentLogs(userId, 7)) || [];
 
     // Calculate period dates
     const today = new Date().toISOString().split('T')[0];
-    const thirtyDaysAgo = getDateNDaysAgo(30);
+    const sevenDaysAgo = getDateNDaysAgo(7);
 
-    // Aggregate 30-day data
-    const aggregatedData = this.aggregateLogs(logs);
+    // Aggregate 7-day data (real user logs only)
+    const aggregatedData = this.prepareUserData(userId.toString(), logs);
 
     let recommendations = [];
     let source = 'fallback-rule-based';
@@ -65,7 +73,7 @@ class MitigationPlanService {
     // Create and save new plan
     const planData = {
       userId,
-      periodStart: thirtyDaysAgo,
+      periodStart: sevenDaysAgo,
       periodEnd: today,
       baseEmissionKg: aggregatedData.totalEmissionKg,
       status: 'generated',
@@ -79,32 +87,46 @@ class MitigationPlanService {
   }
 
   /**
-   * Aggregate daily logs into summary data for plan generation
+   * Prepare user data by aggregating real daily logs.
    */
-  aggregateLogs(logs) {
-    let totalEmissionKg = 0;
+  prepareUserData(userIdStr, realLogs) {
+    const combinedBreakdown = [];
+    
     let transportKg = 0;
     let foodKg = 0;
     let wasteKg = 0;
     let energyKg = 0;
 
-    const dailyBreakdown = logs.map((log) => {
-      totalEmissionKg += log.totalEmissionKg;
-      transportKg += log.breakdown.transportKg;
-      foodKg += log.breakdown.foodKg;
-      wasteKg += log.breakdown.wasteKg;
-      energyKg += log.breakdown.energyKg;
+    // Add existing real logs to totals and the list
+    for (const log of realLogs) {
+      const tKg = log.breakdown?.transportKg || 0;
+      const fKg = log.breakdown?.foodKg || 0;
+      const wKg = log.breakdown?.wasteKg || 0;
+      const eKg = log.breakdown?.energyKg || 0;
 
-      return {
+      transportKg += tKg;
+      foodKg += fKg;
+      wasteKg += wKg;
+      energyKg += eKg;
+
+      combinedBreakdown.push({
         date: log.date,
-        transportation: log.transportation,
-        food: log.food,
-        wasteAndPlastic: log.wasteAndPlastic,
-        energy: log.energy,
-        totalEmissionKg: log.totalEmissionKg,
-        breakdown: log.breakdown
-      };
-    });
+        transportation: log.transportation || { mode: 'walk', distanceKm: 0 },
+        food: log.food || { mealType: 'vegetarian', foodWasteGrams: 0 },
+        wasteAndPlastic: log.wasteAndPlastic || { plasticItemCount: 0, segregated: true },
+        energy: log.energy || { usageHours: 0 },
+        isDummyData: false,
+        breakdown: {
+          transportKg: tKg,
+          foodKg: fKg,
+          wasteKg: wKg,
+          energyKg: eKg
+        },
+        totalEmissionKg: log.totalEmissionKg || (tKg + fKg + wKg + eKg)
+      });
+    }
+
+    const totalEmissionKg = transportKg + foodKg + wasteKg + energyKg;
 
     return {
       totalEmissionKg: parseFloat(totalEmissionKg.toFixed(3)),
@@ -112,15 +134,24 @@ class MitigationPlanService {
       foodKg: parseFloat(foodKg.toFixed(3)),
       wasteKg: parseFloat(wasteKg.toFixed(3)),
       energyKg: parseFloat(energyKg.toFixed(3)),
-      logsCount: logs.length,
-      dailyBreakdown
+      logsCount: combinedBreakdown.length,
+      realDataDays: realLogs.length,
+      dummyDataDays: 0,
+      dailyBreakdown: combinedBreakdown
     };
+  }
+
+  /**
+   * Keep aggregateLogs for compatibility but direct to prepareUserData
+   */
+  aggregateLogs(logs) {
+    return this.prepareUserData('generic_seed', logs);
   }
 
   /**
    * Check if user has enough activity logs
    */
-  async hasEnoughData(userId, threshold = 30) {
+  async hasEnoughData(userId, threshold = 7) {
     const logsCount = await dailyLogRepository.getLogsCount(userId);
     return logsCount >= threshold;
   }
@@ -203,11 +234,11 @@ class MitigationPlanService {
   }
 
   /**
-   * Structure monthly plan with aggregated insights
+   * Structure weekly plan with aggregated insights
    */
-  async structureMonthlyPlan(userId, plan, logsCount) {
-    const logs = await dailyLogRepository.getRecentLogs(userId, 30);
-    const aggregatedData = this.aggregateLogs(logs);
+  async structureWeeklyPlan(userId, plan, logsCount) {
+    const logs = (await dailyLogRepository.getRecentLogs(userId, 7)) || [];
+    const aggregatedData = this.prepareUserData(userId.toString(), logs);
 
     const contributors = [
       { category: 'transport', emission: aggregatedData.transportKg, label: 'Transportation' },
@@ -228,13 +259,13 @@ class MitigationPlanService {
     }));
 
     return {
-      type: 'MONTHLY_PLAN',
+      type: 'WEEKLY_PLAN',
       logsCount,
       plan: {
         topContributors,
         recommendations: plan ? (plan.recommendations || []) : []
       },
-      message: 'Here is your personalized monthly mitigation plan based on your highest emission contributors.'
+      message: 'Here is your personalized weekly mitigation plan based on your highest emission contributors.'
     };
   }
 
@@ -243,23 +274,23 @@ class MitigationPlanService {
    */
   async getOrGeneratePlan(userId) {
     const logsCount = await dailyLogRepository.getLogsCount(userId);
-    const hasEnough = logsCount >= 30;
-
-    if (!hasEnough) {
+    
+    // Enforce 7-day minimum requirement for personalized AI plans
+    if (logsCount < 7) {
       return this.generateGeneralPlan(logsCount);
     }
-
+    
     let plan = await mitigationPlanRepository.findActivePlan(userId);
     if (!plan) {
       try {
         plan = await this.generatePlanForUser(userId);
       } catch (err) {
-        console.error('Error auto-generating monthly plan:', err.message);
+        console.error('Error auto-generating weekly plan:', err.message);
         return this.generateGeneralPlan(logsCount);
       }
     }
 
-    return this.structureMonthlyPlan(userId, plan, logsCount);
+    return this.structureWeeklyPlan(userId, plan, logsCount);
   }
 
   /**
@@ -267,14 +298,8 @@ class MitigationPlanService {
    */
   async forceGeneratePlan(userId) {
     const logsCount = await dailyLogRepository.getLogsCount(userId);
-    const hasEnough = logsCount >= 30;
-
-    if (!hasEnough) {
-      return this.generateGeneralPlan(logsCount);
-    }
-
     const plan = await this.generatePlanForUser(userId);
-    return this.structureMonthlyPlan(userId, plan, logsCount);
+    return this.structureWeeklyPlan(userId, plan, logsCount);
   }
 
   /**
@@ -316,12 +341,14 @@ class MitigationPlanService {
 
     const users = await User.find({});
     const needingUsers = [];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
     for (const user of users) {
       const activePlan = await mitigationPlanRepository.findActivePlan(user._id);
-      if (!activePlan) {
+      if (!activePlan || new Date(activePlan.generatedAt) < sevenDaysAgo) {
         const logsCount = await DailyLog.countDocuments({ userId: user._id });
-        if (logsCount > 0) {
+        if (logsCount >= 7) {
           needingUsers.push(user);
         }
       }
