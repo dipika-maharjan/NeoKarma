@@ -40,7 +40,7 @@ const DashboardPage = () => {
         const cachedStreak = getCachedStreak();
         
         const [dashData, today, config, historyResponse] = await Promise.all([
-          getDashboardSummary(),
+          getDashboardSummary(locale),
           getTodayLog(),
           getScoreConfig(),
           getDailyLogHistory()

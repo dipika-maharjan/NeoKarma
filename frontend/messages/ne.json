@@ -155,7 +155,9 @@
     "vegan": "भेगन",
     "vegetarian": "शाकाहारी",
     "mixed": "मिश्रित",
-    "nonVeg": "मांसाहारी"
+    "nonVeg": "मांसाहारी",
+    "carbonMirror": "कार्बन मिरर",
+    "treesEquivalent": "रूख समतुल्यता"
   },
   "Dashboard": {
     "greeting": "स्वागत छ, {name}!",

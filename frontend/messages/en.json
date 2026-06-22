@@ -155,7 +155,9 @@
     "vegan": "Vegan",
     "vegetarian": "Vegetarian",
     "mixed": "Mixed",
-    "nonVeg": "Non-Veg"
+    "nonVeg": "Non-Veg",
+    "carbonMirror": "Carbon Mirror",
+    "treesEquivalent": "Trees Equivalent"
   },
   "Dashboard": {
     "greeting": "Welcome, {name}!",
