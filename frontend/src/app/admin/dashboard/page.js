@@ -1257,7 +1257,7 @@ export default function AdminDashboardPage() {
                               {student.name}
                             </div>
                             <div className="text-xs text-[#6b7280]">
-                              {student.grade}{student.section ? ` • ${student.section}` : ''}
+                              Grade {student.grade || '—'}
                             </div>
                             <div className="mt-1 text-[11px] text-[#888]">
                               {formatInt(student.totalLogDays)} logs total
