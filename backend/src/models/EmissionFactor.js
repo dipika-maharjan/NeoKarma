@@ -52,8 +52,28 @@ const EmissionFactorSchema = new mongoose.Schema(
      */
     source: {
       type: String,
-      enum: ['IPCC', 'UNFCCC', 'AsianTransportObservatory', 'LocalResearch', 'Other'],
+      enum: [
+        'IPCC',
+        'UNFCCC',
+        'AsianTransportObservatory',
+        'LocalResearch',
+        'FAOSTAT Emissions Intensities 2022',
+        'IPCC 2006 Guidelines Vol 2 Ch 2',
+        'IPCC 2006 Guidelines Vol 2 Ch 2 + Nepal fleet data',
+        'IPCC 2006 Guidelines Vol 5 Ch 2 — Solid Waste Disposal',
+        'Asian Transport Observatory — Nepal Transport and Climate Policy Report',
+        'IPCC 2006 Guidelines Vol 2 Ch 2 — Stationary Combustion (Wood/Wood Waste)',
+        'Other'
+      ],
       required: [true, 'Source is required']
+    },
+
+    /**
+     * Source URL for the emission factor reference
+     */
+    sourceUrl: {
+      type: String,
+      default: null
     },
 
     /**

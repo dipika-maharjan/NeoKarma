@@ -181,9 +181,9 @@ const ResultPage = () => {
   const emissionKg = getEmissionValue(todayLog);
   const breakdown = getBreakdown(todayLog);
   const percentageBelow = averageEmission ? Math.max(0, Math.round(((averageEmission - emissionKg) / averageEmission) * 100)) : null;
-  const dailyTreeAbsorptionKg = appConfig?.dailyTreeAbsorptionKg ?? null;
-  const treesEquivalent = emissionKg && dailyTreeAbsorptionKg
-    ? Math.max(0.1, emissionKg / dailyTreeAbsorptionKg)
+  const monthlyTreeAbsorptionKg = appConfig?.monthlyTreeAbsorptionKg ?? (appConfig?.kgCo2PerTreePerYear ? appConfig.kgCo2PerTreePerYear / 12 : null);
+  const treesEquivalent = emissionKg && monthlyTreeAbsorptionKg
+    ? Math.max(0.1, emissionKg / monthlyTreeAbsorptionKg)
     : null;
   const emissionProgress = averageEmission ? Math.min(100, (emissionKg / averageEmission) * 100) : 0;
 
