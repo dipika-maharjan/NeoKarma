@@ -117,17 +117,19 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-[#C9D8CF] pt-4 text-[12px] text-[#5D6F60] md:flex-row md:items-center md:justify-between">
-          <p>{t('copyright')}</p>
-          <p className="flex max-w-xl items-start gap-2 text-[13px] font-medium leading-6 text-[#4E6256] md:justify-end md:text-right">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#5C8A72]" aria-hidden="true" />
-            <span>
-              {t('studentsCannot')}
-              <span className="block text-center font-semibold text-[#4E6256]">
-                <span className="font-bold text-[#0A3D25]">Neoकर्म</span> {t('helpsSeeIt')}
+        <div className="mt-6 border-t border-[#C9D8CF] pt-4">
+          <div className="grid gap-7 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.15fr_0.9fr_1fr]">
+            <p className="text-[12px] text-[#5D6F60]">{t('copyright')}</p>
+            <div></div>
+            <p className="max-w-xl text-[13px] font-medium leading-6 text-[#4E6256] lg:justify-self-end">
+              <span>
+                {t('studentsCannot')}
+                <span className="block font-semibold text-[#4E6256]">
+                  <span className="font-bold text-[#0A3D25]">Neoकर्म</span> {t('helpsSeeIt')}
+                </span>
               </span>
-            </span>
-          </p>
+            </p>
+          </div>
         </div>
       </div>
     </footer>
