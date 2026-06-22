@@ -1238,48 +1238,39 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <div className="flex flex-1 flex-col gap-3">
-                      {paginatedStreaks.map((student) => {
-                        const isAtRisk = student.status === 'at_risk' || student.atRisk;
-
-                        return (
+                      {paginatedStreaks.map((student) => (
+                        <div
+                          key={`${student.name}-${student.grade}-${student.section || ''}`}
+                          className="flex items-center gap-3 border-b border-[#f5f5f5] pb-3 last:border-b-0 last:pb-0"
+                        >
                           <div
-                            key={`${student.name}-${student.grade}-${student.section || ''}`}
-                            className="flex items-center gap-3 border-b border-[#f5f5f5] pb-3 last:border-b-0 last:pb-0"
+                            className="inline-flex shrink-0 items-center justify-center rounded-full px-2.5 py-1.5 text-[12px] font-bold"
+                            style={{
+                              background: '#e6f4ed',
+                              color: '#1a7a4a'
+                            }}
                           >
-                            <div
-                              className="inline-flex shrink-0 items-center justify-center rounded-full px-2.5 py-1.5 text-[12px] font-bold"
-                              style={{
-                                background: isAtRisk ? '#fef2f2' : '#e6f4ed',
-                                color: isAtRisk ? '#c0392b' : '#1a7a4a'
-                              }}
-                            >
-                              {initials(student.name || '')}
+                            {initials(student.name || '')}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#111]">
+                              {student.name}
                             </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#111]">
-                                {student.name}
-                                {isAtRisk && (
-                                  <span className="rounded-full bg-[#fef2f2] px-1.5 py-0.5 text-[10px] font-semibold text-[#c0392b]">
-                                    At risk
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-xs text-[#6b7280]">
-                                {student.grade}{student.section ? ` • ${student.section}` : ''}
-                              </div>
-                              <div className="mt-1 text-[11px] text-[#888]">
-                                {formatInt(student.totalLogDays)} logs total
-                              </div>
+                            <div className="text-xs text-[#6b7280]">
+                              {student.grade}{student.section ? ` • ${student.section}` : ''}
                             </div>
-                            <div className="flex-shrink-0 text-right">
-                              <div className={`text-sm font-extrabold ${student.currentStreak > 0 ? 'text-[#1a7a4a]' : 'text-[#888]'}`}>
-                                {student.currentStreak} days
-                              </div>
-                              <div className="mt-1 text-[10px] text-[#aaa]">best: {student.longestStreak} days</div>
+                            <div className="mt-1 text-[11px] text-[#888]">
+                              {formatInt(student.totalLogDays)} logs total
                             </div>
                           </div>
-                        );
-                      })}
+                          <div className="flex-shrink-0 text-right">
+                            <div className={`text-sm font-extrabold ${student.currentStreak > 0 ? 'text-[#1a7a4a]' : 'text-[#888]'}`}>
+                              {student.currentStreak} days
+                            </div>
+                            <div className="mt-1 text-[10px] text-[#aaa]">best: {student.longestStreak} days</div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
 
                     <Pagination

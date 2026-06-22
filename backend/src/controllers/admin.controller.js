@@ -640,16 +640,13 @@ class AdminController {
           section: student.section,
           schoolName: student.schoolName,
           locationType: student.locationType,
-          isActive: student.isActive,
           joinedAt: student.createdAt,
           totalLogs: logMap[studentId]?.count || 0,
           avgEmission: logMap[studentId]?.avgEmission || 0,
           lastLogAt: lastLog,
-          status,
           currentStreak: student.practicalMarks?.currentStreak || 0,
           longestStreak: student.practicalMarks?.longestStreak || 0,
-          totalLogDays: student.practicalMarks?.totalLogDays || 0,
-          atRisk: status === 'at_risk'
+          totalLogDays: student.practicalMarks?.totalLogDays || 0
         };
       })
     );

@@ -36,7 +36,6 @@ export default function AdminStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
 
@@ -70,13 +69,9 @@ export default function AdminStudentsPage() {
           .join(' ')
           .toLowerCase()
           .includes(term);
-      const matchesStatus =
-        statusFilter === 'all'
-          ? true
-          : student.status === statusFilter;
-      return matchesQuery && matchesStatus;
+      return matchesQuery;
     });
-  }, [students, query, statusFilter]);
+  }, [students, query]);
 
   const totalPages = Math.ceil(filteredStudents.length / PAGE_SIZE);
   const paginatedStudents = useMemo(() => {
@@ -85,9 +80,6 @@ export default function AdminStudentsPage() {
   }, [filteredStudents, page]);
 
   const summary = useMemo(() => {
-    const activeCount = students.filter((student) => student.status === 'active').length;
-    const atRiskCount = students.filter((student) => student.status === 'at_risk').length;
-    const inactiveCount = students.filter((student) => student.status === 'inactive').length;
     const avgEmission =
       students.length > 0
         ? students.reduce((sum, item) => sum + Number(item.avgEmission || 0), 0) /
@@ -96,9 +88,6 @@ export default function AdminStudentsPage() {
 
     return {
       totalStudents: students.length,
-      activeStudents: activeCount,
-      atRiskStudents: atRiskCount,
-      inactiveStudents: inactiveCount,
       avgEmission
     };
   }, [students]);
@@ -146,7 +135,7 @@ export default function AdminStudentsPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-2">
           {[
             {
               label: 'Total students',
@@ -154,19 +143,9 @@ export default function AdminStudentsPage() {
               accent: 'bg-[#eef8f1]'
             },
             {
-              label: 'Active',
-              value: formatInt(summary.activeStudents),
-              accent: 'bg-[#eef6ff]'
-            },
-            {
-              label: 'At risk',
-              value: formatInt(summary.atRiskStudents),
+              label: 'Average emission',
+              value: `${formatNumber(summary.avgEmission)} kg`,
               accent: 'bg-[#fff7ed]'
-            },
-            {
-              label: 'Inactive',
-              value: formatInt(summary.inactiveStudents),
-              accent: 'bg-[#f5f5f5]'
             }
           ].map((item) => (
             <div key={item.label} className="rounded-2xl bg-white p-5 shadow-sm">
@@ -193,21 +172,6 @@ export default function AdminStudentsPage() {
                 className="w-full outline-none md:w-72"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <select
-                value={statusFilter}
-                onChange={(event) => {
-                  setStatusFilter(event.target.value);
-                  setPage(1);
-                }}
-                className="rounded-xl border border-[#e5e7eb] px-3 py-2 text-sm outline-none"
-              >
-                <option value="all">All students</option>
-                <option value="active">Active</option>
-                <option value="at_risk">At risk</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
           </div>
 
           <div className="mt-5 overflow-hidden rounded-2xl border border-[#eef0ee]">
@@ -220,83 +184,48 @@ export default function AdminStudentsPage() {
                     <th className="px-4 py-3 text-left font-semibold">Streak</th>
                     <th className="px-4 py-3 text-left font-semibold">Logs</th>
                     <th className="px-4 py-3 text-left font-semibold">Avg Emission</th>
-                    <th className="px-4 py-3 text-left font-semibold">Status</th>
                     <th className="px-4 py-3 text-left font-semibold">Last Active</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eef0ee] bg-white">
-                  {paginatedStudents.map((student) => {
-                    const statusConfig = {
-                      active: {
-                        label: '● Active',
-                        bg: '#e6f4ed',
-                        color: '#1a7a4a'
-                      },
-                      at_risk: {
-                        label: '⚠ At risk',
-                        bg: '#fff8ed',
-                        color: '#92600a'
-                      },
-                      inactive: {
-                        label: '○ Inactive',
-                        bg: '#f5f5f5',
-                        color: '#888'
-                      }
-                    };
-
-                    const cfg = statusConfig[student.status] || statusConfig.inactive;
-
-                    return (
-                      <tr key={student._id} className="hover:bg-[#f9fbfa]">
-                        <td className="px-4 py-3">
-                          <div>
-                            <p className="font-semibold text-[#111827]">{student.name}</p>
-                            <p className="text-xs text-[#6b7280]">{student.email}</p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="rounded-full bg-[#f5f7f6] px-2.5 py-1 text-xs font-medium text-[#0A3D25]">
-                            Grade {student.grade || '—'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-[#111827]">{student.currentStreak} day{student.currentStreak === 1 ? '' : 's'}</td>
-                        <td className="px-4 py-3 text-[#111827]">{formatInt(student.totalLogs)}</td>
-                        <td className="px-4 py-3">
-                          <span
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 700,
-                              color:
-                                student.avgEmission === 0
-                                  ? '#aaa'
-                                  : student.avgEmission <= 2
-                                    ? '#1a7a4a'
-                                    : student.avgEmission <= 4
-                                      ? '#f59e0b'
-                                      : '#c0392b'
-                            }}
-                          >
-                            {student.avgEmission === 0
-                              ? 'No logs'
-                              : `${student.avgEmission} kg`}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span style={{
-                            padding: '3px 10px',
-                            borderRadius: 20,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            background: cfg.bg,
-                            color: cfg.color
-                          }}>
-                            {cfg.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-[#111827]">{formatDate(student.lastLogAt)}</td>
-                      </tr>
-                    );
-                  })}
+                  {paginatedStudents.map((student) => (
+                    <tr key={student._id} className="hover:bg-[#f9fbfa]">
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="font-semibold text-[#111827]">{student.name}</p>
+                          <p className="text-xs text-[#6b7280]">{student.email}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="rounded-full bg-[#f5f7f6] px-2.5 py-1 text-xs font-medium text-[#0A3D25]">
+                          Grade {student.grade || '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[#111827]">{student.currentStreak} day{student.currentStreak === 1 ? '' : 's'}</td>
+                      <td className="px-4 py-3 text-[#111827]">{formatInt(student.totalLogs)}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color:
+                              student.avgEmission === 0
+                                ? '#aaa'
+                                : student.avgEmission <= 2
+                                  ? '#1a7a4a'
+                                  : student.avgEmission <= 4
+                                    ? '#f59e0b'
+                                    : '#c0392b'
+                          }}
+                        >
+                          {student.avgEmission === 0
+                            ? 'No logs'
+                            : `${student.avgEmission} kg`}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[#111827]">{formatDate(student.lastLogAt)}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
