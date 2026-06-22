@@ -181,7 +181,9 @@
     "towardStatus":"अर्को लक्ष्य: {status}",
     "carbonMirrorTitle":"तपाइँको कार्बन मिरर",
     "carbonMirrorDescription":"तपाईंका दैनिक क्रियाकलापहरूले विद्यालय र वातावरणमा पार्ने समष्टिगत प्रभाव यहाँ देख्नुहोस्।",
-    "kgCO2Unit":"किग्रा CO₂"
+    "kgCO2Unit":"किग्रा CO₂",
+    "userFallback":"विद्यार्थी",
+    "failedToLoadDashboard":"ड्यासबोर्ड लोड गर्न सकेन। कृपया फेरि प्रयास गर्नुहोस्।"
   },
   "Profile": {
     "profileAccount": "प्रोफाइल / खाता",

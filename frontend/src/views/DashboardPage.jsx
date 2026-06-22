@@ -9,7 +9,7 @@ import { getScoreConfig } from '@/lib/actions/scoreConfigActions';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowDown, ArrowUpRight, Plus } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const DashboardPage = () => {
@@ -17,6 +17,7 @@ const DashboardPage = () => {
   const router = useRouter();
   const t = useTranslations('Dashboard');
   const tStatus = useTranslations('Status');
+  const locale = useLocale();
   const formatNumber = useNumberFormatter();
   const carbonMirrorT = useTranslations('CarbonMirror');
   const [loading, setLoading] = useState(true);
@@ -37,7 +38,7 @@ const DashboardPage = () => {
         const cachedStreak = getCachedStreak();
         
         const [dashData, today, config] = await Promise.all([
-          getDashboardSummary(),
+          getDashboardSummary(locale),
           getTodayLog(),
           getScoreConfig()
         ]);
@@ -64,7 +65,7 @@ const DashboardPage = () => {
     if (isAuthenticated) {
       fetchData();
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, locale, t]);
 
   if (!isAuthenticated) {
     return null;

@@ -14,6 +14,7 @@ const emissionFactorsRoutes = require('./emissionFactors.routes');
 const configRoutes = require('./config.routes');
 const scoreConfigRoutes = require('./scoreConfig.routes');
 const shareRoutes = require('./share.routes');
+const translateRoutes = require('./translate.routes');
 const adminRoutes = require('./admin.routes');
 const asyncHandler = require('../utils/asyncHandler');
 const { getDBStatus } = require('../config/db');
@@ -51,6 +52,7 @@ router.use('/emission-factors', emissionFactorsRoutes);
 router.use('/config', configRoutes);
 router.use('/score-config', scoreConfigRoutes);
 router.use('/share', shareRoutes);
+router.use('/translate', translateRoutes);
 
 /**
  * 501 Not Implemented Placeholder for PDF Export

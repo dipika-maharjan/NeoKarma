@@ -72,7 +72,7 @@ const CarbonMirrorPage = () => {
         let todayLog = null;
         for (let i = 0; i < attempts; i++) {
           try {
-            [summary, todayLog] = await Promise.all([getDashboardSummary(), getTodayLog()]);
+            [summary, todayLog] = await Promise.all([getDashboardSummary(locale), getTodayLog()]);
             break;
           } catch (e) {
             if (i === attempts - 1) throw e;
@@ -257,7 +257,7 @@ const CarbonMirrorPage = () => {
                 setLoading(true);
                 setError(null);
                 try {
-                  const [summary, todayLog] = await Promise.all([getDashboardSummary(), getTodayLog()]);
+                  const [summary, todayLog] = await Promise.all([getDashboardSummary(locale), getTodayLog()]);
                   setPhaseData(summary);
                   setHasLoggedToday(!!todayLog);
                   if (summary?.phase !== 'onboarding') {

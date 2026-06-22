@@ -18,6 +18,7 @@ import {
 import RecommendationsView from '@/components/RecommendationsView';
 import { useAuth } from '@/context/AuthContext';
 import { getDashboardSummary } from '@/lib/actions/dashboardActions';
+import { useLocale } from 'next-intl';
 import { getTodayLog } from '@/lib/actions/calculatorActions';
 import PhaseUnlockCelebration from '@/components/PhaseUnlockCelebration';
 
@@ -274,6 +275,7 @@ const StarterPlanView = ({ summary, hasLoggedToday }) => {
 export default function PlanPage() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const [summary, setSummary] = useState(null);
   const [hasLoggedToday, setHasLoggedToday] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -294,7 +296,7 @@ export default function PlanPage() {
         let todayLog = null;
         for (let i = 0; i < attempts; i++) {
           try {
-            [summaryResult, todayLog] = await Promise.all([getDashboardSummary(), getTodayLog()]);
+            [summaryResult, todayLog] = await Promise.all([getDashboardSummary(locale), getTodayLog()]);
             break;
           } catch (e) {
             if (i === attempts - 1) throw e;
@@ -343,7 +345,7 @@ export default function PlanPage() {
                 // re-run loader
                 (async () => {
                   try {
-                    const [summaryResult, todayLog] = await Promise.all([getDashboardSummary(), getTodayLog()]);
+                    const [summaryResult, todayLog] = await Promise.all([getDashboardSummary(locale), getTodayLog()]);
                     setSummary(summaryResult);
                     setHasLoggedToday(!!todayLog);
                   } catch (err) {

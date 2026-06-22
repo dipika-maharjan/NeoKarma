@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale } from "next-intl";
+import { convertDigits } from "./digitTranslator";
 
 export function useNumberFormatter() {
   const locale = useLocale();
@@ -10,7 +11,11 @@ export function useNumberFormatter() {
     // Guard against non-number values
     const num = typeof value === 'number' ? value : Number(value);
     if (!Number.isFinite(num)) return '--';
-    return new Intl.NumberFormat(localeCode, options).format(num);
+    
+    const formattedNumber = new Intl.NumberFormat(localeCode, options).format(num);
+    
+    // Convert digits to appropriate locale
+    return convertDigits(formattedNumber, locale);
   };
 }
 
