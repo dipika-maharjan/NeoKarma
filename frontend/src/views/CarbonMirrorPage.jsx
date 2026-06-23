@@ -12,7 +12,11 @@ import {
   Lock,
   Route,
   Share2,
-  TreePine
+  TreePine,
+  Utensils,
+  Trash2,
+  Lightbulb,
+  Sprout
 } from 'lucide-react';
 import {
   LineChart,
@@ -29,6 +33,7 @@ import { getDailyLogHistory } from '@/lib/actions/calculatorActions';
 import { getAppConfig } from '@/lib/actions/configActions';
 import { getDashboardSummary } from '@/lib/actions/dashboardActions';
 import { getTodayLog } from '@/lib/actions/calculatorActions';
+import { getActivePlan } from '@/lib/actions/mitigationPlanActions';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
@@ -39,6 +44,50 @@ const CARD_PADDING = 'p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]';
 const EYEBROW_CLASS = 'text-[13px] font-bold uppercase tracking-wider text-[#4A5550]';
 const BODY_CLASS = 'text-[16px] text-[#4A5550]';
 const CARD_TITLE_CLASS = 'text-[18px] font-bold leading-tight';
+
+// Fallback recommendations if plan is not available
+const FALLBACK_RECOMMENDATIONS = [
+  {
+    text: 'Use School Buses More Efficiently',
+    description: 'Optimizing bus routes and fuller occupancy can reduce fuel use by 20-30% across the school community.',
+    estimatedReductionKg: 45,
+    effortLevel: 'medium',
+    category: 'transport'
+  },
+  {
+    text: 'Try Vegetarian Days',
+    description: '1-2 vegetarian days per week in the canteen can cut food emissions by up to 40%.',
+    estimatedReductionKg: 28,
+    effortLevel: 'easy',
+    category: 'food'
+  },
+  {
+    text: 'Improve Waste Sorting',
+    description: 'Reducing contamination in recycling bins saves energy and reduces landfill waste significantly.',
+    estimatedReductionKg: 19,
+    effortLevel: 'easy',
+    category: 'waste'
+  },
+  {
+    text: 'Switch Off Lights & Fans',
+    description: 'Turn off when not in use. A small habit that leads to a big impact over a school term.',
+    estimatedReductionKg: 12,
+    effortLevel: 'easy',
+    category: 'energy'
+  }
+];
+
+// Map backend recommendation format to carousel format
+const mapRecommendationForCarousel = (rec) => {
+  return {
+    text: rec.title || rec.text,
+    description: rec.description || rec.actionDesc,
+    estimatedReductionKg: rec.personalSaving || rec.estimatedReductionKg || parseFloat(rec.reduction) || 0,
+    effortLevel: rec.effortLevel || 'medium',
+    category: rec.category || 'energy',
+    id: rec.id || rec._id
+  };
+};
 
 const CarbonMirrorPage = () => {
   const { isAuthenticated } = useAuth();
@@ -53,10 +102,20 @@ const CarbonMirrorPage = () => {
   const [error, setError] = useState(null);
   const [debugHistoryRaw, setDebugHistoryRaw] = useState(null);
   const [debugMappedRaw, setDebugMappedRaw] = useState(null);
+  const [activePlan, setActivePlan] = useState(null);
+  const [pendingRecommendations, setPendingRecommendations] = useState([]);
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const t = useTranslations('CarbonMirror');
   const tImg = useTranslations('Images');
   const tResult = useTranslations('Result');
   const formatNumber = useNumberFormatter();
+
+  // Check if user has been active for 30+ days
+  const isEligibleForNextMilestone = () => {
+    if (!phaseData) return false;
+    // If user has a streak or daily logs count >= 30, they're eligible
+    return phaseData.streakCount >= 30 || (phaseData.logsCount && phaseData.logsCount >= 30);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,6 +147,51 @@ const CarbonMirrorPage = () => {
           if (data) {
             setMirrorData(data);
           }
+          
+          // Fetch active plan recommendations from the plan page
+          try {
+            let planData = await getActivePlan();
+
+            if (planData) {
+              // Extract recommendations based on plan type
+              let recommendations = [];
+
+              if (planData.type === 'GENERAL_PLAN') {
+                const plan = planData.plan || {};
+                recommendations = [
+                  ...(plan.transport || []),
+                  ...(plan.energy || []),
+                  ...(plan.diet || []),
+                  ...(plan.waste || [])
+                ];
+              } else if (planData.type === 'WEEKLY_PLAN' || planData.type === 'MONTHLY_PLAN') {
+                recommendations = planData.plan?.recommendations || [];
+              } else {
+                // Fallback to plain recommendations array if backend returns plain format
+                recommendations = planData.recommendations || [];
+              }
+
+              // Map and validate recommendations, use fallback if empty
+              if (recommendations && recommendations.length > 0) {
+                const mappedRecs = recommendations.map(mapRecommendationForCarousel);
+                setActivePlan({ recommendations: mappedRecs });
+              } else {
+                const mappedFallback = FALLBACK_RECOMMENDATIONS.map(mapRecommendationForCarousel);
+                setActivePlan({ recommendations: mappedFallback });
+              }
+            } else {
+              // No plan data at all, use fallback
+              const mappedFallback = FALLBACK_RECOMMENDATIONS.map(mapRecommendationForCarousel);
+              setActivePlan({ recommendations: mappedFallback });
+            }
+          } catch (err) {
+            // If plan fetch fails, use fallback recommendations
+            console.warn('Error fetching plan recommendations:', err);
+            const mappedFallback = FALLBACK_RECOMMENDATIONS.map(mapRecommendationForCarousel);
+            setActivePlan({ recommendations: mappedFallback });
+          }
+          setCarouselIndex(0);
+          
           try {
             const historyResp = await getDailyLogHistory();
               if (historyResp && historyResp.data) {
@@ -661,19 +765,133 @@ const CarbonMirrorPage = () => {
           <div className="relative overflow-hidden rounded-[10px] bg-[#0A3D25] p-5 md:p-6 text-white shadow-sm">
             <div className="absolute -bottom-7 -right-8 h-24 w-24 rounded-full border-[11px] border-white/10" />
             <h3 className={`${CARD_TITLE_CLASS} mb-2 !text-white`}>{t('nextMilestone')}</h3>
-            <p className="mb-6 text-[14px] leading-relaxed !text-white/80">
-              {t('keepImproving')}
-            </p>
-            <div className="mb-2 flex items-center justify-between text-[13px] font-semibold text-[#CBE3D8]">
-              <span>{t('currentLabel')} {currentScore !== null ? `${formatNumber(currentScore, {})}/100` : '--'}</span>
-              <span>{t('goalLabel')} {scoreGoalText}</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/20">
-              <div
-                className="h-full rounded-full bg-[#A8E0C7]"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
+            
+            {/* Always show plan recommendations carousel if available - real-time from plan page */}
+            {activePlan?.recommendations && activePlan.recommendations.length > 0 ? (
+              <div className="space-y-4 mt-6">
+                {/* Carousel slide - Matching RecommendationsView card style */}
+                <div className="bg-white border border-gray-100/80 shadow-sm rounded-3xl p-6 flex flex-col justify-between">
+                  <div>
+                    {/* Badge - Dynamic color based on effort level */}
+                    <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                      activePlan.recommendations[carouselIndex]?.effortLevel === 'easy' 
+                        ? 'bg-green-50 text-green-600 border border-green-100'
+                        : activePlan.recommendations[carouselIndex]?.effortLevel === 'medium'
+                        ? 'bg-[#E2F0D9] text-[#0A3D25] border border-[#C5E0B4]'
+                        : 'bg-red-50 text-red-500 border border-red-100'
+                    }`}>
+                      {activePlan.recommendations[carouselIndex]?.effortLevel === 'easy'
+                        ? 'Easy Win'
+                        : activePlan.recommendations[carouselIndex]?.effortLevel === 'medium'
+                        ? 'Medium Impact'
+                        : 'High Impact'}
+                    </span>
+
+                    {/* Main Title & Description */}
+                    <h3 className="text-xl font-bold text-[#0A3D25] mt-4 tracking-tight">
+                      {activePlan.recommendations[carouselIndex]?.text}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                      {activePlan.recommendations[carouselIndex]?.description}
+                    </p>
+                  </div>
+
+                  {/* Bottom Section with impact reduction */}
+                  <div className="mt-6 flex items-end justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                        Impact Reduction
+                      </p>
+                      <p className="text-lg font-extrabold text-gray-800 mt-0.5">
+                        -{formatNumber(activePlan.recommendations[carouselIndex]?.estimatedReductionKg, { maximumFractionDigits: 1 })} kg CO₂
+                        <span className="text-xs font-semibold text-gray-400 ml-1">
+                          /month
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* Icon/Graphic representation using Lucide React */}
+                    <div className="w-24 h-20 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100">
+                      {activePlan.recommendations[carouselIndex]?.category === 'transport' && (
+                        <div className="w-full h-full relative bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                          <Bus className="w-8 h-8" />
+                        </div>
+                      )}
+                      {activePlan.recommendations[carouselIndex]?.category === 'food' && (
+                        <div className="w-full h-full relative bg-indigo-50 text-indigo-500 flex items-center justify-center">
+                          <Utensils className="w-8 h-8" />
+                        </div>
+                      )}
+                      {activePlan.recommendations[carouselIndex]?.category === 'waste' && (
+                        <div className="w-full h-full relative bg-stone-50 text-stone-500 flex items-center justify-center">
+                          <Trash2 className="w-8 h-8" />
+                        </div>
+                      )}
+                      {activePlan.recommendations[carouselIndex]?.category === 'energy' && (
+                        <div className="w-full h-full relative bg-amber-50 text-amber-500 flex items-center justify-center">
+                          <Lightbulb className="w-8 h-8" />
+                        </div>
+                      )}
+                      {!activePlan.recommendations[carouselIndex]?.category && (
+                        <div className="w-full h-full relative bg-green-50 text-green-600 flex items-center justify-center">
+                          <Sprout className="w-8 h-8" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Carousel Navigation - Centered below card */}
+                <div className="flex items-center justify-center gap-8 mt-8">
+                  <button
+                    onClick={() => setCarouselIndex(Math.max(0, carouselIndex - 1))}
+                    disabled={carouselIndex === 0}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
+                  >
+                    ←
+                  </button>
+
+                  <span className="text-xs font-semibold text-white w-12 text-center">
+                    {carouselIndex + 1} / {activePlan.recommendations.length}
+                  </span>
+
+                  <button
+                    onClick={() => setCarouselIndex(Math.min(activePlan.recommendations.length - 1, carouselIndex + 1))}
+                    disabled={carouselIndex === activePlan.recommendations.length - 1}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
+                  >
+                    →
+                  </button>
+                </div>
+
+             
+              </div>
+            ) : (
+              /* Show appropriate message based on user eligibility */
+              <>
+                {!isEligibleForNextMilestone() ? (
+                  /* User hasn't reached 30 days yet */
+                  <p className="mb-6 text-[14px] leading-relaxed !text-white/80">
+                    {t('keepImproving')} Keep logging for {30 - (phaseData?.logsCount || 0)} more days to unlock your next milestone.
+                  </p>
+                ) : (
+                  /* User is eligible but no recommendations yet */
+                  <p className="mb-6 text-[14px] leading-relaxed !text-white/80">
+                    {t('keepImproving')}
+                  </p>
+                )}
+                <div className="mb-4 flex items-center justify-between text-[13px] font-semibold text-[#CBE3D8]">
+                  <span>{t('currentLabel')} {currentScore !== null ? `${formatNumber(currentScore, {})}/100` : '--'}</span>
+                  <span>{t('goalLabel')} {scoreGoalText}</span>
+                </div>
+                <div className="mb-6 h-1.5 overflow-hidden rounded-full bg-white/20">
+                  <div
+                    className="h-full rounded-full bg-[#A8E0C7]"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </section>
       </div>
