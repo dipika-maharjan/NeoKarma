@@ -106,9 +106,6 @@ const NotificationsPage = () => {
                           <h3 className={`text-[18px] font-bold ${style.title}`}>
                             {notification.title}
                           </h3>
-                          {notification.unread && (
-                            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#D32F2F] flex-shrink-0 mt-1.5" />
-                          )}
                         </div>
                         <p className="mt-2 text-[15px] leading-relaxed text-[#4A5550]">
                           {notification.message}
