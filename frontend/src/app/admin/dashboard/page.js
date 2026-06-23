@@ -10,7 +10,15 @@ import {
   Flame,
   TrendingDown,
   Users,
-  Wind
+  Wind,
+  Bus,
+  Salad,
+  Trash2,
+  Zap,
+  Bike,
+  Leaf,
+  PackageX,
+  UtensilsCrossed
 } from 'lucide-react';
 import {
   BarChart,
@@ -188,25 +196,25 @@ export default function AdminDashboardPage() {
       action: 'Walked or Cycled',
       pct: Number(data.ecoActions?.walkedOrCycledPct || 0),
       color: '#1a7a4a',
-      icon: '🚶'
+      icon: <Bike size={15} color="#1a7a4a" />
     },
     {
       action: 'Veg Lunch',
       pct: Number(data.ecoActions?.vegLunchPct || 0),
       color: '#4ecf96',
-      icon: '🥗'
+      icon: <Salad size={15} color="#4ecf96" />
     },
     {
       action: 'No Plastic',
       pct: Number(data.ecoActions?.noPlasticPct || 0),
       color: '#3b82f6',
-      icon: '♻'
+      icon: <PackageX size={15} color="#3b82f6" />
     },
     {
       action: 'No Food Waste',
       pct: Number(data.ecoActions?.noFoodWastePct || 0),
       color: '#f59e0b',
-      icon: '🍱'
+      icon: <UtensilsCrossed size={15} color="#f59e0b" />
     }
   ];
 
@@ -489,8 +497,8 @@ export default function AdminDashboardPage() {
                           data={gradeEmissions}
                           margin={{ top: 30, right: 12, left: -2, bottom: 4 }}
                           barGap={4}
-                          barCategoryGap="10%"
-                          barSize={55}
+                          barCategoryGap="1%"
+                          barSize={70}
                         >
                           <CartesianGrid
                             strokeDasharray="3 3"
@@ -659,7 +667,7 @@ export default function AdminDashboardPage() {
                           s => s.category === 'Transport'
                         )?.value || 0,
                         color: '#f59e0b',
-                        icon: '🚌'
+                        icon: <Bus size={14} color="#f59e0b" />
                       },
                       {
                         label: 'Lunch',
@@ -667,7 +675,7 @@ export default function AdminDashboardPage() {
                           s => s.category === 'Lunch'
                         )?.value || 0,
                         color: '#1a7a4a',
-                        icon: '🥗'
+                        icon: <Salad size={14} color="#1a7a4a" />
                       },
                       {
                         label: 'Waste',
@@ -675,7 +683,7 @@ export default function AdminDashboardPage() {
                           s => s.category === 'Waste'
                         )?.value || 0,
                         color: '#c0392b',
-                        icon: '🗑'
+                        icon: <Trash2 size={14} color="#c0392b" />
                       },
                       {
                         label: 'Energy',
@@ -683,7 +691,7 @@ export default function AdminDashboardPage() {
                           s => s.category === 'Energy'
                         )?.value || 0,
                         color: '#3b82f6',
-                        icon: '⚡'
+                        icon: <Zap size={14} color="#3b82f6" />
                       }
                     ].map(s => {
                       const total = data.emissionSources
@@ -702,14 +710,25 @@ export default function AdminDashboardPage() {
                             marginBottom: 5
                           }}>
                             <span style={{
-                              fontSize: 12,
-                              fontWeight: 600,
-                              color: '#111',
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 6
+                              gap: 6,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: '#111'
                             }}>
-                              {s.icon} {s.label}
+                              <span style={{
+                                width: 24, height: 24,
+                                borderRadius: 6,
+                                background: s.color + '18',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}>
+                                {s.icon}
+                              </span>
+                              {s.label}
                             </span>
                             <span style={{
                               fontSize: 12,
@@ -800,12 +819,16 @@ export default function AdminDashboardPage() {
                         Biggest source
                       </p>
                       <p style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
                         fontSize: 14,
                         fontWeight: 700,
                         color: '#92600a',
                         margin: 0
                       }}>
-                        🚌 Transport
+                        <Bus size={16} color="#92600a" />
+                        Transport
                       </p>
                       <p style={{
                         fontSize: 11,
@@ -839,14 +862,26 @@ export default function AdminDashboardPage() {
                         marginBottom: 6
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: '#111'
-                        }}
-                      >
-                        {item.icon} {item.action}
+                      <span style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: '#111',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 7
+                      }}>
+                        <span style={{
+                          width: 26, height: 26,
+                          borderRadius: 6,
+                          background: item.color + '18',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          {item.icon}
+                        </span>
+                        {item.action}
                       </span>
                       <span
                         style={{
