@@ -68,6 +68,7 @@ const LoginPage = () => {
           src="/Himalayan Mountains.png"
           alt={imgT('himalayanAlt')}
           fill
+          sizes="(min-width: 1024px) 52vw, 0vw"
           className="object-cover opacity-80"
           priority
         />
