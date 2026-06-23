@@ -108,6 +108,7 @@ const CarbonMirrorPage = () => {
   const t = useTranslations('CarbonMirror');
   const tImg = useTranslations('Images');
   const tResult = useTranslations('Result');
+  const tPlan = useTranslations('Plan');
   const formatNumber = useNumberFormatter();
 
   // Check if user has been active for 30+ days
@@ -781,10 +782,10 @@ const CarbonMirrorPage = () => {
                         : 'bg-red-50 text-red-500 border border-red-100'
                     }`}>
                       {activePlan.recommendations[carouselIndex]?.effortLevel === 'easy'
-                        ? 'Easy Win'
+                        ? tPlan('easyWin')
                         : activePlan.recommendations[carouselIndex]?.effortLevel === 'medium'
-                        ? 'Medium Impact'
-                        : 'High Impact'}
+                        ? tPlan('mediumImpact')
+                        : tPlan('highImpact')}
                     </span>
 
                     {/* Main Title & Description */}
@@ -800,12 +801,12 @@ const CarbonMirrorPage = () => {
                   <div className="mt-6 flex items-end justify-between">
                     <div>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                        Impact Reduction
+                        {tPlan('impactReduction')}
                       </p>
                       <p className="text-lg font-extrabold text-gray-800 mt-0.5">
-                        -{formatNumber(activePlan.recommendations[carouselIndex]?.estimatedReductionKg, { maximumFractionDigits: 1 })} kg CO₂
+                        -{formatNumber(activePlan.recommendations[carouselIndex]?.estimatedReductionKg || activePlan.recommendations[carouselIndex]?.saving || 0, { maximumFractionDigits: 1 })} kg CO₂
                         <span className="text-xs font-semibold text-gray-400 ml-1">
-                          /month
+                          /{tPlan('kgPerMo').split('/')[1]?.trim() || 'mo'}
                         </span>
                       </p>
                     </div>

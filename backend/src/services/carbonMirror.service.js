@@ -8,6 +8,7 @@ const config = require('../config/env');
 const emissionCalculationService = require('./emissionCalculation.service');
 const monthlySnapshotRepository = require('../repositories/monthlySnapshot.repository');
 const dailyLogRepository = require('../repositories/dailyLog.repository');
+const { translateFields } = require('../utils/translator');
 const AppError = require('../utils/AppError');
 
 // US Forest Service: mature tree absorbs 21.77 kg CO2 per year
@@ -61,15 +62,8 @@ Respond with ONLY the story text, no explanations.`;
   async generateMirror(totalEmissionKg, locale = 'en') {
     const treesEquivalent = this.calculateTreesEquivalent(totalEmissionKg);
 
-    let story = '';
+    let story = `Your footprint today equals roughly ${treesEquivalent} mature trees' monthly absorption capacity.`;
     let status = '';
-
-    // Generate stories based on locale
-    if (locale === 'ne' || locale === 'np') {
-      story = `तपाईंको आजको पदचिह्न लगभग ${treesEquivalent} परिपक्व रूखहरूको मासिक अवशोषण क्षमतासँग बराबर छ।`;
-    } else {
-      story = `Your footprint today equals roughly ${treesEquivalent} mature trees' monthly absorption capacity.`;
-    }
 
     if (treesEquivalent >= 50) {
       status = 'deforestation';
@@ -81,12 +75,14 @@ Respond with ONLY the story text, no explanations.`;
       status = 'afforestation';
     }
 
-    return {
+    const result = {
       story,
       treesEquivalent,
       status,
       kgCO2: totalEmissionKg
     };
+
+    return await translateFields(result, ['story'], locale);
   }
 
   /**
@@ -120,53 +116,41 @@ Respond with ONLY the story text, no explanations.`;
    * Compare current month's emissions to previous month
    * Now locale-aware
    */
-  generateMonthComparison(currentKg, previousKg, locale = 'en') {
+  async generateMonthComparison(currentKg, previousKg, locale = 'en') {
     if (previousKg === 0) {
-      const noDataMsg = locale === 'ne' || locale === 'np'
-        ? 'तुलना गर्नको लागि कुनै अघिल्लो महिनाको डेटा छैन'
-        : 'No previous month data to compare';
-      
-      return {
+      const noDataMsg = 'No previous month data to compare';
+      return await translateFields({
         deltaKg: currentKg,
         direction: 'noData',
         message: noDataMsg
-      };
+      }, ['message'], locale);
     }
 
     const deltaKg = parseFloat((previousKg - currentKg).toFixed(3));
 
     if (deltaKg > 0) {
-      const improvedMsg = locale === 'ne' || locale === 'np'
-        ? `उत्कृष्ट! तपाइँले गत महिनाको तुलनामा ${deltaKg} किग्रा CO₂ मा सुधार गर्नुभयो।`
-        : `Excellent! You improved by ${deltaKg} kg CO₂ compared to last month.`;
-      
-      return {
+      const improvedMsg = `Excellent! You improved by ${deltaKg} kg CO₂ compared to last month.`;
+      return await translateFields({
         deltaKg,
         direction: 'improved',
         message: improvedMsg,
         percentChange: parseFloat(((deltaKg / previousKg) * 100).toFixed(1))
-      };
+      }, ['message'], locale);
     } else if (deltaKg < 0) {
-      const worsenedMsg = locale === 'ne' || locale === 'np'
-        ? `आपको उत्सर्जन गत महिनाको तुलनामा ${Math.abs(deltaKg)} किग्रा CO₂ ले बढ्यो। सुधारमा ध्यान केन्द्रित गरौं।`
-        : `Your emissions increased by ${Math.abs(deltaKg)} kg CO₂ compared to last month. Let's focus on improvements.`;
-      
-      return {
+      const worsenedMsg = `Your emissions increased by ${Math.abs(deltaKg)} kg CO₂ compared to last month. Let's focus on improvements.`;
+      return await translateFields({
         deltaKg: Math.abs(deltaKg),
         direction: 'worsened',
         message: worsenedMsg,
         percentChange: parseFloat(((Math.abs(deltaKg) / previousKg) * 100).toFixed(1))
-      };
+      }, ['message'], locale);
     } else {
-      const noChangeMsg = locale === 'ne' || locale === 'np'
-        ? 'आपको उत्सर्जन गत महिनाको जस्तै छ।'
-        : 'Your emissions are the same as last month.';
-      
-      return {
+      const noChangeMsg = 'Your emissions are the same as last month.';
+      return await translateFields({
         deltaKg: 0,
         direction: 'noChange',
         message: noChangeMsg
-      };
+      }, ['message'], locale);
     }
   }
 

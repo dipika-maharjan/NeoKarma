@@ -41,6 +41,7 @@ const sortOptions = [
 
 const ScoreHistoryView = () => {
   const t = useTranslations('Score');
+  const tCommon = useTranslations();
   const { user } = useAuth();
   const formatNumber = useNumberFormatter();
   const [currentPage, setCurrentPage] = useState(1);
@@ -366,13 +367,13 @@ const ScoreHistoryView = () => {
                 <Target size={18} strokeWidth={2.1} />
               </div>
               <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Active
+                {t('activeLabel')}
               </span>
             </div>
             <div className="mt-5">
-              <h3 className="text-lg font-black text-gray-800">{currentStreak} Days</h3>
+              <h3 className="text-lg font-black text-gray-800">{currentStreak} {tCommon('Plan.days') || 'Days'}</h3>
               <p className="text-[11px] text-gray-400 mt-1">
-                {Math.min(currentStreak * 0.5, 3).toFixed(1)} / 3.0 streak multiplier
+                {t('streakMultiplier', { current: Math.min(currentStreak * 0.5, 3).toFixed(1), max: '3.0' })}
               </p>
               <div className="w-full h-1.5 bg-gray-100 rounded-full mt-3 overflow-hidden">
                 <div
@@ -389,12 +390,12 @@ const ScoreHistoryView = () => {
                 <CalendarCheck size={18} strokeWidth={2.1} />
               </div>
               <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Weekly
+                {t('weeklyLabel')}
               </span>
             </div>
             <div className="mt-5">
               <h3 className="text-lg font-black text-gray-800">{completedCount} / {totalActions}</h3>
-              <p className="text-[11px] text-gray-400 mt-1">Actions completed in plan</p>
+              <p className="text-[11px] text-gray-400 mt-1">{t('actionsCompleted')}</p>
               <div className="w-full h-1.5 bg-gray-100 rounded-full mt-3 overflow-hidden">
                 <div
                   className="score-progress-bar h-full bg-blue-500 rounded-full transition-all duration-500"
@@ -410,17 +411,17 @@ const ScoreHistoryView = () => {
                 <TrendingDown size={18} strokeWidth={2.1} />
               </div>
               <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Impact
+                {t('impactLabel')}
               </span>
             </div>
             <div className="mt-5">
               <h3 className="text-lg font-black text-gray-800 flex items-center gap-1.5">
-                {impactDrop !== null && impactDrop > 0 ? <><ArrowDown size={18} strokeWidth={2.6} /> {impactDrop}%</> : impactDrop === null ? '0%' : 'Stable'}
+                {impactDrop !== null && impactDrop > 0 ? <><ArrowDown size={18} strokeWidth={2.6} /> {impactDrop}%</> : impactDrop === null ? '0%' : t('stable')}
               </h3>
-              <p className="text-[11px] text-gray-400 mt-1">Emission trend reduction</p>
+              <p className="text-[11px] text-gray-400 mt-1">{t('emissionTrend')}</p>
               <p className="text-[10px] text-emerald-600 font-bold mt-2 flex items-center gap-1.5">
                 <Activity size={12} strokeWidth={2.5} />
-                {impactDrop === null ? 'Not logged yet' : impactDrop > 0 ? "You're doing amazing!" : 'Keep logging to build your trend'}
+                {impactDrop === null ? t('notLoggedYet') : impactDrop > 0 ? t('doingAmazing') : t('keepLoggingTrend')}
               </p>
             </div>
           </div>
@@ -431,15 +432,15 @@ const ScoreHistoryView = () => {
                 <Repeat2 size={18} strokeWidth={2.1} />
               </div>
               <span className="text-[9px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Quality
+                {t('qualityLabel')}
               </span>
             </div>
             <div className="mt-5">
               <h3 className="text-lg font-black text-gray-800">{consistencyPts.toFixed(1)} / 25</h3>
-              <p className="text-[11px] text-gray-400 mt-1">Logs consistency weight</p>
+              <p className="text-[11px] text-gray-400 mt-1">{t('logsConsistency')}</p>
               <p className="text-[10px] text-purple-600 font-bold mt-2 flex items-center gap-1.5">
                 <CalendarDays size={12} strokeWidth={2.5} />
-                Logged {logsCount} times total
+                {t('loggedTimes', { count: logsCount })}
               </p>
             </div>
           </div>
@@ -525,15 +526,20 @@ const ScoreHistoryView = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-1/3">Date</th>
-                    <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-1/3">Emission</th>
-                    <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-1/3">Score Earned</th>
+                    <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-1/4">Date</th>
+                    <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-1/4">Activity</th>
+                    <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-1/4">Emission</th>
+                    <th className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-1/4">Score Earned</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentRows.map((row, index) => (
                     <tr key={row._id || index} className="score-row border-b border-gray-50 last:border-0 hover:bg-[#F6FAF8] transition-colors">
                       <td className="py-4 text-xs font-bold text-[#1E3322]">{formatDateString(row.date)}</td>
+                      <td className="py-4 text-xs font-bold text-gray-500">
+                        {row.transportation?.mode && <div>{tCommon(`modeNames.${row.transportation.mode}`)}</div>}
+                        {row.food?.mealType && <div>{tCommon(`mealTypes.${row.food.mealType}`)}</div>}
+                      </td>
                       <td className="py-4 text-xs font-bold text-gray-500">{formatNumber ? `${formatNumber(row.totalEmissionKg, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('unitKgCO2')}` : `${(row.totalEmissionKg || 0).toFixed(2)} kg CO2`}</td>
                       <td className="py-4 text-xs font-extrabold text-[#0A3D25]">+{pdfPointsPerLog} pts</td>
                     </tr>

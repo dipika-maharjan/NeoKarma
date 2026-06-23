@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation';
 import { GraduationCap, Loader2, Mail, MapPin, Save, School, Trophy, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import LanguageToggle from '@/components/LanguageToggle';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 const ProfileAccountPage = () => {
   const router = useRouter();
   const { user, isAuthenticated, updateProfile } = useAuth();
+  const locale = useLocale();
   const t = useTranslations('Profile');
   const tAuth = useTranslations('Auth');
   const [formData, setFormData] = useState(() => ({
@@ -57,7 +58,7 @@ const ProfileAccountPage = () => {
       value: `${user?.streak?.current || 0} ${t('days') || 'days'}`,
       icon: Trophy
     }
-  ]), [user, t, tAuth]);
+  ]), [user, t, tAuth, locale]);
 
   if (!isAuthenticated || !user) {
     return null;

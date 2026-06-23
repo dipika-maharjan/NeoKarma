@@ -9,6 +9,7 @@ const carbonMirrorService = require('../services/carbonMirror.service');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { getTodayStr } = require('../utils/dateHelpers');
+const { translate } = require('../utils/translator');
 
 class DailyLogController {
   submitLog = asyncHandler(async (req, res) => {
@@ -74,15 +75,14 @@ class DailyLogController {
 
     await carbonMirrorService.updateSnapshotAfterLog(userId, date, emissionResult);
 
-    const locale = req.query.locale || req.body.locale || req.cookies?.locale || 'en';
+    const locale = req.query.locale || req.locale || 'en';
     const mirror = await carbonMirrorService.generateMirror(createdLog.totalEmissionKg, locale);
     const statusCode = isExistingLog ? 200 : 201;
 
-    const localeStr = String(locale).toLowerCase();
-    const isNepali = localeStr.startsWith('ne') || localeStr.startsWith('np');
-    const message = isExistingLog
-      ? (isNepali ? 'यो मितिको लागि दैनिक लग पहिले नै अवस्थित छ, तपाईंको प्रविष्टि सफलतापूर्वक अपडेट भयो।' : 'Daily log already exists for this date, your entry was updated successfully.')
-      : (isNepali ? 'दैनिक लग सफलतापूर्वक सबमिट भयो।' : 'Daily log submitted successfully.');
+    const messageEn = isExistingLog
+      ? 'Daily log already exists for this date, your entry was updated successfully.'
+      : 'Daily log submitted successfully.';
+    const message = await translate(messageEn, locale);
 
     res.status(statusCode).json({
       success: true,

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Bus, Utensils, Archive, Lightbulb, Sprout, Leaf, Trash2 } from 'lucide-react';
 import { useRecommendationProgress } from '@/hooks/useRecommendationProgress';
 import ProgressTrackerWrapper from './ProgressTrackerWrapper';
@@ -369,9 +369,9 @@ const mapBackendRecToCard = (rec, index) => {
     else visualType = 'lightbulb';
   }
 
-  const reduction = rec.reduction || `-${(rec.estimatedReductionKg || 0).toFixed(1)} kg CO2`;
+  const reduction = rec.reduction || `-${(rec.estimatedReductionKg || rec.saving || 0).toFixed(1)} kg CO2`;
   const reductionUnit = rec.reductionUnit || '/month';
-  const personalSaving = rec.personalSaving !== undefined ? rec.personalSaving : (rec.estimatedReductionKg || 0);
+  const personalSaving = rec.personalSaving !== undefined ? rec.personalSaving : (rec.estimatedReductionKg || rec.saving || 0);
 
   return {
     id,
@@ -391,6 +391,7 @@ const mapBackendRecToCard = (rec, index) => {
 const RecommendationsView = ({ onNavigateToDashboard }) => {
   const { user } = useAuth();
   const t = useTranslations('Plan');
+  const locale = useLocale();
   const [activeTab, setActiveTab] = useState('recommendations'); // 'recommendations' or 'plan'
   const [addedIds, setAddedIds] = useState(new Set());
   const [planItems, setPlanItems] = useState([]);
@@ -699,15 +700,15 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   <p className="text-xs text-[#0A3D25]/85 font-semibold mt-2.5">
                     {logsCount >= 30 ? (
                       <span className="flex items-center gap-1 text-amber-600 font-extrabold justify-center sm:justify-start">
-                        🏆 30-Day Milestone Achieved! AI Recommendations fully enabled.
+                        {t('milestone30')}
                       </span>
                     ) : logsCount >= 7 ? (
                       <span className="flex items-center gap-1 text-emerald-600 font-bold justify-center sm:justify-start">
-                        ⚡ {logsCount}/30 days logged — Custom AI recommendations are active! (7+ days baseline unlocked)
+                        {t('milestone7', { count: logsCount })}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-orange-600 font-medium justify-center sm:justify-start">
-                        ⏳ {logsCount}/30 days logged AI recommendations unlock in {7 - logsCount} more logging days.
+                        {t('milestoneUnlock', { count: logsCount, remaining: 7 - logsCount })}
                       </span>
                     )}
                   </p>
@@ -719,7 +720,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                 onClick={() => setActiveTab('plan')}
                 className="w-full lg:w-auto bg-[#0A3D25] hover:bg-[#0D5232] text-white text-sm font-semibold py-2.5 px-6 rounded-full transition-all shadow-sm flex items-center justify-center gap-2 shrink-0 self-stretch lg:self-center"
               >
-                View My Action Plan <span className="text-lg">→</span>
+                {t('viewMyActionPlan')} <span className="text-lg">→</span>
               </button>
             </div>
 
@@ -741,7 +742,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                       <div>
                         {/* Badge */}
                         <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${rec.badgeColor}`}>
-                          {rec.badge}
+                          {rec.badge === 'EASY WIN' ? t('easyWin') : rec.badge === 'MEDIUM IMPACT' ? t('mediumImpact') : t('highImpact')}
                         </span>
 
                         {/* Main Title & Description */}
@@ -762,7 +763,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                           <p className="text-lg font-extrabold text-gray-800 mt-0.5">
                             {rec.reduction}
                             <span className="text-xs font-semibold text-gray-400">
-                              {rec.reductionUnit}
+                              {rec.reductionUnit === '/mo' || rec.reductionUnit === '/month' ? t('kgPerMo') : rec.reductionUnit}
                             </span>
                           </p>
                           <button
@@ -832,12 +833,12 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
               {/* Left Box: Total Actions */}
               <div className="flex-1 border-r border-[#155A39]/60 last:border-0 pr-6">
                 <p className="text-[10px] font-bold tracking-wider text-[#A2CBA0] uppercase">
-                  Total Actions
+                  {t('totalActions')}
                 </p>
                 <p className="text-3xl font-black mt-2 flex items-baseline gap-1">
                   {totalActions < 10 ? `0${totalActions}` : totalActions}
                   <span className="text-xs font-semibold text-[#A2CBA0] normal-case tracking-normal">
-                    committed
+                    {t('committed')}
                   </span>
                 </p>
               </div>
@@ -845,12 +846,12 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
               {/* Middle Box: CO2 Saved */}
               <div className="flex-1 border-r border-[#155A39]/60 last:border-0 px-0 md:px-6">
                 <p className="text-[10px] font-bold tracking-wider text-[#A2CBA0] uppercase">
-                  Total CO2 Saved
+                  {t('totalCO2Saved')}
                 </p>
                 <p className="text-3xl font-black mt-2 flex items-baseline gap-1">
                   {totalCO2Saved}
                   <span className="text-xs font-semibold text-[#A2CBA0] normal-case tracking-normal">
-                    kg / mo
+                    {t('kgPerMo')}
                   </span>
                 </p>
               </div>
@@ -932,7 +933,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                           {/* Status Label Row */}
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-[9px] font-extrabold text-[#0A3D25] uppercase tracking-wider">
-                              {item.category}
+                              {t(`filter${item.category.charAt(0).toUpperCase() + item.category.slice(1)}`) || item.category}
                             </span>
                             <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                             <span className={`text-[9px] font-extrabold uppercase tracking-wider ${isCompleted
@@ -964,7 +965,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                             {t('potentialSaving')}
                           </p>
                           <p className="text-xs font-black text-gray-800 mt-0.5">
-                            {item.saving}kg CO2/mo
+                            {item.saving}{t('kgCO2PerMo')}
                           </p>
                         </div>
 

@@ -6,12 +6,13 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import LanguageToggle from './LanguageToggle';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import profileImg from '../../public/profile.png';
 
 export default function ProfileDropdown() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const locale = useLocale();
   const t = useTranslations('Profile');
   const tAuth = useTranslations('Auth');
   const [isOpen, setIsOpen] = useState(false);
@@ -71,7 +72,7 @@ export default function ProfileDropdown() {
             <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
             <p className="text-xs text-gray-500 truncate">{displaySchool}</p>
             <span className="inline-block mt-1 text-[10px] font-bold text-forest-green bg-[#E8F5E9] px-2 py-0.5 rounded-full uppercase">
-              {t('gradeLabel', { grade: user.grade || '--', location: tAuth(user.locationType) || user.locationType || 'student' })}
+              {t('gradeLabel', { grade: user.grade ? user.grade : '--', location: tAuth(user.locationType) || user.locationType || 'student' })}
             </span>
           </div>
 
