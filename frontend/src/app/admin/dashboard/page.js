@@ -72,143 +72,6 @@ const cardStyle = {
   boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)'
 };
 
-function Pagination({
-  page,
-  totalPages,
-  total,
-  pageSize,
-  label,
-  onChange
-}) {
-  if (totalPages <= 1) return null;
-
-  const start = (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
-
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
-    .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-    .reduce((acc, p, idx, arr) => {
-      if (idx > 0 && p - arr[idx - 1] > 1) {
-        acc.push('...');
-      }
-      acc.push(p);
-      return acc;
-    }, []);
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 14,
-        paddingTop: 14,
-        borderTop: '1px solid #f0f0f0'
-      }}
-    >
-      <span
-        style={{
-          fontSize: 12,
-          color: '#aaa',
-          fontWeight: 400
-        }}
-      >
-        {start}–{end} of {total} {label}
-      </span>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 3
-        }}
-      >
-        <button
-          onClick={() => onChange(Math.max(1, page - 1))}
-          disabled={page === 1}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 6,
-            border: '1px solid #e8e8e8',
-            background: '#fff',
-            color: page === 1 ? '#ddd' : '#555',
-            fontSize: 14,
-            cursor: page === 1 ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 500
-          }}
-        >
-          ‹
-        </button>
-
-        {pages.map((p, i) =>
-          p === '...' ? (
-            <span
-              key={`ellipsis-${i}`}
-              style={{
-                width: 30,
-                height: 30,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                color: '#aaa'
-              }}
-            >
-              •••
-            </span>
-          ) : (
-            <button
-              key={p}
-              onClick={() => onChange(p)}
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 6,
-                border: page === p ? 'none' : '1px solid #e8e8e8',
-                background: page === p ? '#1a7a4a' : '#fff',
-                color: page === p ? '#fff' : '#555',
-                fontSize: 12,
-                fontWeight: page === p ? 700 : 400,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.15s'
-              }}
-            >
-              {p}
-            </button>
-          )
-        )}
-
-        <button
-          onClick={() => onChange(Math.min(totalPages, page + 1))}
-          disabled={page === totalPages}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 6,
-            border: '1px solid #e8e8e8',
-            background: '#fff',
-            color: page === totalPages ? '#ddd' : '#555',
-            fontSize: 14,
-            cursor: page === totalPages ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 500
-          }}
-        >
-          ›
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -218,13 +81,7 @@ export default function AdminDashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [timeframe, setTimeframe] = useState('30');
   const [activeChart, setActiveChart] = useState('grades'); // 'grades' | 'sources' | 'eco'
-  const [classPage, setClassPage] = useState(1);
-  const [streakPage, setStreakPage] = useState(1);
-  const [activityPage, setActivityPage] = useState(1);
   const isFirstLoad = useRef(true);
-  const CLASS_PAGE_SIZE = 5;
-  const STREAK_PAGE_SIZE = 5;
-  const ACTIVITY_PAGE_SIZE = 4;
   const timeframeLabel = {
     7: 'Last 7 days',
     30: 'Last 30 days',
@@ -375,27 +232,6 @@ export default function AdminDashboardPage() {
   ];
   const activityFeed = liveActivity || [];
   const streakRows = studentStreaks || [];
-  const paginatedClasses = (schoolPerformance || []).slice(
-    (classPage - 1) * CLASS_PAGE_SIZE,
-    classPage * CLASS_PAGE_SIZE
-  );
-  const classTotalPages = Math.ceil(
-    (schoolPerformance?.length || 0) / CLASS_PAGE_SIZE
-  );
-  const paginatedStreaks = streakRows.slice(
-    (streakPage - 1) * STREAK_PAGE_SIZE,
-    streakPage * STREAK_PAGE_SIZE
-  );
-  const streakTotalPages = Math.ceil(
-    (streakRows.length || 0) / STREAK_PAGE_SIZE
-  );
-  const paginatedActivity = activityFeed.slice(
-    (activityPage - 1) * ACTIVITY_PAGE_SIZE,
-    activityPage * ACTIVITY_PAGE_SIZE
-  );
-  const activityTotalPages = Math.ceil(
-    (activityFeed.length || 0) / ACTIVITY_PAGE_SIZE
-  );
 
   return (
     <main
@@ -1079,7 +915,7 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedClasses.map((school) => (
+                    {(schoolPerformance || []).map((school) => (
                       <tr key={`${school.className}-${school.rank}`} style={{ borderBottom: '1px solid #f5f7f6' }}>
                         <td style={{ padding: '12px 8px', fontWeight: 700 }}>{school.rank}</td>
                         <td style={{ padding: '12px 8px', fontWeight: 600 }}>{school.className || school.schoolName}</td>
@@ -1090,16 +926,6 @@ export default function AdminDashboardPage() {
                     ))}
                   </tbody>
                 </table>
-              </div>
-              <div style={{ marginTop: 'auto', paddingTop: 12 }}>
-                <Pagination
-                  page={classPage}
-                  totalPages={classTotalPages}
-                  total={schoolPerformance?.length || 0}
-                  pageSize={CLASS_PAGE_SIZE}
-                  label="grades"
-                  onChange={setClassPage}
-                />
               </div>
             </div>
           </section>
@@ -1125,36 +951,32 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <div className="flex max-h-[340px] flex-1 flex-col gap-2.5 overflow-y-auto pr-1">
-                      {paginatedActivity.map((entry, index) => {
+                      {activityFeed.map((entry, index) => {
                         const style = feedStyle[entry.type] || feedStyle.MIRROR;
                         const FeedIcon = style.icon;
                         return (
                           <div key={`${entry.type}-${index}`} className="flex items-center gap-3 border-b border-[#f2f4f1] py-3 last:border-b-0">
-                            <div className="inline-flex shrink-0 items-center justify-center rounded-full p-2" style={{ background: style.bg }}>
-                              <FeedIcon size={14} color={style.color} />
-                            </div>
+                            {entry.type !== 'MIRROR' && (
+                              <div className="inline-flex shrink-0 items-center justify-center rounded-full p-2" style={{ background: style.bg }}>
+                                <FeedIcon size={14} color={style.color} />
+                              </div>
+                            )}
                             <div className="min-w-0 flex-1">
                               <div className="font-semibold text-[#111827]">{entry.description}</div>
                               <div className="text-xs text-[#6b7280]">
                                 {timeAgo(entry.createdAt)} · {entry.school}
                               </div>
                             </div>
-                            <span className="rounded-full px-2.5 py-1 text-[12px] font-bold" style={{ background: style.bg, color: style.color }}>
-                              {entry.type}
-                            </span>
+                            {entry.type !== 'MIRROR' && (
+                              <span className="rounded-full px-2.5 py-1 text-[12px] font-bold" style={{ background: style.bg, color: style.color }}>
+                                {entry.type}
+                              </span>
+                            )}
                           </div>
                         );
                       })}
                     </div>
 
-                    <Pagination
-                      page={activityPage}
-                      totalPages={activityTotalPages}
-                      total={activityFeed.length}
-                      pageSize={ACTIVITY_PAGE_SIZE}
-                      label="activities"
-                      onChange={setActivityPage}
-                    />
                   </>
                 )}
               </div>
@@ -1172,7 +994,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <div className="flex max-h-[340px] flex-1 flex-col gap-3 overflow-y-auto pr-1">
-                      {paginatedStreaks.map((student) => (
+                      {streakRows.map((student) => (
                         <div
                           key={`${student.name}-${student.grade}-${student.section || ''}`}
                           className="flex items-center gap-3 border-b border-[#f5f5f5] pb-3 last:border-b-0 last:pb-0"
@@ -1207,14 +1029,6 @@ export default function AdminDashboardPage() {
                       ))}
                     </div>
 
-                    <Pagination
-                      page={streakPage}
-                      totalPages={streakTotalPages}
-                      total={streakRows.length}
-                      pageSize={STREAK_PAGE_SIZE}
-                      label="students"
-                      onChange={setStreakPage}
-                    />
                   </>
                 )}
               </div>

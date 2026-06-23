@@ -36,8 +36,6 @@ export default function AdminStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 10;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -72,12 +70,6 @@ export default function AdminStudentsPage() {
       return matchesQuery;
     });
   }, [students, query]);
-
-  const totalPages = Math.ceil(filteredStudents.length / PAGE_SIZE);
-  const paginatedStudents = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return filteredStudents.slice(start, start + PAGE_SIZE);
-  }, [filteredStudents, page]);
 
   const summary = useMemo(() => {
     const avgEmission =
@@ -164,10 +156,7 @@ export default function AdminStudentsPage() {
               <Search size={16} className="text-[#6b7280]" />
               <input
                 value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setPage(1);
-                }}
+                onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search students"
                 className="w-full outline-none md:w-72"
               />
@@ -188,7 +177,7 @@ export default function AdminStudentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eef0ee] bg-white">
-                  {paginatedStudents.map((student) => (
+                  {filteredStudents.map((student) => (
                     <tr key={student._id} className="hover:bg-[#f9fbfa]">
                       <td className="px-4 py-3">
                         <div>
@@ -230,67 +219,10 @@ export default function AdminStudentsPage() {
               </table>
             </div>
           </div>
-
           <div className="flex items-center justify-between border-t border-[#eef0ee] pt-4">
             <span className="text-xs text-[#6b7280]">
-              Showing {(page - 1) * PAGE_SIZE + 1}–
-              {Math.min(page * PAGE_SIZE, filteredStudents.length)} of {filteredStudents.length} students
+              Showing {filteredStudents.length} students
             </span>
-
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
-                  page === 1
-                    ? 'cursor-not-allowed border-[#eef0ee] bg-[#f9faf9] text-[#cbd5e1]'
-                    : 'border-[#e5e7eb] bg-white text-[#111827] hover:bg-[#f9faf9]'
-                }`}
-              >
-                ← Prev
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                .reduce((acc, p, idx, arr) => {
-                  if (idx > 0 && p - arr[idx - 1] > 1) {
-                    acc.push('...');
-                  }
-                  acc.push(p);
-                  return acc;
-                }, [])
-                .map((p, i) =>
-                  p === '...' ? (
-                    <span key={`ellipsis-${i}`} className="px-1 text-xs text-[#6b7280]">
-                      ...
-                    </span>
-                  ) : (
-                    <button
-                      key={`page-${p}`}
-                      onClick={() => setPage(p)}
-                      className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
-                        page === p
-                          ? 'border-[#1a7a4a] bg-[#1a7a4a] text-white'
-                          : 'border-[#e5e7eb] bg-white text-[#111827] hover:bg-[#f9faf9]'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  )
-                )}
-
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages || totalPages === 0}
-                className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
-                  page === totalPages || totalPages === 0
-                    ? 'cursor-not-allowed border-[#eef0ee] bg-[#f9faf9] text-[#cbd5e1]'
-                    : 'border-[#e5e7eb] bg-white text-[#111827] hover:bg-[#f9faf9]'
-                }`}
-              >
-                Next →
-              </button>
-            </div>
           </div>
         </section>
       </div>
