@@ -6,7 +6,7 @@ require('dotenv').config({
 
 const User = require('../src/models/User');
 const DailyLog = require('../src/models/DailyLog');
-const emissionCalculationService = require('../src/services/emissionCalculation.service');
+// emissionCalculation.service not needed for demo random seed — omit to avoid unused import
 
 function randomBetween(min, max) {
   return parseFloat((Math.random() * (max - min) + min).toFixed(2));

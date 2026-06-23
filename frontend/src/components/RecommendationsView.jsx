@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations } from 'next-intl';
+import { Bus, Utensils, Trash2, Lightbulb, Leaf } from 'lucide-react';
 
 // Unified recommendations list matching the Smart Recommendations view
 const PRESETS = [
@@ -435,22 +436,22 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                         <div className="w-32 h-24 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100">
                           {rec.visualType === 'bus' && (
                             <div className="w-full h-full relative bg-emerald-50 flex items-center justify-center">
-                              <span className="text-4xl">🚌</span>
+                              <Bus size={36} className="text-emerald-600" />
                             </div>
                           )}
                           {rec.visualType === 'fork-knife' && (
                             <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center">
-                              <span className="text-2xl">🍽️</span>
+                              <Utensils size={24} className="text-indigo-600" />
                             </div>
                           )}
                           {rec.visualType === 'bin' && (
                             <div className="w-full h-full relative bg-stone-50 flex items-center justify-center">
-                              <span className="text-4xl">🗑️</span>
+                              <Trash2 size={36} className="text-stone-600" />
                             </div>
                           )}
                           {rec.visualType === 'lightbulb' && (
                             <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center">
-                              <span className="text-2xl">💡</span>
+                              <Lightbulb size={24} className="text-amber-600" />
                             </div>
                           )}
                         </div>
@@ -576,7 +577,19 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                     <div className="flex items-start gap-4 flex-1">
                       {/* Icon */}
                       <div className="w-12 h-12 rounded-2xl bg-[#E2F0D9] border border-[#C5E0B4]/40 flex items-center justify-center text-xl shrink-0 select-none">
-                        {item.icon}
+                        {(
+                          (item.icon === '🚌' || item.icon === 'bus' || item.category === 'transport') ? (
+                            <Bus size={18} className="text-[#0A3D25]" />
+                          ) : (item.icon === '💡' || item.icon === 'lightbulb' || item.category === 'energy') ? (
+                            <Lightbulb size={18} className="text-[#0A3D25]" />
+                          ) : (item.icon === '🍽️' || item.icon === 'fork-knife' || item.category === 'food') ? (
+                            <Utensils size={18} className="text-[#0A3D25]" />
+                          ) : (item.icon === '🗑️' || item.icon === 'bin' || item.category === 'waste') ? (
+                            <Trash2 size={18} className="text-[#0A3D25]" />
+                          ) : (
+                            <Leaf size={18} className="text-[#0A3D25]" />
+                          )
+                        )}
                       </div>
 
                       {/* Title & Desc */}
@@ -639,7 +652,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                           className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
                           title={t('deleteAction')}
                         >
-                          🗑️
+                          <Trash2 size={14} />
                         </button>
                       </div>
 
