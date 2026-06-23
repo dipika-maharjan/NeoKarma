@@ -7,7 +7,6 @@ import { GraduationCap, Loader2, Mail, MapPin, Pencil, Save, School, Trophy, Use
 import { useAuth } from '@/context/AuthContext';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useTranslations, useLocale } from 'next-intl';
-import { useTranslations } from 'next-intl';
 import ProfileAvatar from '@/components/ProfileAvatar';
 
 const profileImageMessages = {

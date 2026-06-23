@@ -5,9 +5,8 @@ import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations, useLocale } from 'next-intl';
 import { Bus, Utensils, Archive, Lightbulb, Sprout, Leaf, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import {
-  Archive,
+  Archive as LucideArchive,
   ArrowLeft,
   ArrowRight,
   Bus,
