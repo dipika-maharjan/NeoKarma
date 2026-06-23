@@ -4,6 +4,7 @@
 const app = require('./app');
 const config = require('./config/env');
 const mitigationPlanService = require('./services/mitigationPlan.service');
+const streakReminderService = require('./services/streakReminder.service');
 
 const PORT = config.PORT || 5000;
 
@@ -18,6 +19,12 @@ const server = app.listen(PORT, () => {
       console.log('Cron scheduler started');
     } catch (err) {
       console.error('Cron scheduler error:', err.message);
+    }
+
+    try {
+      streakReminderService.startCronScheduler();
+    } catch (err) {
+      console.error('Streak reminder cron error:', err.message);
     }
   }, 10000);
 });
