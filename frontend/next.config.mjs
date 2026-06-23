@@ -38,34 +38,45 @@ const pwaConfig = withPWA({
     { url: '/score', revision: null }
   ],
   runtimeCaching: [
+    // API endpoints — NetworkFirst so data is always fresh when online
     {
-      urlPattern: /^https?:\/\/.*\/api\/emission-factors/,
+      urlPattern: /^https?:\/\/.*\/api\/.*/,
       handler: 'NetworkFirst',
       options: {
-        cacheName: 'emission-factors-cache',
-        expiration: { maxEntries: 1, maxAgeSeconds: 60 * 60 * 24 * 7 },
+        cacheName: 'api-cache',
+        expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
+        networkTimeoutSeconds: 10,
       },
     },
+    // Page navigation — NetworkFirst with cache fallback
+    // This is what allows offline navigation between pages
     {
-      urlPattern: /^https?:\/\/.*\/api\/logs/,
+      urlPattern: /^https?:\/\/[^/]+\/(dashboard|calculator|carbon-mirror)(\/.*)?$/,
       handler: 'NetworkFirst',
       options: {
-        cacheName: 'logs-cache',
-        expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
+        cacheName: 'pages-cache',
+        expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 },
+        networkTimeoutSeconds: 5,
       },
     },
+    // Static assets (JS, CSS, images) — StaleWhileRevalidate
     {
-      urlPattern: /^https?:\/\/.*\/api\/dashboard/,
-      handler: 'NetworkFirst',
+      urlPattern: /\.(?:js|css|woff2?|png|jpg|jpeg|svg|ico)$/,
+      handler: 'StaleWhileRevalidate',
       options: {
-        cacheName: 'dashboard-cache',
-        expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 },
+        cacheName: 'static-assets-cache',
+        expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
       },
     },
+    // Catch-all for everything else
     {
       urlPattern: /.*/,
       handler: 'NetworkFirst',
-      options: { cacheName: 'app-shell-cache' },
+      options: {
+        cacheName: 'fallback-cache',
+        expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
+        networkTimeoutSeconds: 10,
+      },
     },
   ],
 })(baseConfig);
