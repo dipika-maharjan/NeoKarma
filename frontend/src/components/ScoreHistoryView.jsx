@@ -310,7 +310,7 @@ const ScoreHistoryView = () => {
             </span>
           </div>
 
-          <div className="score-gauge relative w-52 h-52 md:w-60 md:h-60 rounded-full flex items-center justify-center select-none">
+          <div className="score-gauge relative mx-auto w-52 h-52 md:mx-0 md:w-60 md:h-60 rounded-full flex items-center justify-center select-none">
             <div className="absolute inset-0 rounded-full bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)] border border-gray-100" />
             <div className="absolute inset-2.5 rounded-full border border-[#E5EFE9]" />
             <div

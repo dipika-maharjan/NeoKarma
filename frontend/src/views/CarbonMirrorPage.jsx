@@ -611,10 +611,11 @@ const CarbonMirrorPage = () => {
             <button
               type="button"
               onClick={shareInsight}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#072B1A]"
+              aria-label={t('shareInsight')}
+              className="inline-flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-0 text-[14px] font-bold text-white transition-colors hover:bg-[#072B1A] sm:w-auto sm:px-5"
             >
               <Share2 size={16} />
-              {t('shareInsight')}
+              <span className="hidden sm:inline">{t('shareInsight')}</span>
             </button>
           </div>
         </section>

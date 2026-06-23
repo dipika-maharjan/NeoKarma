@@ -4,7 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations } from 'next-intl';
-import { Bus, Utensils, Archive, Lightbulb, Sprout, Leaf, Recycle } from 'lucide-react';
+import {
+  Archive,
+  ArrowLeft,
+  ArrowRight,
+  Bus,
+  Check,
+  Hourglass,
+  Leaf,
+  Lightbulb,
+  Monitor,
+  Plus,
+  Recycle,
+  Sprout,
+  Trophy,
+  Utensils,
+  Zap,
+} from 'lucide-react';
 import { useRecommendationProgress } from '@/hooks/useRecommendationProgress';
 import ProgressTrackerWrapper from './ProgressTrackerWrapper';
 
