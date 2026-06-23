@@ -54,12 +54,6 @@ const initials = (name) =>
     .slice(0, 2)
     .toUpperCase();
 
-const donutDash = (pct) => {
-  const r = 50;
-  const circ = 2 * Math.PI * r;
-  return `${(pct / 100) * circ} ${circ}`;
-};
-
 const feedStyle = {
   MIRROR: { bg: '#e6f4ed', color: '#1a7a4a', icon: TrendingDown },
   AWARD: { bg: '#e8f0fc', color: '#1a56b0', icon: Award },
@@ -74,6 +68,7 @@ const cardStyle = {
   display: 'flex',
   flexDirection: 'column',
   minWidth: 0,
+  overflow: 'hidden',
   boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)'
 };
 
@@ -320,7 +315,6 @@ export default function AdminDashboardPage() {
     schoolPerformance,
     studentStreaks,
     liveActivity,
-    systemImpact,
     schoolName,
     adminName,
     studentsEnrolled
@@ -358,9 +352,6 @@ export default function AdminDashboardPage() {
       icon: '🍱'
     }
   ];
-
-  const impact = systemImpact || {};
-  const remainingPct = Math.max(0, 100 - (impact.targetMetPct || 0));
 
   const statCards = [
     {
@@ -628,23 +619,23 @@ export default function AdminDashboardPage() {
               ) : (
                 <div style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: 32
+                  alignItems: 'stretch',
+                  gap: 24
                 }}>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
                       fontSize: 11,
                       color: '#888',
-                      marginBottom: 8
+                      marginBottom: 10
                     }}>
                       Average CO₂ per grade. Lower is better.
                     </p>
-                    <ResponsiveContainer width="100%" height={200}>
+                    <ResponsiveContainer width="100%" height={270}>
                       <BarChart
                         data={data.gradeDistribution}
-                        margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
-                        barCategoryGap="3%"
-                        barSize={50}
+                        margin={{ top: 10, right: 12, left: 0, bottom: 4 }}
+                        barCategoryGap="10%"
+                        barSize={34}
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
@@ -665,7 +656,7 @@ export default function AdminDashboardPage() {
                           tick={{ fontSize: 11, fill: '#999' }}
                           axisLine={false}
                           tickLine={false}
-                          width={36}
+                          width={48}
                         />
                         <Tooltip
                           contentStyle={{
@@ -681,8 +672,8 @@ export default function AdminDashboardPage() {
                         />
                         <Bar
                           dataKey="avgEmission"
-                          radius={[4, 4, 0, 0]}
-                          maxBarSize={28}
+                          radius={[6, 6, 0, 0]}
+                          maxBarSize={34}
                           isAnimationActive={true}
                         >
                           {data.gradeDistribution.map((entry, i) => (
@@ -700,19 +691,32 @@ export default function AdminDashboardPage() {
                     </ResponsiveContainer>
                   </div>
                   <div style={{
-                    width: 200,
-                    flexShrink: 0
+                    width: 250,
+                    flexShrink: 0,
+                    alignSelf: 'stretch',
+                    background: '#fbfcfb',
+                    border: '1px solid #eef2ee',
+                    borderRadius: 12,
+                    padding: '16px 18px'
                   }}>
                     <p style={{
                       fontSize: 11,
                       color: '#888',
-                      marginBottom: 12,
+                      margin: '0 0 6px',
                       fontWeight: 600,
                       textTransform: 'uppercase',
                       letterSpacing: '0.4px'
                     }}>
                       Performance key
                     </p>
+                    <h4 style={{
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: '#111',
+                      margin: '0 0 14px'
+                    }}>
+                      Emissions by Grade
+                    </h4>
                     {[
                       {
                         color: '#1a7a4a',
@@ -732,16 +736,17 @@ export default function AdminDashboardPage() {
                     ].map(l => (
                       <div key={l.label} style={{
                         display: 'flex',
-                        alignItems: 'center',
+                        alignItems: 'flex-start',
                         gap: 10,
-                        marginBottom: 12
+                        marginBottom: 14
                       }}>
                         <div style={{
-                          width: 10,
-                          height: 10,
+                          width: 9,
+                          height: 9,
                           borderRadius: '50%',
                           background: l.color,
-                          flexShrink: 0
+                          flexShrink: 0,
+                          marginTop: 4
                         }}/>
                         <div>
                           <div style={{
@@ -761,9 +766,9 @@ export default function AdminDashboardPage() {
                       </div>
                     ))}
                     <div style={{
-                      marginTop: 16,
+                      marginTop: 18,
                       padding: '10px 12px',
-                      background: '#f8faf8',
+                      background: '#f4f8f5',
                       borderRadius: 8,
                       borderLeft: '3px solid #1a7a4a'
                     }}>
@@ -1049,13 +1054,13 @@ export default function AdminDashboardPage() {
             gap: 24
           }}
         >
-          <section className="dashboard-split-left" style={{ ...cardStyle, gridColumn: 'span 8' }}>
+          <section className="dashboard-split-left" style={{ ...cardStyle, gridColumn: 'span 12' }}>
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
               <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: '0 0 16px' }}>
                 Class Performance
               </h3>
-              <div style={{ overflowX: 'auto', flex: 1 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div style={{ overflow: 'auto', flex: 1, maxHeight: 360 }}>
+                <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #eef2ee' }}>
                       <th style={{ textAlign: 'left', padding: '10px 8px', fontSize: 12, color: '#6b7280' }}>S.N</th>
@@ -1099,77 +1104,6 @@ export default function AdminDashboardPage() {
             </div>
           </section>
 
-          <section className="dashboard-split-right" style={{ ...cardStyle, gridColumn: 'span 4' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <div style={{ marginBottom: 14 }}>
-                <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>System impact</p>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  marginTop: 6
-                }}>
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0A3D25' }}>
-                    Target met
-                  </h3>
-                  <div
-                    title="% of log entries where total daily emission was under 3 kg CO₂. Based on Nepal national school sustainability guidelines."
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: '50%',
-                      background: '#f0f0f0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 10,
-                      color: '#888',
-                      cursor: 'help',
-                      flexShrink: 0
-                    }}
-                  >?
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
-                <svg width="130" height="130" viewBox="0 0 130 130">
-                  <circle cx="65" cy="65" r="50" fill="none" stroke="#e8ede8" strokeWidth="13" />
-                  <circle
-                    cx="65"
-                    cy="65"
-                    r="50"
-                    fill="none"
-                    stroke="#0e6b45"
-                    strokeWidth="13"
-                    strokeDasharray={donutDash(impact.targetMetPct || 0)}
-                    strokeDashoffset={2 * Math.PI * 50 * 0.25}
-                    strokeLinecap="round"
-                    transform="rotate(-90 65 65)"
-                  />
-                  <text x="65" y="58" textAnchor="middle" fontSize="20" fontWeight="700" fill="#111">
-                    {impact.targetMetPct || 0}%
-                  </text>
-                  <text x="65" y="78" textAnchor="middle" fontSize="10" fill="#888">
-                    Target Met
-                  </text>
-                </svg>
-                <div style={{ flex: 1 }}>
-                  <div style={{ marginBottom: 8, fontSize: 13, color: '#6b7280' }}>
-                    Eco transport — {impact.ecoTransportPct || 0}%
-                  </div>
-                  <div style={{ marginBottom: 8, fontSize: 13, color: '#6b7280' }}>
-                    Veg days — {impact.vegDaysPct || 0}%
-                  </div>
-                  <div style={{ marginBottom: 8, fontSize: 13, color: '#6b7280' }}>
-                    No plastic — {impact.noPlasticPct || 0}%
-                  </div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>
-                    Remaining — {remainingPct}%
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
         </section>
 
         <section
@@ -1190,7 +1124,7 @@ export default function AdminDashboardPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex flex-1 flex-col gap-2.5">
+                    <div className="flex max-h-[340px] flex-1 flex-col gap-2.5 overflow-y-auto pr-1">
                       {paginatedActivity.map((entry, index) => {
                         const style = feedStyle[entry.type] || feedStyle.MIRROR;
                         const FeedIcon = style.icon;
@@ -1237,7 +1171,7 @@ export default function AdminDashboardPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex flex-1 flex-col gap-3">
+                    <div className="flex max-h-[340px] flex-1 flex-col gap-3 overflow-y-auto pr-1">
                       {paginatedStreaks.map((student) => (
                         <div
                           key={`${student.name}-${student.grade}-${student.section || ''}`}

@@ -120,7 +120,7 @@ export default function AdminStudentsPage() {
   return (
     <main className="min-h-screen bg-[#f5f7f6] p-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
@@ -148,7 +148,7 @@ export default function AdminStudentsPage() {
               accent: 'bg-[#fff7ed]'
             }
           ].map((item) => (
-            <div key={item.label} className="rounded-2xl bg-white p-5 shadow-sm">
+            <div key={item.label} className="overflow-hidden rounded-2xl bg-white p-5 shadow-sm">
               <div className={`inline-flex rounded-xl p-2 ${item.accent}`}>
                 <Zap size={18} className="text-[#0A3D25]" />
               </div>
@@ -158,7 +158,7 @@ export default function AdminStudentsPage() {
           ))}
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm">
               <Search size={16} className="text-[#6b7280]" />
@@ -174,10 +174,10 @@ export default function AdminStudentsPage() {
             </div>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-2xl border border-[#eef0ee]">
-            <div className="overflow-x-auto">
+          <div className="mt-5 max-h-[520px] overflow-auto rounded-2xl border border-[#eef0ee]">
+            <div className="min-w-[860px]">
               <table className="min-w-full divide-y divide-[#eef0ee] text-sm">
-                <thead className="bg-[#f9faf9] text-[#6b7280]">
+                <thead className="sticky top-0 z-10 bg-[#f9faf9] text-[#6b7280]">
                   <tr>
                     <th className="px-4 py-3 text-left font-semibold">Student</th>
                     <th className="px-4 py-3 text-left font-semibold">Grade</th>
