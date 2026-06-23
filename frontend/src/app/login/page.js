@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 const LoginPage = () => {
@@ -19,6 +19,7 @@ const LoginPage = () => {
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const getHomeRoute = (user) => {
     if (!user) return '/dashboard';
@@ -35,6 +36,13 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError(t('invalidEmail'));
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -128,14 +136,24 @@ const LoginPage = () => {
               <label className="mb-1.5 block text-[12px] font-extrabold text-[#303542]">
                 {t('password')}
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t('passwordPlaceholder')}
-                required
-                className="h-10 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t('passwordPlaceholder')}
+                  required
+                  className="h-10 w-full rounded-md border border-[#cfd7df] bg-white pl-3 pr-10 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between text-[11px] font-medium">

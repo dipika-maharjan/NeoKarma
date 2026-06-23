@@ -87,7 +87,7 @@
     "password": "पासवर्ड",
     "remember": "मलाई सम्झनुहोस्",
     "forgot": "पासवर्ड बिर्सनुभयो?",
-    "signInButton": "ड्यासबोर्डमा लगइन",
+    "signInButton": "लगइन",
     "signingIn": "लगइन हुँदैछ...",
     "createAccount": "खाता सिर्जना गर्नुहोस्",
     "dontHaveAccount": "खाता छैन?",
@@ -122,7 +122,15 @@
     "resettingPassword": "रिसेट हुँदैछ...",
     "resetPasswordSuccess": "तपाईंको पासवर्ड सफलतापूर्वक रिसेट गरिएको छ। अब तपाईं नयाँ पासवर्डको साथ लगइन गर्न सक्नुहुन्छ।",
     "passwordMismatch": "पासवर्डहरू मिलेनन्",
-    "invalidToken": "पासवर्ड रिसेट लिंक अवैध छ वा म्याद समाप्त भएको छ।"
+    "invalidToken": "पासवर्ड रिसेट लिंक अवैध छ वा म्याद समाप्त भएको छ।",
+    "invalidEmail": "कृपया वैध इमेल ठेगाना प्रविष्ट गर्नुहोस्।",
+    "nameInvalid": "नाम कम्तीमा २ अक्षरको हुनुपर्छ र अक्षरहरू मात्र हुनुपर्छ।",
+    "passwordWeak": "पासवर्ड कम्तीमा ८ अक्षरको हुनुपर्छ र एउटा ठूलो अक्षर, एउटा सानो अक्षर, एउटा अंक र एउटा विशेष संकेत (जस्तै !@#$%) समावेश हुनुपर्छ।",
+    "passwordRequirementLength": "कम्तीमा ८ अक्षर",
+    "passwordRequirementUppercase": "कम्तीमा एउटा ठूलो अक्षर",
+    "passwordRequirementLowercase": "कम्तीमा एउटा सानो अक्षर",
+    "passwordRequirementNumber": "कम्तीमा एउटा अंक",
+    "passwordRequirementSpecial": "कम्तीमा एउटा विशेष संकेत"
   },
   "Images": {
     "himalayanAlt": "हिमालयन पर्वत"
