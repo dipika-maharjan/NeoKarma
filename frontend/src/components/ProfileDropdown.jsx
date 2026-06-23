@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
-import profileImg from '../../public/profile.png';
+import ProfileAvatar from './ProfileAvatar';
 
 export default function ProfileDropdown() {
   const router = useRouter();
@@ -56,23 +55,22 @@ export default function ProfileDropdown() {
         aria-label={t('openProfileMenu')}
         className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:border-forest-green transition-colors flex items-center justify-center bg-white outline-none focus:ring-2 focus:ring-forest-green"
       >
-        <Image
-          src={profileImg}
-          alt="User Profile Menu"
-          width={36}
-          height={36}
-          className="w-full h-full object-cover"
-        />
+        <ProfileAvatar imageSrc={user.profileImage} alt="User Profile Menu" size="sm" />
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="px-4 py-2 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
-            <p className="text-xs text-gray-500 truncate">{displaySchool}</p>
-            <span className="inline-block mt-1 text-[10px] font-bold text-forest-green bg-[#E8F5E9] px-2 py-0.5 rounded-full uppercase">
-              {t('gradeLabel', { grade: user.grade || '--', location: tAuth(user.locationType) || user.locationType || 'student' })}
-            </span>
+            <div className="flex items-center gap-3">
+              <ProfileAvatar imageSrc={user.profileImage} alt={displayName} size="md" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+                <p className="text-xs text-gray-500 truncate">{displaySchool}</p>
+                <span className="inline-block mt-1 text-[10px] font-bold text-forest-green bg-[#E8F5E9] px-2 py-0.5 rounded-full uppercase">
+                  {t('gradeLabel', { grade: user.grade || '--', location: tAuth(user.locationType) || user.locationType || 'student' })}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="py-1">

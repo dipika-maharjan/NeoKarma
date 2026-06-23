@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations } from 'next-intl';
-import { Bus, Utensils, Archive, Lightbulb, Sprout, Leaf, Trash2 } from 'lucide-react';
+import { Bus, Utensils, Archive, Lightbulb, Sprout, Leaf, Recycle } from 'lucide-react';
 import { useRecommendationProgress } from '@/hooks/useRecommendationProgress';
 import ProgressTrackerWrapper from './ProgressTrackerWrapper';
 
@@ -334,7 +334,7 @@ const renderIcon = (iconStr) => {
   const s = iconStr.toString();
   if (s.includes('🚌') || s === 'bus') return <Bus className="w-6 h-6" />;
   if (s.includes('🍽') || s === 'fork-knife') return <Utensils className="w-6 h-6" />;
-  if (s.includes('🗑') || s === 'bin') return <Trash2 className="w-6 h-6" />;
+  if (s.includes('🗑') || s === 'bin') return <Recycle className="w-6 h-6" />;
   if (s.includes('💡') || s === 'lightbulb') return <Lightbulb className="w-6 h-6" />;
   if (s.includes('🥤') || s.includes('📄')) return <Leaf className="w-6 h-6" />;
   if (s.includes('🖥')) return <Lightbulb className="w-6 h-6" />;
@@ -643,7 +643,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                 {/* Left Side: Circular Progress Meter or Badge */}
                 {logsCount >= 30 ? (
                   /* 30 Days AI Recommendation Enabled Badge */
-                  <div className="relative flex flex-col items-center justify-center w-28 h-28 shrink-0 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 rounded-full shadow-[0_4px_20px_rgba(245,158,11,0.35)] border-2 border-white">
+                  <div className="relative flex flex-col items-center justify-center w-24 h-24 md:w-28 md:h-28 shrink-0 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 rounded-full shadow-[0_4px_20px_rgba(245,158,11,0.35)] border-2 border-white">
                     <div className="w-[88px] h-[88px] rounded-full overflow-hidden border border-amber-300">
                       <img src="/earth_gauge_bg.png" alt="Earth" className="w-full h-full object-cover" />
                     </div>
@@ -654,7 +654,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   </div>
                 ) : (
                   /* Circular progress bar with Earth image inside */
-                  <div className="relative flex items-center justify-center w-28 h-28 shrink-0 bg-stone-50 border border-stone-100 rounded-full">
+                  <div className="relative flex items-center justify-center w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-100 rounded-full">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 112 112">
                       <circle
                         cx="56"
@@ -687,7 +687,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
                 {/* Right Side: Header Text & Progress Info */}
                 <div className="text-center sm:text-left">
-                  <h1 className="text-[30px] font-extrabold tracking-tight text-[#0A3D25] leading-tight">
+                  <h1 className="text-[24px] md:text-[28px] lg:text-[30px] font-extrabold tracking-tight text-[#0A3D25] leading-tight">
                     {t('smartRecommendations')}
                   </h1>
                   <p className="text-xs text-gray-500 mt-1 max-w-xl">
@@ -766,7 +766,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                           </p>
                           <button
                             onClick={() => addToPlan(rec)}
-                            className={`mt-3 text-xs font-bold py-2 px-5 rounded-full transition-all border ${isAdded
+                            className={`mt-3 text-xs font-bold py-2.5 px-5 h-10 rounded-full transition-all border flex items-center justify-center ${isAdded
                               ? 'bg-[#E2F0D9] text-[#0A3D25] border-[#C5E0B4]'
                               : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232] cursor-pointer'
                               }`}
@@ -788,8 +788,8 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                             </div>
                           )}
                           {rec.visualType === 'bin' && (
-                            <div className="w-full h-full relative bg-stone-50 text-stone-500 flex items-center justify-center">
-                              <Trash2 className="w-10 h-10" />
+                            <div className="w-full h-full relative bg-green-50 text-green-600 flex items-center justify-center">
+                              <Recycle className="w-10 h-10" />
                             </div>
                           )}
                           {rec.visualType === 'lightbulb' && (

@@ -226,7 +226,7 @@ const CalculatorPage = () => {
           type="button"
           onClick={() => changeNumber(field, -step, 0, max)}
           disabled={value <= 0}
-          className="h-10 w-10 rounded-lg border border-[#BFCBC5] bg-[#EEF3FE] text-[#1B2733] disabled:text-gray-300 disabled:bg-white flex items-center justify-center"
+          className="h-11 w-11 md:h-10 md:w-10 rounded-lg border border-[#BFCBC5] bg-[#EEF3FE] text-[#1B2733] disabled:text-gray-300 disabled:bg-white flex items-center justify-center"
           aria-label={t('decrease', { label })}
         >
           <Minus size={15} />
@@ -238,13 +238,13 @@ const CalculatorPage = () => {
           max={max}
           step={step}
           onChange={(event) => handleNumberInput(field, event.target.value, 0, max)}
-          className="h-10 w-20 rounded-lg border border-[#BFCBC5] bg-white text-center text-[15px] font-medium text-[#111827] outline-none focus:border-[#004332]"
+          className="h-11 w-24 md:h-10 md:w-20 rounded-lg border border-[#BFCBC5] bg-white text-center text-[16px] md:text-[15px] font-medium text-[#111827] outline-none focus:border-[#004332]"
         />
         <button
           type="button"
           onClick={() => changeNumber(field, step, 0, max)}
           disabled={value >= max}
-          className="h-10 w-10 rounded-lg border border-[#BFCBC5] bg-[#EEF3FE] text-[#1B2733] disabled:text-gray-300 disabled:bg-white flex items-center justify-center"
+          className="h-11 w-11 md:h-10 md:w-10 rounded-lg border border-[#BFCBC5] bg-[#EEF3FE] text-[#1B2733] disabled:text-gray-300 disabled:bg-white flex items-center justify-center"
           aria-label={t('increase', { label })}
         >
           <Plus size={15} />
@@ -295,7 +295,7 @@ const CalculatorPage = () => {
       <div className="mx-auto w-full max-w-[1500px]">
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div>
-            <h1 className="text-[32px] font-extrabold leading-tight text-[#0A3D25] md:text-[34px]">
+            <h1 className="text-[26px] font-extrabold leading-tight text-[#0A3D25] md:text-[32px] lg:text-[34px]">
               {t('title')}
             </h1>
             <p className="mt-1 text-[16px] text-[#4A5550]">
@@ -344,15 +344,15 @@ const CalculatorPage = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-[1.42fr_1fr] xl:grid-cols-[1.48fr_1fr]">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 md:grid-cols-1 lg:grid-cols-[1.42fr_1fr] xl:grid-cols-[1.48fr_1fr]">
           <div className="space-y-6">
             <section className="rounded-xl border border-[#E0E5E2] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.08)] md:p-6">
               <div className="mb-7 flex items-center gap-2 text-[#17202A]">
                 <Bus size={22} className="text-[#0A3D25]" />
                 <h2 className="text-[24px] font-extrabold leading-none">{t('transportTitle')}</h2>
               </div>
-              <p className="mb-[18px] text-[16px] text-[#4A5550]">{t('transportQuestion')}</p>
-              <div className="mb-6 grid grid-cols-5 gap-2">
+              <p className="mb-3 md:mb-[18px] text-[16px] text-[#4A5550]">{t('transportQuestion')}</p>
+              <div className="mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3">
                 {transportationOptions.map(option => {
                   const selected = formData.transportationMode === option.value;
                   return (
@@ -360,7 +360,7 @@ const CalculatorPage = () => {
                       key={option.value}
                       type="button"
                       onClick={() => setField('transportationMode', option.value)}
-                      className={`flex h-[75px] min-w-0 flex-col items-center justify-center rounded-[10px] border text-[12px] font-semibold transition-all ${
+                      className={`flex h-[60px] md:h-[75px] min-w-0 flex-col items-center justify-center rounded-[10px] border text-[11px] md:text-[12px] font-semibold transition-all ${
                         selected
                           ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25]'
                           : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
@@ -389,8 +389,8 @@ const CalculatorPage = () => {
                 <ForkKnife size={22} className="text-[#0A3D25]" />
                 <h2 className="text-[24px] font-extrabold leading-none">{t('lunchTitle')}</h2>
               </div>
-              <p className="mb-[18px] text-[16px] text-[#4A5550]">{t('lunchQuestion')}</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <p className="mb-3 md:mb-[18px] text-[16px] text-[#4A5550]">{t('lunchQuestion')}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 {foodOptions.map(option => {
                   const selected = formData.foodMealType === option.value;
                   return (
@@ -398,14 +398,14 @@ const CalculatorPage = () => {
                       key={option.value}
                       type="button"
                       onClick={() => setField('foodMealType', option.value)}
-                      className={`h-[54px] rounded-lg border text-center transition-all ${
+                      className={`h-[50px] md:h-[54px] rounded-lg border text-center transition-all ${
                         selected
                           ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25] font-semibold'
                           : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
                       }`}
                     >
-                      <span className="block text-[15px] font-medium">{option.label}</span>
-                      <span className="mt-0.5 block text-[11px] text-[#4A5550] font-normal">{option.estimate}</span>
+                      <span className="block text-[14px] md:text-[15px] font-medium">{option.label}</span>
+                      <span className="mt-0.5 block text-[12px] md:text-[11px] text-[#4A5550] font-normal">{option.estimate}</span>
                     </button>
                   );
                 })}
@@ -432,7 +432,7 @@ const CalculatorPage = () => {
                 <Trash2 size={21} className="text-[#0A3D25]" />
                 <h2 className="text-[24px] font-extrabold leading-none">{t('wasteTitle')}</h2>
               </div>
-              <div className="space-y-[26px]">
+              <div className="space-y-4 md:space-y-[26px]">
                 <YesNo
                   label={t('plasticQuestion')}
                   value={formData.usedSingleUsePlastic}
@@ -454,7 +454,7 @@ const CalculatorPage = () => {
                 <h2 className="text-[24px] font-extrabold leading-none">{t('energyTitle')}</h2>
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 <div>
                   <p className="mb-[18px] text-[16px] text-[#4A5550]">
                     {t('electricityQuestion')}
@@ -472,8 +472,8 @@ const CalculatorPage = () => {
                   )}
                 </div>
 
-                <div className="border-t border-[#E0E5E2] pt-6">
-                  <p className="mb-[18px] text-[16px] text-[#4A5550]">
+                <div className="border-t border-[#E0E5E2] pt-4 md:pt-6">
+                  <p className="mb-3 md:mb-[18px] text-[16px] text-[#4A5550]">
                     {t('firewoodQuestion')}
                   </p>
                   <Stepper
@@ -492,7 +492,7 @@ const CalculatorPage = () => {
             </section>
 
             {/* Button below Energy section on mobile, before Streak */}
-            <div className="pt-6 text-center lg:hidden">
+            <div className="pt-4 md:pt-6 text-center lg:hidden">
               <Button
                 type="submit"
                 variant="primary"

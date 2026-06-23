@@ -1,24 +1,32 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { GraduationCap, Loader2, Mail, MapPin, Save, School, Trophy, User } from 'lucide-react';
+import { GraduationCap, Loader2, Mail, MapPin, Pencil, Save, School, Trophy, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import LanguageToggle from '@/components/LanguageToggle';
 import { useTranslations } from 'next-intl';
+import ProfileAvatar from '@/components/ProfileAvatar';
+
+const profileImageMessages = {
+  typeError: 'Please choose a PNG, JPG, or WebP image.',
+  sizeError: 'Profile image must be under 1 MB.',
+  readError: 'Could not read that image. Please try another file.',
+};
 
 const ProfileAccountPage = () => {
   const router = useRouter();
   const { user, isAuthenticated, updateProfile } = useAuth();
   const t = useTranslations('Profile');
   const tAuth = useTranslations('Auth');
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState(() => ({
     name: user?.name || user?.email || '',
     email: user?.email || '',
     schoolName: user?.schoolName || '',
     grade: user?.grade || '',
-    locationType: user?.locationType || ''
+    locationType: user?.locationType || '',
+    profileImage: user?.profileImage || ''
   }));
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
@@ -31,12 +39,15 @@ const ProfileAccountPage = () => {
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        name: user.name || user.email || '',
-        email: user.email || '',
-        schoolName: user.schoolName || '',
-        grade: user.grade || '',
-        locationType: user.locationType || ''
+      queueMicrotask(() => {
+        setFormData({
+          name: user.name || user.email || '',
+          email: user.email || '',
+          schoolName: user.schoolName || '',
+          grade: user.grade || '',
+          locationType: user.locationType || '',
+          profileImage: user.profileImage || ''
+        });
       });
     }
   }, [user]);
@@ -68,6 +79,33 @@ const ProfileAccountPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleProfileImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setStatus({ type: 'error', message: profileImageMessages.typeError });
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > 1024 * 1024) {
+      setStatus({ type: 'error', message: profileImageMessages.sizeError });
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({ ...prev, profileImage: reader.result || '' }));
+      setStatus({ type: '', message: '' });
+    };
+    reader.onerror = () => {
+      setStatus({ type: 'error', message: profileImageMessages.readError });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus({ type: '', message: '' });
@@ -97,7 +135,8 @@ const ProfileAccountPage = () => {
       name: nextName,
       schoolName: nextSchoolName || '',
       grade: nextGrade,
-      locationType: nextLocationType
+      locationType: nextLocationType,
+      profileImage: formData.profileImage || ''
     });
     setSaving(false);
 
@@ -135,8 +174,28 @@ const ProfileAccountPage = () => {
           <aside className="space-y-6">
             <section className="overflow-hidden rounded-xl border border-[#E0E5E2] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
               <div className="bg-[#a8d3ac] p-6 text-[#0A3D25]">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/70 shadow-sm">
-                  <User size={30} />
+                <div className="relative h-16 w-16">
+                  <ProfileAvatar
+                    imageSrc={formData.profileImage}
+                    alt={user.name || user.email}
+                    size="lg"
+                    className="bg-white/70 text-[#0A3D25] shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    aria-label="Edit profile image"
+                    className="absolute -bottom-1 -right-1 inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#a8d3ac] bg-[#0A3D25] text-white shadow-sm transition-colors hover:bg-[#072B1A] focus:outline-none focus:ring-2 focus:ring-[#0A3D25]/30"
+                  >
+                    <Pencil size={14} aria-hidden="true" />
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleProfileImageChange}
+                    className="hidden"
+                  />
                 </div>
                 <h2 className="mt-5 text-[24px] font-extrabold">
                   {user.name || user.email}
@@ -161,16 +220,6 @@ const ProfileAccountPage = () => {
                   </div>
                 ))}
               </div>
-            </section>
-
-            <section className="rounded-xl border border-[#D8E8DE] bg-[#EEF7F1] p-5">
-              <div className="mb-3 flex items-center justify-between gap-4">
-                <p className="text-[14px] font-bold text-[#17202A]">{t('language')}</p>
-                <LanguageToggle />
-              </div>
-              <p className="text-[13px] leading-5 text-[#52665B]">
-                {t('languageNotice')}
-              </p>
             </section>
           </aside>
 

@@ -6,7 +6,18 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 
-const PUBLIC_PREFIXES = ['/', '/login', '/register', '/share'];
+const PUBLIC_PREFIXES = [
+  '/',
+  '/login',
+  '/register',
+  '/share',
+  '/about',
+  '/curriculum',
+  '/sustainability',
+  '/contact',
+  '/support',
+  '/terms',
+];
 
 const LayoutShell = ({ children }) => {
   const pathname = usePathname();

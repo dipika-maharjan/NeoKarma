@@ -57,6 +57,10 @@ const UserSchema = new mongoose.Schema(
       trim: true,
       maxlength: [200, 'School name cannot exceed 200 characters']
     },
+    profileImage: {
+      type: String,
+      default: ''
+    },
     extraProfile: {
       questionKey: {
         type: String,
