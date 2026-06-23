@@ -476,7 +476,7 @@ export default function AdminDashboardPage() {
                   No emission data yet. Students need to submit logs.
                 </div>
               ) : (
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,8fr)_minmax(230px,2fr)]">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,5.5fr)_minmax(350px,4.5fr)]">
                   <div className="rounded-xl border border-[#e8eee9] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div>
