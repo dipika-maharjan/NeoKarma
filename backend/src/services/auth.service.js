@@ -74,8 +74,7 @@ class AuthService {
 
     return {
       user: userObj,
-      token,
-      role: user.role
+      token
     };
   }
 
@@ -111,7 +110,6 @@ class AuthService {
 
     return {
       token,
-      role: user.role,
       user: userObj
     };
   }
