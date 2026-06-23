@@ -765,7 +765,7 @@ export default function AdminDashboardPage() {
                     })}
                   </div>
                   <div style={{
-                    width: 180,
+                    width: 280,
                     flexShrink: 0
                   }}>
                     <div style={{
