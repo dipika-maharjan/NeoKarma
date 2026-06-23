@@ -2,4 +2,4 @@
 export default {
   locales: ['en', 'ne'],
   defaultLocale: 'en'
-};
+}; 
