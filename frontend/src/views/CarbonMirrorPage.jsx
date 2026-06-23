@@ -39,6 +39,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 import { Skeleton } from '@/components/ui';
 import PhaseUnlockCelebration from '@/components/PhaseUnlockCelebration';
+import { useNotifications } from '@/context/NotificationContext';
+import { useToast } from '@/context/ToastContext';
 
 const CARD_CLASS = 'rounded-[10px] border border-[#E0E5E2] bg-white';
 const CARD_PADDING = 'p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]';
@@ -110,6 +112,8 @@ const CarbonMirrorPage = () => {
   const tImg = useTranslations('Images');
   const tResult = useTranslations('Result');
   const formatNumber = useNumberFormatter();
+  const { showNotification } = useNotifications();
+  const { showToast } = useToast();
 
   // Check if user has been active for 30+ days
   const isEligibleForNextMilestone = () => {
@@ -147,6 +151,19 @@ const CarbonMirrorPage = () => {
           const data = await getCarbonMirror(locale || 'en');
           if (data) {
             setMirrorData(data);
+                        // Show toast when mirror updates
+                        showToast('📊 Carbon Mirror updated with latest data', { type: 'info', duration: 3000 });
+            // Trigger notification for mirror update
+            showNotification({
+              id: `mirror-updated-${new Date().toISOString()}`,
+              type: 'info',
+              title: 'Carbon Mirror updated',
+              message: 'Your Carbon Mirror has refreshed with the latest emissions data and insights.',
+              actionLabel: 'View mirror',
+              actionHref: '/carbon-mirror',
+              createdAt: new Date().toISOString(),
+              unread: true
+            });
           }
           
           // Fetch active plan recommendations from the plan page

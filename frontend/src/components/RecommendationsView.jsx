@@ -4,7 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations } from 'next-intl';
+import { useNotifications } from '@/context/NotificationContext';
 import { Bus, Utensils, Archive, Lightbulb, Sprout, Leaf, Trash2 } from 'lucide-react';
+import { useToast } from '@/context/ToastContext';
 import { useRecommendationProgress } from '@/hooks/useRecommendationProgress';
 import ProgressTrackerWrapper from './ProgressTrackerWrapper';
 
@@ -391,6 +393,8 @@ const mapBackendRecToCard = (rec, index) => {
 const RecommendationsView = ({ onNavigateToDashboard }) => {
   const { user } = useAuth();
   const t = useTranslations('Plan');
+  const { showNotification } = useNotifications();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('recommendations'); // 'recommendations' or 'plan'
   const [addedIds, setAddedIds] = useState(new Set());
   const [planItems, setPlanItems] = useState([]);
@@ -456,6 +460,19 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
           try {
             const newPlan = await generatePlan();
             planData = newPlan;
+                        // Show toast notification when plan is generated
+                        showToast('🎉 Your personalized plan is ready!', { type: 'success', duration: 4000 });
+            // Show notification when plan is generated
+            showNotification({
+              id: `plan-ready-${new Date().toISOString()}`,
+              type: 'success',
+              title: 'Your personalized plan is ready',
+              message: "Based on your 30 days of logging, we've created a custom action plan just for you.",
+              actionLabel: 'View plan',
+              actionHref: '/recommendations',
+              createdAt: new Date().toISOString(),
+              unread: true
+            });
           } catch (genErr) {
             console.warn('Could not generate plan automatically:', genErr);
           }
@@ -528,6 +545,22 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
     setPlanItems([newItem, ...planItems]);
     setActiveTab('plan'); // Direct redirect to show plan
+    // Notify user and show quick toast
+    try {
+      showNotification({
+        id: `plan-item-added-${new Date().toISOString()}`,
+        type: 'success',
+        title: 'Added to plan',
+        message: `"${newItem.title}" has been added to your plan.`,
+        actionLabel: 'View plan',
+        actionHref: '/plan',
+        createdAt: new Date().toISOString(),
+        unread: true
+      });
+    } catch (e) {
+      // ignore if notifications context unavailable
+    }
+    try { showToast('Added to your plan', { type: 'success', duration: 3000 }); } catch (e) {}
   };
 
   // Toggle completion of a task in the plan

@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowDown, ArrowUpRight, Plus } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
+import { useNotifications } from '@/context/NotificationContext';
+import { useToast } from '@/context/ToastContext';
 
 const DashboardPage = () => {
   const { user, isAuthenticated } = useAuth();
@@ -20,6 +22,8 @@ const DashboardPage = () => {
   const locale = useLocale();
   const formatNumber = useNumberFormatter();
   const carbonMirrorT = useTranslations('CarbonMirror');
+  const { showNotification } = useNotifications();
+    const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [streakData, setStreakData] = useState(null);
@@ -56,6 +60,38 @@ const DashboardPage = () => {
         setTodayLog(today);
         if (config) {
           setScoreConfig(config);
+        }
+
+        // Trigger milestone notifications
+        if (streakInfo) {
+          // 30-day milestone notification
+          if (streakInfo.currentStreak === 30) {
+                        showToast('🏆 Wow! 30-day streak achieved!', { type: 'success', duration: 5000 });
+            showNotification({
+              id: `milestone-30day-${new Date().toISOString()}`,
+              type: 'success',
+              title: '🏆 30-Day Milestone!',
+              message: 'You\'ve logged for 30 consecutive days. Your personalized AI recommendations are now active!',
+              actionLabel: 'View recommendations',
+              actionHref: '/plan',
+              createdAt: new Date().toISOString(),
+              unread: true
+            });
+          }
+          // 7-day milestone
+          else if (streakInfo.currentStreak === 7) {
+                        showToast('🔥 7-day streak! You\'re on fire!', { type: 'success', duration: 4000 });
+            showNotification({
+              id: `milestone-7day-${new Date().toISOString()}`,
+              type: 'success',
+              title: '🔥 7-Day Streak!',
+              message: 'You\'re on fire! Keep logging daily to build your streak.',
+              actionLabel: 'Keep going',
+              actionHref: '/calculator',
+              createdAt: new Date().toISOString(),
+              unread: true
+            });
+          }
         }
         
         if (historyResponse && historyResponse.data) {

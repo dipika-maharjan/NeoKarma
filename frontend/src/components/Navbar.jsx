@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 import { Menu, X } from 'lucide-react';
+import NotificationBell from '@/components/NotificationBell';
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -122,6 +123,8 @@ const Navbar = () => {
           <LanguageToggle />
           {isAuthenticated && user ? (
             <>
+              <NotificationBell />
+
               {/* Day Streak Pill Layout (merged): show compact pill and hover details */}
               <div className="relative group">
                 <div className="flex items-center gap-1.5 bg-white/70 text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-[#CFE2D5] shadow-sm select-none">
