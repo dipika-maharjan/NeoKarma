@@ -7,7 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 import LanguageToggle from './LanguageToggle';
 import { useTranslations, useLocale } from 'next-intl';
 import profileImg from '../../public/profile.png';
-import { useTranslations } from 'next-intl';
 import ProfileAvatar from './ProfileAvatar';
 
 export default function ProfileDropdown() {
