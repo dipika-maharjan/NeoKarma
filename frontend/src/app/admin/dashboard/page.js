@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchAdminDashboard } from '@/lib/api/adminApi';
 import {
   Activity,
   AlertTriangle,
@@ -112,19 +113,9 @@ export default function AdminDashboardPage() {
         }
         setError('');
 
-        const token = localStorage.getItem('token') || '';
-        const response = await fetch(`/api/admin/dashboard?days=${timeframe}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to load dashboard data.');
-        }
-
-        const dashboardData = await response.json();
-        setData(dashboardData || null);
+        const response = await fetchAdminDashboard(timeframe);
+        const dashboardData = response.data || null;
+        setData(dashboardData);
       } catch (err) {
         setError(err?.message || 'Failed to load dashboard data.');
       } finally {

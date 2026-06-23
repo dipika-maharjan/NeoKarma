@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchAdminReports } from '@/lib/api/adminApi';
 import {
   Download,
   FileText,
@@ -98,18 +99,8 @@ export default function AdminReportsPage() {
         }
         setError('');
 
-        const token = localStorage.getItem('token') || '';
-        const response = await fetch(`/api/admin/reports?days=${timeframe}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to load reports.');
-        }
-
-        const reportData = await response.json();
+        const response = await fetchAdminReports(timeframe);
+        const reportData = response.data || null;
         setData(reportData);
       } catch (err) {
         setError(err?.message || 'Failed to load reports.');
