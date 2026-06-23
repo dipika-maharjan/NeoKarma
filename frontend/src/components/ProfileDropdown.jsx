@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
-import profileImg from '../../public/profile.png';
+import { LogOut, UserCircle, User } from 'lucide-react';
 
 export default function ProfileDropdown() {
   const router = useRouter();
@@ -54,15 +52,9 @@ export default function ProfileDropdown() {
         onClick={toggleDropdown}
         aria-expanded={isOpen}
         aria-label={t('openProfileMenu')}
-        className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:border-forest-green transition-colors flex items-center justify-center bg-white outline-none focus:ring-2 focus:ring-forest-green"
+        className="w-11 h-11 rounded-full border border-gray-200 cursor-pointer hover:border-forest-green transition-all duration-150 ease-in-out flex items-center justify-center bg-white shadow-sm outline-none focus:ring-2 focus:ring-forest-green"
       >
-        <Image
-          src={profileImg}
-          alt="User Profile Menu"
-          width={36}
-          height={36}
-          className="w-full h-full object-cover"
-        />
+        <UserCircle className="w-6 h-6 text-forest-green" />
       </button>
 
       {isOpen && (
@@ -79,15 +71,11 @@ export default function ProfileDropdown() {
             <Link
               href="/profile/account"
               onClick={() => setIsOpen(false)}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-forest-green transition-colors cursor-pointer no-underline"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-forest-green transition-colors cursor-pointer no-underline"
             >
-              {t('profileAccount')}
+              <User className="w-4 h-4" />
+              Profile
             </Link>
-          
-            <div className="mt-1 flex items-center justify-between px-4 py-2">
-              <span className="text-sm font-medium text-gray-700">{t('language')}</span>
-              <LanguageToggle />
-            </div>
           </div>
 
           <div className="border-t border-gray-100 my-1" />
@@ -99,8 +87,9 @@ export default function ProfileDropdown() {
                 logout();
                 router.push('/login');
               }}
-              className="w-full text-left block px-4 py-2 text-sm text-rose-accent hover:bg-rose-50 transition-colors font-medium cursor-pointer"
+              className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-rose-accent hover:bg-rose-50 transition-colors font-medium cursor-pointer"
             >
+              <LogOut className="w-4 h-4" />
               {t('logout')}
             </button>
           </div>
