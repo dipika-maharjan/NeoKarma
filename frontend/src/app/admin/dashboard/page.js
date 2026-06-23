@@ -341,7 +341,7 @@ export default function AdminDashboardPage() {
           className="dashboard-grid dashboard-grid--stats"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: 24
           }}
         >
@@ -349,10 +349,7 @@ export default function AdminDashboardPage() {
             <div
               key={card.label}
               className="dashboard-stat-card"
-              style={{
-                ...cardStyle,
-                gridColumn: 'span 3'
-              }}
+              style={cardStyle}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                 <span style={{ fontSize: 13, color: '#6b7280' }}>{card.label}</span>
@@ -467,7 +464,7 @@ export default function AdminDashboardPage() {
                   No emission data yet. Students need to submit logs.
                 </div>
               ) : (
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,5.5fr)_minmax(350px,4.5fr)]">
+                <div className="grid gap-3 grid-cols-1 lg:grid-cols-[minmax(0,5.5fr)_minmax(350px,4.5fr)]">
                   <div className="rounded-xl border border-[#e8eee9] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div>
@@ -638,12 +635,8 @@ export default function AdminDashboardPage() {
                   No source data yet.
                 </div>
               ) : (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 32
-                }}>
-                  <div style={{ flex: 1 }}>
+                <div className="flex flex-col md:flex-row items-start gap-8">
+                  <div style={{ flex: 1, width: '100%' }}>
                     <p style={{
                       fontSize: 11,
                       color: '#888',
@@ -755,10 +748,7 @@ export default function AdminDashboardPage() {
                       )
                     })}
                   </div>
-                  <div style={{
-                    width: 280,
-                    flexShrink: 0
-                  }}>
+                  <div className="w-full md:w-[280px] shrink-0">
                     <div style={{
                       background: '#f8faf8',
                       borderRadius: 10,
@@ -914,11 +904,11 @@ export default function AdminDashboardPage() {
           className="dashboard-grid dashboard-grid--split"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+            gridTemplateColumns: '1fr',
             gap: 24
           }}
         >
-          <section className="dashboard-split-left" style={{ ...cardStyle, gridColumn: 'span 12' }}>
+          <section className="dashboard-split-left" style={cardStyle}>
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
               <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: '0 0 16px' }}>
                 Class Performance
@@ -961,14 +951,9 @@ export default function AdminDashboardPage() {
         </section>
 
         <section
-          className="dashboard-grid dashboard-grid--bottom"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-            gap: 24
-          }}
+          className="dashboard-grid dashboard-grid--bottom grid grid-cols-1 lg:grid-cols-12 gap-6"
         >
-          <section className="dashboard-bottom-left col-span-6 flex" style={{ ...cardStyle, gridColumn: 'span 6' }}>
+          <section className="dashboard-bottom-left flex lg:col-span-6" style={cardStyle}>
             <div className="flex min-w-0 flex-1 flex-col">
               <h3 className="mb-4 text-[15px] font-bold text-[#111]">Activity Feed</h3>
               <div className="flex flex-1 flex-col">
@@ -1011,7 +996,7 @@ export default function AdminDashboardPage() {
             </div>
           </section>
 
-          <section className="dashboard-bottom-right col-span-6 flex" style={{ ...cardStyle, gridColumn: 'span 6' }}>
+          <section className="dashboard-bottom-right flex lg:col-span-6" style={cardStyle}>
             <div className="flex min-w-0 flex-1 flex-col">
               <h3 className="mb-4 text-[15px] font-bold text-[#111]">Student Streaks</h3>
               <div className="flex flex-1 flex-col">
