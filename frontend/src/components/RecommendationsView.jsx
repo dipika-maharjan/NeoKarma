@@ -9,20 +9,14 @@ import {
   Archive as LucideArchive,
   ArrowLeft,
   ArrowRight,
-  Bus,
   Check,
   Hourglass,
-  Leaf,
-  Lightbulb,
   Monitor,
   Plus,
   Recycle,
-  Sprout,
   Trophy,
-  Utensils,
   Zap,
 } from 'lucide-react';
-import { useRecommendationProgress } from '@/hooks/useRecommendationProgress';
 import ProgressTrackerWrapper from './ProgressTrackerWrapper';
 
 
