@@ -1,21 +1,22 @@
 import React from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 const footerColumns = [
   {
     titleKey: 'explore',
     links: [
-      { labelKey: 'aboutUs', href: '#about' },
-      { labelKey: 'curriculum', href: '#curriculum' },
-      { labelKey: 'sustainability', href: '#sustainability' },
+      { labelKey: 'aboutUs', href: '/about' },
+      { labelKey: 'curriculum', href: '/curriculum' },
+      { labelKey: 'sustainability', href: '/sustainability' },
     ],
   },
   {
     titleKey: 'support',
     links: [
-      { labelKey: 'contact', href: '#contact' },
-      { labelKey: 'helpCenter', href: '#support' },
-      { labelKey: 'termsOfService', href: '#terms' },
+      { labelKey: 'contact', href: '/contact' },
+      { labelKey: 'helpCenter', href: '/support' },
+      { labelKey: 'termsOfService', href: '/terms' },
     ],
   },
 ];
@@ -79,7 +80,7 @@ const Footer = () => {
                   {t(column.titleKey)}
                 </span>
                 {column.links.map((link) => (
-                  <a
+                  <Link
                     key={link.labelKey}
                     href={link.href}
                     className="group w-fit text-[13px] text-[#52665B] transition-all duration-200 hover:translate-x-1 hover:text-[#0A3D25]"
@@ -87,7 +88,7 @@ const Footer = () => {
                     <span className="bg-gradient-to-r from-[#5C8A72] to-[#5C8A72] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-300 group-hover:bg-[length:100%_1px]">
                       {t(link.labelKey)}
                     </span>
-                  </a>
+                  </Link>
                 ))}
               </div>
             ))}

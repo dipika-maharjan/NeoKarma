@@ -67,143 +67,6 @@ const exportCsv = (rows) => {
   URL.revokeObjectURL(url);
 };
 
-function Pagination({
-  page,
-  totalPages,
-  total,
-  pageSize,
-  label,
-  onChange
-}) {
-  if (totalPages <= 1) return null;
-
-  const start = (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
-
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
-    .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-    .reduce((acc, p, idx, arr) => {
-      if (idx > 0 && p - arr[idx - 1] > 1) {
-        acc.push('...');
-      }
-      acc.push(p);
-      return acc;
-    }, []);
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 14,
-        paddingTop: 14,
-        borderTop: '1px solid #f0f0f0'
-      }}
-    >
-      <span
-        style={{
-          fontSize: 12,
-          color: '#aaa',
-          fontWeight: 400
-        }}
-      >
-        {start}–{end} of {total} {label}
-      </span>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 3
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => onChange(Math.max(1, page - 1))}
-          disabled={page === 1}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 6,
-            border: '1px solid #e8e8e8',
-            background: '#fff',
-            color: page === 1 ? '#ddd' : '#555',
-            fontSize: 14,
-            cursor: page === 1 ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 500
-          }}
-        >
-          ‹
-        </button>
-        {pages.map((p, i) =>
-          p === '...' ? (
-            <span
-              key={`ellipsis-${i}`}
-              style={{
-                width: 30,
-                height: 30,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                color: '#aaa'
-              }}
-            >
-              •••
-            </span>
-          ) : (
-            <button
-              key={p}
-              type="button"
-              onClick={() => onChange(p)}
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 6,
-                border: page === p ? 'none' : '1px solid #e8e8e8',
-                background: page === p ? '#1a7a4a' : '#fff',
-                color: page === p ? '#fff' : '#555',
-                fontSize: 12,
-                fontWeight: page === p ? 700 : 400,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              {p}
-            </button>
-          )
-        )}
-        <button
-          type="button"
-          onClick={() => onChange(Math.min(totalPages, page + 1))}
-          disabled={page === totalPages}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 6,
-            border: '1px solid #e8e8e8',
-            background: '#fff',
-            color: page === totalPages ? '#ddd' : '#555',
-            fontSize: 14,
-            cursor: page === totalPages ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 500
-          }}
-        >
-          ›
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function AdminReportsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -212,9 +75,7 @@ export default function AdminReportsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [timeframe, setTimeframe] = useState('30');
-  const [logsPage, setLogsPage] = useState(1);
   const isFirstLoad = useRef(true);
-  const LOGS_PAGE_SIZE = 8;
   const timeframeLabel = {
     7: 'Last 7 days',
     30: 'Last 30 days',
@@ -267,12 +128,6 @@ export default function AdminReportsPage() {
     [data]
   );
   const recentLogs = data?.recentLogs || [];
-  const logsTotalPages = Math.max(1, Math.ceil(recentLogs.length / LOGS_PAGE_SIZE));
-  const safeLogsPage = Math.min(logsPage, logsTotalPages);
-  const paginatedLogs = recentLogs.slice(
-    (safeLogsPage - 1) * LOGS_PAGE_SIZE,
-    safeLogsPage * LOGS_PAGE_SIZE
-  );
 
   if (loading) {
     return (
@@ -437,7 +292,7 @@ export default function AdminReportsPage() {
                 <h3 className="mt-1 text-lg font-semibold text-[#111827]">Recent logs</h3>
               </div>
             </div>
-            <div className="max-h-[430px] overflow-auto rounded-2xl border border-[#eef0ee]">
+            <div className="max-h-[300px] overflow-auto rounded-2xl border border-[#eef0ee]">
               <div className="min-w-[680px]">
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 bg-[#f9faf9] text-[#6b7280]">
@@ -449,7 +304,7 @@ export default function AdminReportsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#eef0ee] bg-white">
-                    {paginatedLogs.map((row, index) => (
+                    {recentLogs.map((row, index) => (
                       <tr key={`${row.studentName}-${index}`} className="hover:bg-[#f9fbfa]">
                         <td className="px-4 py-3 font-medium text-[#111827]">{row.studentName}</td>
                         <td className="px-4 py-3 text-[#6b7280]">{row.grade || '—'}</td>
@@ -461,14 +316,6 @@ export default function AdminReportsPage() {
                 </table>
               </div>
             </div>
-            <Pagination
-              page={safeLogsPage}
-              totalPages={logsTotalPages}
-              total={recentLogs.length}
-              pageSize={LOGS_PAGE_SIZE}
-              label="logs"
-              onChange={setLogsPage}
-            />
           </div>
 
         </section>

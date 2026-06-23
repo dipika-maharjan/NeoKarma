@@ -31,7 +31,7 @@ class ProfileController {
    */
   updateProfile = asyncHandler(async (req, res) => {
     const userId = req.user.userId;
-    const { name, grade, locationType, schoolName, extraProfile } = req.body;
+    const { name, grade, locationType, schoolName, extraProfile, profileImage } = req.body;
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
@@ -39,6 +39,18 @@ class ProfileController {
     if (locationType !== undefined) updateData.locationType = locationType;
     if (schoolName !== undefined) updateData.schoolName = schoolName;
     if (extraProfile !== undefined) updateData.extraProfile = extraProfile;
+    if (profileImage !== undefined) {
+      const isEmpty = profileImage === '';
+      const isValidDataImage = typeof profileImage === 'string'
+        && /^data:image\/(png|jpe?g|webp);base64,/i.test(profileImage)
+        && profileImage.length <= 1.5 * 1024 * 1024;
+
+      if (!isEmpty && !isValidDataImage) {
+        throw new AppError('Profile image must be a PNG, JPG, or WebP image under 1MB', 400);
+      }
+
+      updateData.profileImage = profileImage;
+    }
 
     const user = await userRepository.update(userId, updateData);
     if (!user) {

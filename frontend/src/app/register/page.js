@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { register } from '@/lib/actions/authActions';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 const RegisterPage = () => {
@@ -20,6 +20,16 @@ const RegisterPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const password = formData.password;
+  const isLengthValid = password.length >= 8;
+  const isUppercaseValid = /[A-Z]/.test(password);
+  const isLowercaseValid = /[a-z]/.test(password);
+  const isNumberValid = /[0-9]/.test(password);
+  const isSpecialValid = /[!@#$%^&*(),.?":{}|<>_+-]/.test(password);
+  const isPasswordValid = isLengthValid && isUppercaseValid && isLowercaseValid && isNumberValid && isSpecialValid;
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations('Auth');
@@ -54,13 +64,30 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    // Name validation: min 2 chars, must contain at least one letter
+    const nameTrimmed = formData.name.trim();
+    const nameRegex = /^[\p{L}\p{M}'\-.\s]{2,}$/u;
+    if (!nameTrimmed || !nameRegex.test(nameTrimmed) || !/\p{L}/u.test(nameTrimmed)) {
+      setError(t('nameInvalid'));
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError(t('invalidEmail'));
+      return;
+    }
+
+    // Password strength check
+    if (!isPasswordValid) {
+      setError(t('passwordWeak'));
+      return;
+    }
+
+    // Passwords matching check
+    if (formData.password !== formData.confirmPassword) {
+      setError(t('passwordMismatch'));
       return;
     }
 
@@ -86,6 +113,7 @@ const RegisterPage = () => {
           src="/Himalayan Mountains.png"
           alt={imgT('himalayanAlt')}
           fill
+          sizes="(min-width: 1024px) 52vw, 0vw"
           className="object-cover opacity-80"
           priority
         />
@@ -171,30 +199,50 @@ const RegisterPage = () => {
                 <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
                   {t('password')}
                 </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder={t('passwordPlaceholder')}
-                  required
-                  className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder={t('passwordPlaceholder')}
+                    required
+                    className="h-9 w-full rounded-md border border-[#cfd7df] bg-white pl-3 pr-8 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
                   {t('confirm')}
                 </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder={t('passwordPlaceholder')}
-                  required
-                  className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder={t('passwordPlaceholder')}
+                    required
+                    className="h-9 w-full rounded-md border border-[#cfd7df] bg-white pl-3 pr-8 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
               </div>
             </div>
 

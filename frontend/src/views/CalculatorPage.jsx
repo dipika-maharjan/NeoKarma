@@ -17,7 +17,8 @@ import {
   Minus,
   Plus,
   Trash2,
-  Zap
+  Zap,
+  Flame
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
@@ -544,7 +545,7 @@ const CalculatorPage = () => {
             <section className="relative overflow-hidden rounded-xl bg-[#E8F5E9] border border-[#BEE8D3] p-6 text-[#1B5E20]">
               <div className="absolute -bottom-10 -right-10 h-28 w-28 opacity-10 rounded-full bg-[#1B5E20]" />
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🔥</span>
+                <Flame size={20} className="text-[#1B5E20]" />
                 <div>
                   <p className="text-[16px] font-extrabold text-[#1B5E20]">
                     {t('streakTitle')}

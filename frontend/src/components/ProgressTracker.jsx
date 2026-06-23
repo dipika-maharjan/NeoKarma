@@ -1,10 +1,13 @@
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 /**
  * Half-circle progress tracker component
  * Shows visual progress of action completion based on actual user data
  */
 const ProgressTracker = ({ percentage, current, target, message, unit = 'days' }) => {
+  const t = useTranslations('Plan');
+
   const radius = 50;
   const circumference = Math.PI * radius; // Half circle
   const offset = circumference * (1 - percentage / 100);
@@ -60,7 +63,7 @@ const ProgressTracker = ({ percentage, current, target, message, unit = 'days' }
       {/* Progress text */}
       <div className="text-center">
         <p className="text-xs font-medium text-[#4E6256]">
-          {current} of {target} {unit}
+          {current} {t('of')} {target} {unit}
         </p>
         <p className="text-xs text-[#5D6F60] mt-1 max-w-xs">
           {message}
@@ -70,7 +73,7 @@ const ProgressTracker = ({ percentage, current, target, message, unit = 'days' }
       {/* Status badge */}
       {percentage >= 100 && (
         <span className="inline-block px-2.5 py-1 bg-green-50 text-green-700 text-[10px] font-semibold rounded-full border border-green-200">
-          ✓ On Track
+          ✓ {t('onTrack')}
         </span>
       )}
     </div>

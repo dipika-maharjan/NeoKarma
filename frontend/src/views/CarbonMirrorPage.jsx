@@ -14,7 +14,7 @@ import {
   Share2,
   TreePine,
   Utensils,
-  Trash2,
+  Recycle,
   Lightbulb,
   Sprout
 } from 'lucide-react';
@@ -111,6 +111,7 @@ const CarbonMirrorPage = () => {
   const t = useTranslations('CarbonMirror');
   const tImg = useTranslations('Images');
   const tResult = useTranslations('Result');
+  const tPlan = useTranslations('Plan');
   const formatNumber = useNumberFormatter();
   const { showNotification } = useNotifications();
   const { showToast } = useToast();
@@ -428,7 +429,7 @@ const CarbonMirrorPage = () => {
                 <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-[#0A3D25]/75">
                   Personalized insights unlock soon
                 </p>
-                <h1 className="text-[32px] font-extrabold leading-tight text-[#0A3D25] md:text-[38px]">
+                <h1 className="text-[26px] font-extrabold leading-tight text-[#0A3D25] md:text-[32px] lg:text-[38px]">
                   Your Carbon Mirror is forming
                 </h1>
                 <p className="hidden">
@@ -640,10 +641,11 @@ const CarbonMirrorPage = () => {
             <button
               type="button"
               onClick={shareInsight}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#072B1A]"
+              aria-label={t('shareInsight')}
+              className="inline-flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-0 text-[14px] font-bold text-white transition-colors hover:bg-[#072B1A] sm:w-auto sm:px-5"
             >
               <Share2 size={16} />
-              {t('shareInsight')}
+              <span className="hidden sm:inline">{t('shareInsight')}</span>
             </button>
           </div>
         </section>
@@ -816,10 +818,10 @@ const CarbonMirrorPage = () => {
                         : 'bg-red-50 text-red-500 border border-red-100'
                     }`}>
                       {activePlan.recommendations[carouselIndex]?.effortLevel === 'easy'
-                        ? 'Easy Win'
+                        ? tPlan('easyWin')
                         : activePlan.recommendations[carouselIndex]?.effortLevel === 'medium'
-                        ? 'Medium Impact'
-                        : 'High Impact'}
+                        ? tPlan('mediumImpact')
+                        : tPlan('highImpact')}
                     </span>
 
                     {/* Main Title & Description */}
@@ -835,12 +837,12 @@ const CarbonMirrorPage = () => {
                   <div className="mt-6 flex items-end justify-between">
                     <div>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                        Impact Reduction
+                        {tPlan('impactReduction')}
                       </p>
                       <p className="text-lg font-extrabold text-gray-800 mt-0.5">
-                        -{formatNumber(activePlan.recommendations[carouselIndex]?.estimatedReductionKg, { maximumFractionDigits: 1 })} kg CO₂
+                        -{formatNumber(activePlan.recommendations[carouselIndex]?.estimatedReductionKg || activePlan.recommendations[carouselIndex]?.saving || 0, { maximumFractionDigits: 1 })} kg CO₂
                         <span className="text-xs font-semibold text-gray-400 ml-1">
-                          /month
+                          /{tPlan('kgPerMo').split('/')[1]?.trim() || 'mo'}
                         </span>
                       </p>
                     </div>
@@ -858,8 +860,8 @@ const CarbonMirrorPage = () => {
                         </div>
                       )}
                       {activePlan.recommendations[carouselIndex]?.category === 'waste' && (
-                        <div className="w-full h-full relative bg-stone-50 text-stone-500 flex items-center justify-center">
-                          <Trash2 className="w-8 h-8" />
+                        <div className="w-full h-full relative bg-green-50 text-green-600 flex items-center justify-center">
+                          <Recycle className="w-8 h-8" />
                         </div>
                       )}
                       {activePlan.recommendations[carouselIndex]?.category === 'energy' && (
@@ -877,11 +879,11 @@ const CarbonMirrorPage = () => {
                 </div>
 
                 {/* Carousel Navigation - Centered below card */}
-                <div className="flex items-center justify-center gap-8 mt-8">
+                <div className="flex items-center justify-center gap-4 md:gap-8 mt-8">
                   <button
                     onClick={() => setCarouselIndex(Math.max(0, carouselIndex - 1))}
                     disabled={carouselIndex === 0}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
+                    className="flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
                   >
                     ←
                   </button>
@@ -893,7 +895,7 @@ const CarbonMirrorPage = () => {
                   <button
                     onClick={() => setCarouselIndex(Math.min(activePlan.recommendations.length - 1, carouselIndex + 1))}
                     disabled={carouselIndex === activePlan.recommendations.length - 1}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
+                    className="flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
                   >
                     →
                   </button>

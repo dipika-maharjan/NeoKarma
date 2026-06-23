@@ -4,12 +4,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useTranslations } from 'next-intl';
-import { LogOut, UserCircle, User } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
+import { LogOut, User } from 'lucide-react';
+import LanguageToggle from './LanguageToggle';
+import profileImg from '../../public/profile.png';
+import ProfileAvatar from './ProfileAvatar';
 
 export default function ProfileDropdown() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const locale = useLocale();
   const t = useTranslations('Profile');
   const tAuth = useTranslations('Auth');
   const [isOpen, setIsOpen] = useState(false);
@@ -54,17 +58,22 @@ export default function ProfileDropdown() {
         aria-label={t('openProfileMenu')}
         className="w-11 h-11 rounded-full border border-gray-200 cursor-pointer hover:border-forest-green transition-all duration-150 ease-in-out flex items-center justify-center bg-white shadow-sm outline-none focus:ring-2 focus:ring-forest-green"
       >
-        <UserCircle className="w-6 h-6 text-forest-green" />
+        <ProfileAvatar imageSrc={user.profileImage} alt="User Profile Menu" size="sm" />
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="px-4 py-2 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
-            <p className="text-xs text-gray-500 truncate">{displaySchool}</p>
-            <span className="inline-block mt-1 text-[10px] font-bold text-forest-green bg-[#E8F5E9] px-2 py-0.5 rounded-full uppercase">
-              {t('gradeLabel', { grade: user.grade || '--', location: tAuth(user.locationType) || user.locationType || 'student' })}
-            </span>
+            <div className="flex items-center gap-3">
+              <ProfileAvatar imageSrc={user.profileImage} alt={displayName} size="md" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+                <p className="text-xs text-gray-500 truncate">{displaySchool}</p>
+                <span className="inline-block mt-1 text-[10px] font-bold text-forest-green bg-[#E8F5E9] px-2 py-0.5 rounded-full uppercase">
+                  {t('gradeLabel', { grade: user.grade || '--', location: tAuth(user.locationType) || user.locationType || 'student' })}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="py-1">

@@ -14,7 +14,7 @@ class MitigationPlanController {
   getActivePlan = asyncHandler(async (req, res) => {
     const userId = req.user.userId;
 
-    const planData = await mitigationPlanService.getOrGeneratePlan(userId);
+    const planData = await mitigationPlanService.getOrGeneratePlan(userId, req.locale);
 
     res.status(200).json({
       success: true,
@@ -29,7 +29,7 @@ class MitigationPlanController {
   generatePlan = asyncHandler(async (req, res) => {
     const userId = req.user.userId;
 
-    const planData = await mitigationPlanService.forceGeneratePlan(userId);
+    const planData = await mitigationPlanService.forceGeneratePlan(userId, req.locale);
 
     res.status(201).json({
       success: true,

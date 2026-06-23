@@ -10,7 +10,15 @@ import {
   Flame,
   TrendingDown,
   Users,
-  Wind
+  Wind,
+  Bus,
+  Salad,
+  Trash2,
+  Zap,
+  Bike,
+  Leaf,
+  PackageX,
+  UtensilsCrossed
 } from 'lucide-react';
 import {
   BarChart,
@@ -72,143 +80,6 @@ const cardStyle = {
   boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)'
 };
 
-function Pagination({
-  page,
-  totalPages,
-  total,
-  pageSize,
-  label,
-  onChange
-}) {
-  if (totalPages <= 1) return null;
-
-  const start = (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
-
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
-    .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-    .reduce((acc, p, idx, arr) => {
-      if (idx > 0 && p - arr[idx - 1] > 1) {
-        acc.push('...');
-      }
-      acc.push(p);
-      return acc;
-    }, []);
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 14,
-        paddingTop: 14,
-        borderTop: '1px solid #f0f0f0'
-      }}
-    >
-      <span
-        style={{
-          fontSize: 12,
-          color: '#aaa',
-          fontWeight: 400
-        }}
-      >
-        {start}–{end} of {total} {label}
-      </span>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 3
-        }}
-      >
-        <button
-          onClick={() => onChange(Math.max(1, page - 1))}
-          disabled={page === 1}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 6,
-            border: '1px solid #e8e8e8',
-            background: '#fff',
-            color: page === 1 ? '#ddd' : '#555',
-            fontSize: 14,
-            cursor: page === 1 ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 500
-          }}
-        >
-          ‹
-        </button>
-
-        {pages.map((p, i) =>
-          p === '...' ? (
-            <span
-              key={`ellipsis-${i}`}
-              style={{
-                width: 30,
-                height: 30,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                color: '#aaa'
-              }}
-            >
-              •••
-            </span>
-          ) : (
-            <button
-              key={p}
-              onClick={() => onChange(p)}
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 6,
-                border: page === p ? 'none' : '1px solid #e8e8e8',
-                background: page === p ? '#1a7a4a' : '#fff',
-                color: page === p ? '#fff' : '#555',
-                fontSize: 12,
-                fontWeight: page === p ? 700 : 400,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.15s'
-              }}
-            >
-              {p}
-            </button>
-          )
-        )}
-
-        <button
-          onClick={() => onChange(Math.min(totalPages, page + 1))}
-          disabled={page === totalPages}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 6,
-            border: '1px solid #e8e8e8',
-            background: '#fff',
-            color: page === totalPages ? '#ddd' : '#555',
-            fontSize: 14,
-            cursor: page === totalPages ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 500
-          }}
-        >
-          ›
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -218,13 +89,7 @@ export default function AdminDashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [timeframe, setTimeframe] = useState('30');
   const [activeChart, setActiveChart] = useState('grades'); // 'grades' | 'sources' | 'eco'
-  const [classPage, setClassPage] = useState(1);
-  const [streakPage, setStreakPage] = useState(1);
-  const [activityPage, setActivityPage] = useState(1);
   const isFirstLoad = useRef(true);
-  const CLASS_PAGE_SIZE = 5;
-  const STREAK_PAGE_SIZE = 5;
-  const ACTIVITY_PAGE_SIZE = 4;
   const timeframeLabel = {
     7: 'Last 7 days',
     30: 'Last 30 days',
@@ -331,25 +196,25 @@ export default function AdminDashboardPage() {
       action: 'Walked or Cycled',
       pct: Number(data.ecoActions?.walkedOrCycledPct || 0),
       color: '#1a7a4a',
-      icon: '🚶'
+      icon: <Bike size={15} color="#1a7a4a" />
     },
     {
       action: 'Veg Lunch',
       pct: Number(data.ecoActions?.vegLunchPct || 0),
       color: '#4ecf96',
-      icon: '🥗'
+      icon: <Salad size={15} color="#4ecf96" />
     },
     {
       action: 'No Plastic',
       pct: Number(data.ecoActions?.noPlasticPct || 0),
       color: '#3b82f6',
-      icon: '♻'
+      icon: <PackageX size={15} color="#3b82f6" />
     },
     {
       action: 'No Food Waste',
       pct: Number(data.ecoActions?.noFoodWastePct || 0),
       color: '#f59e0b',
-      icon: '🍱'
+      icon: <UtensilsCrossed size={15} color="#f59e0b" />
     }
   ];
 
@@ -375,27 +240,21 @@ export default function AdminDashboardPage() {
   ];
   const activityFeed = liveActivity || [];
   const streakRows = studentStreaks || [];
-  const paginatedClasses = (schoolPerformance || []).slice(
-    (classPage - 1) * CLASS_PAGE_SIZE,
-    classPage * CLASS_PAGE_SIZE
+  const gradeDistribution = data.gradeDistribution || [];
+  const gradeEmissions = gradeDistribution.map((entry) => ({
+    ...entry,
+    avgEmission: Number(entry.avgEmission || 0)
+  }));
+  const sortedGradeEmissions = [...gradeEmissions].sort(
+    (a, b) => a.avgEmission - b.avgEmission
   );
-  const classTotalPages = Math.ceil(
-    (schoolPerformance?.length || 0) / CLASS_PAGE_SIZE
-  );
-  const paginatedStreaks = streakRows.slice(
-    (streakPage - 1) * STREAK_PAGE_SIZE,
-    streakPage * STREAK_PAGE_SIZE
-  );
-  const streakTotalPages = Math.ceil(
-    (streakRows.length || 0) / STREAK_PAGE_SIZE
-  );
-  const paginatedActivity = activityFeed.slice(
-    (activityPage - 1) * ACTIVITY_PAGE_SIZE,
-    activityPage * ACTIVITY_PAGE_SIZE
-  );
-  const activityTotalPages = Math.ceil(
-    (activityFeed.length || 0) / ACTIVITY_PAGE_SIZE
-  );
+  const lowestGrade = sortedGradeEmissions[0];
+  const highestGrade = sortedGradeEmissions[sortedGradeEmissions.length - 1];
+  const gradeAverage =
+    gradeEmissions.length > 0
+      ? gradeEmissions.reduce((sum, entry) => sum + entry.avgEmission, 0) /
+        gradeEmissions.length
+      : 0;
 
   return (
     <main
@@ -603,7 +462,7 @@ export default function AdminDashboardPage() {
             }}
           >
             {activeChart === 'grades' && (
-              (data.gradeDistribution || []).length === 0 ? (
+              gradeEmissions.length === 0 ? (
                 <div
                   style={{
                     display: 'flex',
@@ -617,169 +476,156 @@ export default function AdminDashboardPage() {
                   No emission data yet. Students need to submit logs.
                 </div>
               ) : (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'stretch',
-                  gap: 24
-                }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{
-                      fontSize: 11,
-                      color: '#888',
-                      marginBottom: 10
-                    }}>
-                      Average CO₂ per grade. Lower is better.
-                    </p>
-                    <ResponsiveContainer width="100%" height={270}>
-                      <BarChart
-                        data={data.gradeDistribution}
-                        margin={{ top: 10, right: 12, left: 0, bottom: 4 }}
-                        barCategoryGap="10%"
-                        barSize={34}
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="#f0f0f0"
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="grade"
-                          tickFormatter={v => `Gr.${v}`}
-                          tick={{ fontSize: 11, fill: '#999' }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tickFormatter={v => `${v} kg`}
-                          domain={[0, 'auto']}
-                          tickCount={5}
-                          tick={{ fontSize: 11, fill: '#999' }}
-                          axisLine={false}
-                          tickLine={false}
-                          width={48}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: 8,
-                            border: '1px solid #eef0ee',
-                            fontSize: 12,
-                            padding: '6px 10px',
-                            boxShadow: 'none'
-                          }}
-                          formatter={v => [`${v} kg CO₂`, 'Avg Emission']}
-                          labelFormatter={l => `Grade ${l}`}
-                          cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                        />
-                        <Bar
-                          dataKey="avgEmission"
-                          radius={[6, 6, 0, 0]}
-                          maxBarSize={34}
-                          isAnimationActive={true}
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,5.5fr)_minmax(350px,4.5fr)]">
+                  <div className="rounded-xl border border-[#e8eee9] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-[14px] font-extrabold text-[#111827]">
+                          Emissions by Grade
+                        </h4>
+                        <p className="mt-1 text-[11px] text-[#6b7280]">
+                          Average CO2 per student log. Lower is better.
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-[#eef8f1] px-2.5 py-1 text-[11px] font-bold text-[#1a7a4a]">
+                        {timeframeLabel}
+                      </span>
+                    </div>
+                    <div className="flex min-h-[305px] items-center">
+                      <ResponsiveContainer width="100%" height={305}>
+                        <BarChart
+                          data={gradeEmissions}
+                          margin={{ top: 30, right: 12, left: -2, bottom: 4 }}
+                          barGap={4}
+                          barCategoryGap="1%"
+                          barSize={70}
                         >
-                          {data.gradeDistribution.map((entry, i) => (
-                            <Cell
-                              key={i}
-                              fill={
-                                entry.avgEmission <= 2   ? '#1a7a4a' :
-                                entry.avgEmission <= 3.5 ? '#f59e0b' :
-                                '#c0392b'
-                              }
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#edf2ee"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="grade"
+                            tickFormatter={(v) => `Gr.${v}`}
+                            tick={{ fontSize: 12, fontWeight: 700, fill: '#4b5563' }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tickFormatter={(v) => `${v} kg`}
+                            domain={[0, 'auto']}
+                            tickCount={5}
+                            tick={{ fontSize: 11, fill: '#6b7280' }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={44}
+                          />
+                          <Tooltip
+                            cursor={{ fill: 'rgba(26, 122, 74, 0.06)' }}
+                            contentStyle={{
+                              borderRadius: 10,
+                              border: '1px solid #dfe8e1',
+                              fontSize: 12,
+                              padding: '8px 10px',
+                              boxShadow: '0 10px 24px rgba(15, 23, 42, 0.08)'
+                            }}
+                            formatter={(v) => [`${formatNumber(v)} kg CO2`, 'Average']}
+                            labelFormatter={(l) => `Grade ${l}`}
+                          />
+                          <Bar
+                            dataKey="avgEmission"
+                            radius={[10, 10, 0, 0]}
+                            maxBarSize={55}
+                            isAnimationActive={true}
+                            animationDuration={800}
+                            animationEasing="ease-out"
+                          >
+                            <LabelList
+                              dataKey="avgEmission"
+                              position="top"
+                              formatter={(value) => `${formatNumber(value)}kg`}
+                              style={{
+                                fill: '#374151',
+                                fontSize: 11,
+                                fontWeight: 800
+                              }}
                             />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                            {gradeEmissions.map((entry, i) => (
+                              <Cell
+                                key={`${entry.grade}-${i}`}
+                                fill={
+                                  entry.avgEmission <= 2
+                                    ? '#0f8a50'
+                                    : entry.avgEmission <= 3.5
+                                      ? '#f59e0b'
+                                      : '#d92d20'
+                                }
+                                className="[transform-box:fill-box] [transform-origin:center_bottom] transition-all duration-200 hover:scale-y-[1.04] hover:opacity-95 hover:drop-shadow-[0_10px_12px_rgba(15,138,80,0.22)]"
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                  <div style={{
-                    width: 250,
-                    flexShrink: 0,
-                    alignSelf: 'stretch',
-                    background: '#fbfcfb',
-                    border: '1px solid #eef2ee',
-                    borderRadius: 12,
-                    padding: '16px 18px'
-                  }}>
-                    <p style={{
-                      fontSize: 11,
-                      color: '#888',
-                      margin: '0 0 6px',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.4px'
-                    }}>
-                      Performance key
-                    </p>
-                    <h4 style={{
-                      fontSize: 14,
-                      fontWeight: 800,
-                      color: '#111',
-                      margin: '0 0 14px'
-                    }}>
-                      Emissions by Grade
-                    </h4>
+
+                  <div className="rounded-xl border border-[#e8eee9] bg-[#fbfcfb] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+                    <div className="mb-4">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.04em] text-[#6b7280]">
+                        Performance Summary
+                      </p>
+                      <h4 className="mt-1 text-[14px] font-extrabold text-[#111827]">
+                        Grade Insights
+                      </h4>
+                    </div>
+
                     {[
                       {
-                        color: '#1a7a4a',
-                        label: 'Good',
-                        sub: 'Under 2 kg CO₂'
+                        label: 'Lowest Emission',
+                        value: lowestGrade ? `Grade ${lowestGrade.grade}` : '-',
+                        detail: `${formatNumber(lowestGrade?.avgEmission)} kg CO2`,
+                        color: '#1a7a4a'
                       },
                       {
-                        color: '#f59e0b',
-                        label: 'Moderate',
-                        sub: '2 – 3.5 kg CO₂'
+                        label: 'Highest Emission',
+                        value: highestGrade ? `Grade ${highestGrade.grade}` : '-',
+                        detail: `${formatNumber(highestGrade?.avgEmission)} kg CO2`,
+                        color: '#c0392b'
                       },
                       {
-                        color: '#c0392b',
-                        label: 'Needs attention',
-                        sub: 'Above 3.5 kg CO₂'
+                        label: 'Avg CO2',
+                        value: `${formatNumber(gradeAverage)} kg`,
+                        detail: 'Across visible grades',
+                        color: '#0A3D25'
                       }
-                    ].map(l => (
-                      <div key={l.label} style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 10,
-                        marginBottom: 14
-                      }}>
-                        <div style={{
-                          width: 9,
-                          height: 9,
-                          borderRadius: '50%',
-                          background: l.color,
-                          flexShrink: 0,
-                          marginTop: 4
-                        }}/>
-                        <div>
-                          <div style={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: '#111'
-                          }}>
-                            {l.label}
-                          </div>
-                          <div style={{
-                            fontSize: 11,
-                            color: '#888'
-                          }}>
-                            {l.sub}
-                          </div>
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className="mb-3 rounded-lg border border-[#eef2ee] bg-white px-3 py-3 last:mb-0"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[12px] font-semibold text-[#6b7280]">
+                            {item.label}
+                          </span>
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ background: item.color }}
+                          />
+                        </div>
+                        <div className="mt-1 text-[16px] font-extrabold text-[#111827]">
+                          {item.value}
+                        </div>
+                        <div className="mt-0.5 text-[11px] text-[#6b7280]">
+                          {item.detail}
                         </div>
                       </div>
                     ))}
-                    <div style={{
-                      marginTop: 18,
-                      padding: '10px 12px',
-                      background: '#f4f8f5',
-                      borderRadius: 8,
-                      borderLeft: '3px solid #1a7a4a'
-                    }}>
-                      <p style={{
-                        fontSize: 11,
-                        color: '#555',
-                        lineHeight: 1.5,
-                        margin: 0
-                      }}>
-                        Grade 12 has the lowest avg emission.
-                        Grade 8 needs the most improvement.
+
+                    <div className="mt-4 rounded-lg border-l-4 border-[#1a7a4a] bg-[#eef8f1] px-3 py-2">
+                      <p className="text-[11px] leading-5 text-[#355342]">
+                        Green bars are under 2 kg CO2, amber bars are 2-3.5 kg,
+                        and red bars need attention.
                       </p>
                     </div>
                   </div>
@@ -821,7 +667,7 @@ export default function AdminDashboardPage() {
                           s => s.category === 'Transport'
                         )?.value || 0,
                         color: '#f59e0b',
-                        icon: '🚌'
+                        icon: <Bus size={14} color="#f59e0b" />
                       },
                       {
                         label: 'Lunch',
@@ -829,7 +675,7 @@ export default function AdminDashboardPage() {
                           s => s.category === 'Lunch'
                         )?.value || 0,
                         color: '#1a7a4a',
-                        icon: '🥗'
+                        icon: <Salad size={14} color="#1a7a4a" />
                       },
                       {
                         label: 'Waste',
@@ -837,7 +683,7 @@ export default function AdminDashboardPage() {
                           s => s.category === 'Waste'
                         )?.value || 0,
                         color: '#c0392b',
-                        icon: '🗑'
+                        icon: <Trash2 size={14} color="#c0392b" />
                       },
                       {
                         label: 'Energy',
@@ -845,7 +691,7 @@ export default function AdminDashboardPage() {
                           s => s.category === 'Energy'
                         )?.value || 0,
                         color: '#3b82f6',
-                        icon: '⚡'
+                        icon: <Zap size={14} color="#3b82f6" />
                       }
                     ].map(s => {
                       const total = data.emissionSources
@@ -864,14 +710,25 @@ export default function AdminDashboardPage() {
                             marginBottom: 5
                           }}>
                             <span style={{
-                              fontSize: 12,
-                              fontWeight: 600,
-                              color: '#111',
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 6
+                              gap: 6,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: '#111'
                             }}>
-                              {s.icon} {s.label}
+                              <span style={{
+                                width: 24, height: 24,
+                                borderRadius: 6,
+                                background: s.color + '18',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}>
+                                {s.icon}
+                              </span>
+                              {s.label}
                             </span>
                             <span style={{
                               fontSize: 12,
@@ -908,7 +765,7 @@ export default function AdminDashboardPage() {
                     })}
                   </div>
                   <div style={{
-                    width: 180,
+                    width: 280,
                     flexShrink: 0
                   }}>
                     <div style={{
@@ -962,12 +819,16 @@ export default function AdminDashboardPage() {
                         Biggest source
                       </p>
                       <p style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
                         fontSize: 14,
                         fontWeight: 700,
                         color: '#92600a',
                         margin: 0
                       }}>
-                        🚌 Transport
+                        <Bus size={16} color="#92600a" />
+                        Transport
                       </p>
                       <p style={{
                         fontSize: 11,
@@ -1001,14 +862,26 @@ export default function AdminDashboardPage() {
                         marginBottom: 6
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: '#111'
-                        }}
-                      >
-                        {item.icon} {item.action}
+                      <span style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: '#111',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 7
+                      }}>
+                        <span style={{
+                          width: 26, height: 26,
+                          borderRadius: 6,
+                          background: item.color + '18',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          {item.icon}
+                        </span>
+                        {item.action}
                       </span>
                       <span
                         style={{
@@ -1079,7 +952,7 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedClasses.map((school) => (
+                    {(schoolPerformance || []).map((school) => (
                       <tr key={`${school.className}-${school.rank}`} style={{ borderBottom: '1px solid #f5f7f6' }}>
                         <td style={{ padding: '12px 8px', fontWeight: 700 }}>{school.rank}</td>
                         <td style={{ padding: '12px 8px', fontWeight: 600 }}>{school.className || school.schoolName}</td>
@@ -1090,16 +963,6 @@ export default function AdminDashboardPage() {
                     ))}
                   </tbody>
                 </table>
-              </div>
-              <div style={{ marginTop: 'auto', paddingTop: 12 }}>
-                <Pagination
-                  page={classPage}
-                  totalPages={classTotalPages}
-                  total={schoolPerformance?.length || 0}
-                  pageSize={CLASS_PAGE_SIZE}
-                  label="grades"
-                  onChange={setClassPage}
-                />
               </div>
             </div>
           </section>
@@ -1125,36 +988,32 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <div className="flex max-h-[340px] flex-1 flex-col gap-2.5 overflow-y-auto pr-1">
-                      {paginatedActivity.map((entry, index) => {
+                      {activityFeed.map((entry, index) => {
                         const style = feedStyle[entry.type] || feedStyle.MIRROR;
                         const FeedIcon = style.icon;
                         return (
                           <div key={`${entry.type}-${index}`} className="flex items-center gap-3 border-b border-[#f2f4f1] py-3 last:border-b-0">
-                            <div className="inline-flex shrink-0 items-center justify-center rounded-full p-2" style={{ background: style.bg }}>
-                              <FeedIcon size={14} color={style.color} />
-                            </div>
+                            {entry.type !== 'MIRROR' && (
+                              <div className="inline-flex shrink-0 items-center justify-center rounded-full p-2" style={{ background: style.bg }}>
+                                <FeedIcon size={14} color={style.color} />
+                              </div>
+                            )}
                             <div className="min-w-0 flex-1">
                               <div className="font-semibold text-[#111827]">{entry.description}</div>
                               <div className="text-xs text-[#6b7280]">
                                 {timeAgo(entry.createdAt)} · {entry.school}
                               </div>
                             </div>
-                            <span className="rounded-full px-2.5 py-1 text-[12px] font-bold" style={{ background: style.bg, color: style.color }}>
-                              {entry.type}
-                            </span>
+                            {entry.type !== 'MIRROR' && (
+                              <span className="rounded-full px-2.5 py-1 text-[12px] font-bold" style={{ background: style.bg, color: style.color }}>
+                                {entry.type}
+                              </span>
+                            )}
                           </div>
                         );
                       })}
                     </div>
 
-                    <Pagination
-                      page={activityPage}
-                      totalPages={activityTotalPages}
-                      total={activityFeed.length}
-                      pageSize={ACTIVITY_PAGE_SIZE}
-                      label="activities"
-                      onChange={setActivityPage}
-                    />
                   </>
                 )}
               </div>
@@ -1172,7 +1031,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <div className="flex max-h-[340px] flex-1 flex-col gap-3 overflow-y-auto pr-1">
-                      {paginatedStreaks.map((student) => (
+                      {streakRows.map((student) => (
                         <div
                           key={`${student.name}-${student.grade}-${student.section || ''}`}
                           className="flex items-center gap-3 border-b border-[#f5f5f5] pb-3 last:border-b-0 last:pb-0"
@@ -1207,14 +1066,6 @@ export default function AdminDashboardPage() {
                       ))}
                     </div>
 
-                    <Pagination
-                      page={streakPage}
-                      totalPages={streakTotalPages}
-                      total={streakRows.length}
-                      pageSize={STREAK_PAGE_SIZE}
-                      label="students"
-                      onChange={setStreakPage}
-                    />
                   </>
                 )}
               </div>

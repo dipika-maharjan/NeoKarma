@@ -10,6 +10,7 @@ const userRepository = require('../repositories/user.repository');
 const externalAiProvider = require('./ai/externalAiProvider');
 const fallbackRuleProvider = require('./ai/fallbackRuleProvider');
 const { getDateNDaysAgo } = require('../utils/dateHelpers');
+const { translateFields } = require('../utils/translator');
 const AppError = require('../utils/AppError');
 
 // Seeded random helper for consistent dummy data generation
@@ -276,11 +277,45 @@ class MitigationPlanService {
   }
 
   /**
-   * Get or generate the plan (auto routing based on threshold)
+   * Translate plan recommendations
+   */
+  async _translatePlanData(planData, locale) {
+    if (locale === 'en' || !planData || !planData.plan) return planData;
+
+    try {
+      const result = { ...planData, plan: { ...planData.plan } };
+
+      if (planData.type === 'GENERAL_PLAN') {
+        for (const category of ['transport', 'energy', 'diet', 'waste']) {
+          if (result.plan[category]) {
+            result.plan[category] = await Promise.all(
+              result.plan[category].map(rec => translateFields(rec, ['text', 'description', 'title', 'action'], locale))
+            );
+          }
+        }
+      } else if (planData.type === 'MONTHLY_PLAN' && result.plan.recommendations) {
+        result.plan.recommendations = await Promise.all(
+          result.plan.recommendations.map(rec => translateFields(rec, ['text', 'description', 'title', 'action'], locale))
+        );
+      }
+
+      if (result.message) {
+        const translatedMsg = await translateFields({ message: result.message }, ['message'], locale);
+        result.message = translatedMsg.message;
+      }
+
+      return result;
+    } catch (err) {
+      console.error('Failed to translate plan:', err.message);
+      return planData;
+    }
+  }
+
   /**
+   * Get or generate the plan (auto routing based on threshold)
    * CRITICAL: Always includes dailyLogs for frontend progress tracking
    */
-  async getOrGeneratePlan(userId) {
+  async getOrGeneratePlan(userId, locale = 'en') {
     const logsCount = await dailyLogRepository.getLogsCount(userId);
     
     // CRITICAL FIX: Always fetch logs to include in response for tracking
@@ -292,7 +327,7 @@ class MitigationPlanService {
       const planData = this.generateGeneralPlan(logsCount);
       // Add dailyLogs to response
       planData.dailyLogs = dailyLogs;
-      return planData;
+      return await this._translatePlanData(planData, locale);
     }
     
     // 30+ logs: generate personalized AI-powered plan from user's actual data
@@ -313,33 +348,33 @@ class MitigationPlanService {
         const planData = this.generateGeneralPlan(logsCount);
         // Add dailyLogs to response even on error
         planData.dailyLogs = dailyLogs;
-        return planData;
+        return await this._translatePlanData(planData, locale);
       }
     }
 
     const monthlyPlan = await this.structureMonthlyPlan(userId, plan, logsCount);
     // Add dailyLogs to monthly plan response
     monthlyPlan.dailyLogs = dailyLogs;
-    return monthlyPlan;
+    return await this._translatePlanData(monthlyPlan, locale);
   }
 
   /**
    * Force generate the plan (manually trigger generation)
    */
-  async forceGeneratePlan(userId) {
+  async forceGeneratePlan(userId, locale = 'en') {
     const logsCount = await dailyLogRepository.getLogsCount(userId);
     const dailyLogs = (await dailyLogRepository.getRecentLogs(userId, 30)) || [];
 
     if (logsCount < 30) {
       const planData = this.generateGeneralPlan(logsCount);
       planData.dailyLogs = dailyLogs;
-      return planData;
+      return await this._translatePlanData(planData, locale);
     }
 
     const plan = await this.generatePlanForUser(userId);
     const monthlyPlan = await this.structureMonthlyPlan(userId, plan, logsCount);
     monthlyPlan.dailyLogs = dailyLogs;
-    return monthlyPlan;
+    return await this._translatePlanData(monthlyPlan, locale);
   }
 
   /**

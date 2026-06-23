@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { resetPasswordAction } from '@/lib/actions/authActions';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 const ResetPasswordForm = () => {
@@ -19,6 +19,15 @@ const ResetPasswordForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const isLengthValid = password.length >= 8;
+  const isUppercaseValid = /[A-Z]/.test(password);
+  const isLowercaseValid = /[a-z]/.test(password);
+  const isNumberValid = /[0-9]/.test(password);
+  const isSpecialValid = /[!@#$%^&*(),.?":{}|<>_+-]/.test(password);
+  const isPasswordValid = isLengthValid && isUppercaseValid && isLowercaseValid && isNumberValid && isSpecialValid;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +35,12 @@ const ResetPasswordForm = () => {
 
     if (!token) {
       setError(t('invalidToken'));
+      return;
+    }
+
+    // Password strength check
+    if (!isPasswordValid) {
+      setError(t('passwordWeak'));
       return;
     }
 
@@ -132,30 +147,50 @@ const ResetPasswordForm = () => {
                 <label className="mb-1.5 block text-[12px] font-extrabold text-[#303542]">
                   {t('newPassword')}
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('passwordPlaceholder')}
-                  required
-                  minLength={6}
-                  className="h-10 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t('passwordPlaceholder')}
+                    required
+                    className="h-10 w-full rounded-md border border-[#cfd7df] bg-white pl-3 pr-10 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
+
+
 
               <div>
                 <label className="mb-1.5 block text-[12px] font-extrabold text-[#303542]">
                   {t('confirmPassword')}
                 </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder={t('passwordPlaceholder')}
-                  required
-                  minLength={6}
-                  className="h-10 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder={t('passwordPlaceholder')}
+                    required
+                    className="h-10 w-full rounded-md border border-[#cfd7df] bg-white pl-3 pr-10 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0A3D25] focus:ring-2 focus:ring-[#0A3D25]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               <button

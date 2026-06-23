@@ -258,12 +258,12 @@ const DashboardPage = () => {
     <div className="min-h-[calc(100vh-76px)] bg-[#FAFAFA] px-4 py-8 md:px-8 lg:px-12 xl:px-16">
       <div className="mx-auto w-full max-w-[1500px]">
         <div className="mb-12 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-[32px] font-extrabold tracking-tight text-[#17202A] md:text-[34px]">
+          <h1 className="text-[26px] font-extrabold tracking-tight text-[#17202A] md:text-[30px] lg:text-[34px]">
             {t('greeting', { name: studentName })}
           </h1>
           <Link
             href="/calculator"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-8 text-[15px] font-bold text-white shadow-[0_3px_8px_rgba(10,61,37,0.2)] transition-colors hover:bg-[#072B1A]"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-6 md:px-8 text-[15px] font-bold text-white shadow-[0_3px_8px_rgba(10,61,37,0.2)] transition-colors hover:bg-[#072B1A]"
           >
             <Plus size={20} />
             {t('logToday')}
