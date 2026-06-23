@@ -12,10 +12,7 @@ import {
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -302,18 +299,11 @@ export default function AdminReportsPage() {
   if (!data) return null;
 
   const breakdown = data.categoryBreakdown || {};
-  const categoryItems = [
-    { label: 'Transportation', value: breakdown.transport || 0 },
-    { label: 'Food', value: breakdown.food || 0 },
-    { label: 'Waste', value: breakdown.waste || 0 },
-    { label: 'Energy', value: breakdown.energy || 0 }
-  ];
-  const maxCategoryValue = Math.max(...categoryItems.map((item) => item.value || 0), 1);
 
   return (
     <main className="min-h-screen bg-[#f5f7f6] p-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
@@ -390,7 +380,7 @@ export default function AdminReportsPage() {
               icon: <TrendingUp size={18} className="text-[#2563eb]" />
             }
           ].map((item) => (
-            <div key={item.label} className="rounded-2xl bg-white p-5 shadow-sm">
+            <div key={item.label} className="overflow-hidden rounded-2xl bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-[#6b7280]">{item.label}</p>
                 <div className="rounded-xl bg-[#f5f7f6] p-2">{item.icon}</div>
@@ -400,7 +390,7 @@ export default function AdminReportsPage() {
           ))}
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
@@ -437,8 +427,8 @@ export default function AdminReportsPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <section>
+          <div className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
@@ -447,10 +437,10 @@ export default function AdminReportsPage() {
                 <h3 className="mt-1 text-lg font-semibold text-[#111827]">Recent logs</h3>
               </div>
             </div>
-            <div className="overflow-hidden rounded-2xl border border-[#eef0ee]">
-              <div className="overflow-x-auto">
+            <div className="max-h-[430px] overflow-auto rounded-2xl border border-[#eef0ee]">
+              <div className="min-w-[680px]">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-[#f9faf9] text-[#6b7280]">
+                  <thead className="sticky top-0 z-10 bg-[#f9faf9] text-[#6b7280]">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Student</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Grade</th>
@@ -481,59 +471,6 @@ export default function AdminReportsPage() {
             />
           </div>
 
-          <div className="space-y-4">
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
-                Category snapshot
-              </p>
-              <div className="mt-4 space-y-3">
-                {categoryItems.map((item) => (
-                  <div key={item.label}>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-[#6b7280]">{item.label}</span>
-                      <span className="font-semibold text-[#111827]">{formatNumber(item.value)}kg</span>
-                    </div>
-                    <div className="mt-1 h-2 rounded-full bg-[#eef0ee]">
-                      <div
-                        className="h-2 rounded-full bg-[#1a7a4a]"
-                        style={{ width: `${Math.min(100, ((item.value || 0) / maxCategoryValue) * 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
-                Transport mode breakdown
-              </p>
-              <div className="mt-4 h-56 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.transportModes || []} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
-                    <CartesianGrid stroke="#eef0ee" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 12, fill: '#6b7280' }} />
-                    <YAxis
-                      type="category"
-                      dataKey="mode"
-                      width={80}
-                      tick={{ fontSize: 12, fill: '#6b7280' }}
-                    />
-                    <Tooltip
-                      formatter={(value) => [value, 'Count']}
-                      contentStyle={{ borderRadius: 12, border: '1px solid #eef0ee' }}
-                    />
-                    <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                      {(data.transportModes || []).map((entry, index) => (
-                        <Cell key={`${entry.mode}-${index}`} fill={entry.isEco ? '#1a7a4a' : '#f59e0b'} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-          </div>
         </section>
       </div>
     </main>
