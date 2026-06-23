@@ -232,6 +232,21 @@ export default function AdminDashboardPage() {
   ];
   const activityFeed = liveActivity || [];
   const streakRows = studentStreaks || [];
+  const gradeDistribution = data.gradeDistribution || [];
+  const gradeEmissions = gradeDistribution.map((entry) => ({
+    ...entry,
+    avgEmission: Number(entry.avgEmission || 0)
+  }));
+  const sortedGradeEmissions = [...gradeEmissions].sort(
+    (a, b) => a.avgEmission - b.avgEmission
+  );
+  const lowestGrade = sortedGradeEmissions[0];
+  const highestGrade = sortedGradeEmissions[sortedGradeEmissions.length - 1];
+  const gradeAverage =
+    gradeEmissions.length > 0
+      ? gradeEmissions.reduce((sum, entry) => sum + entry.avgEmission, 0) /
+        gradeEmissions.length
+      : 0;
 
   return (
     <main
@@ -439,7 +454,7 @@ export default function AdminDashboardPage() {
             }}
           >
             {activeChart === 'grades' && (
-              (data.gradeDistribution || []).length === 0 ? (
+              gradeEmissions.length === 0 ? (
                 <div
                   style={{
                     display: 'flex',
@@ -453,169 +468,156 @@ export default function AdminDashboardPage() {
                   No emission data yet. Students need to submit logs.
                 </div>
               ) : (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'stretch',
-                  gap: 24
-                }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{
-                      fontSize: 11,
-                      color: '#888',
-                      marginBottom: 10
-                    }}>
-                      Average CO₂ per grade. Lower is better.
-                    </p>
-                    <ResponsiveContainer width="100%" height={270}>
-                      <BarChart
-                        data={data.gradeDistribution}
-                        margin={{ top: 10, right: 12, left: 0, bottom: 4 }}
-                        barCategoryGap="10%"
-                        barSize={34}
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="#f0f0f0"
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="grade"
-                          tickFormatter={v => `Gr.${v}`}
-                          tick={{ fontSize: 11, fill: '#999' }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tickFormatter={v => `${v} kg`}
-                          domain={[0, 'auto']}
-                          tickCount={5}
-                          tick={{ fontSize: 11, fill: '#999' }}
-                          axisLine={false}
-                          tickLine={false}
-                          width={48}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: 8,
-                            border: '1px solid #eef0ee',
-                            fontSize: 12,
-                            padding: '6px 10px',
-                            boxShadow: 'none'
-                          }}
-                          formatter={v => [`${v} kg CO₂`, 'Avg Emission']}
-                          labelFormatter={l => `Grade ${l}`}
-                          cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                        />
-                        <Bar
-                          dataKey="avgEmission"
-                          radius={[6, 6, 0, 0]}
-                          maxBarSize={34}
-                          isAnimationActive={true}
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,8fr)_minmax(230px,2fr)]">
+                  <div className="rounded-xl border border-[#e8eee9] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-[14px] font-extrabold text-[#111827]">
+                          Emissions by Grade
+                        </h4>
+                        <p className="mt-1 text-[11px] text-[#6b7280]">
+                          Average CO2 per student log. Lower is better.
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-[#eef8f1] px-2.5 py-1 text-[11px] font-bold text-[#1a7a4a]">
+                        {timeframeLabel}
+                      </span>
+                    </div>
+                    <div className="flex min-h-[305px] items-center">
+                      <ResponsiveContainer width="100%" height={305}>
+                        <BarChart
+                          data={gradeEmissions}
+                          margin={{ top: 30, right: 12, left: -2, bottom: 4 }}
+                          barGap={4}
+                          barCategoryGap="10%"
+                          barSize={55}
                         >
-                          {data.gradeDistribution.map((entry, i) => (
-                            <Cell
-                              key={i}
-                              fill={
-                                entry.avgEmission <= 2   ? '#1a7a4a' :
-                                entry.avgEmission <= 3.5 ? '#f59e0b' :
-                                '#c0392b'
-                              }
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#edf2ee"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="grade"
+                            tickFormatter={(v) => `Gr.${v}`}
+                            tick={{ fontSize: 12, fontWeight: 700, fill: '#4b5563' }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tickFormatter={(v) => `${v} kg`}
+                            domain={[0, 'auto']}
+                            tickCount={5}
+                            tick={{ fontSize: 11, fill: '#6b7280' }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={44}
+                          />
+                          <Tooltip
+                            cursor={{ fill: 'rgba(26, 122, 74, 0.06)' }}
+                            contentStyle={{
+                              borderRadius: 10,
+                              border: '1px solid #dfe8e1',
+                              fontSize: 12,
+                              padding: '8px 10px',
+                              boxShadow: '0 10px 24px rgba(15, 23, 42, 0.08)'
+                            }}
+                            formatter={(v) => [`${formatNumber(v)} kg CO2`, 'Average']}
+                            labelFormatter={(l) => `Grade ${l}`}
+                          />
+                          <Bar
+                            dataKey="avgEmission"
+                            radius={[10, 10, 0, 0]}
+                            maxBarSize={55}
+                            isAnimationActive={true}
+                            animationDuration={800}
+                            animationEasing="ease-out"
+                          >
+                            <LabelList
+                              dataKey="avgEmission"
+                              position="top"
+                              formatter={(value) => `${formatNumber(value)}kg`}
+                              style={{
+                                fill: '#374151',
+                                fontSize: 11,
+                                fontWeight: 800
+                              }}
                             />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                            {gradeEmissions.map((entry, i) => (
+                              <Cell
+                                key={`${entry.grade}-${i}`}
+                                fill={
+                                  entry.avgEmission <= 2
+                                    ? '#0f8a50'
+                                    : entry.avgEmission <= 3.5
+                                      ? '#f59e0b'
+                                      : '#d92d20'
+                                }
+                                className="[transform-box:fill-box] [transform-origin:center_bottom] transition-all duration-200 hover:scale-y-[1.04] hover:opacity-95 hover:drop-shadow-[0_10px_12px_rgba(15,138,80,0.22)]"
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                  <div style={{
-                    width: 250,
-                    flexShrink: 0,
-                    alignSelf: 'stretch',
-                    background: '#fbfcfb',
-                    border: '1px solid #eef2ee',
-                    borderRadius: 12,
-                    padding: '16px 18px'
-                  }}>
-                    <p style={{
-                      fontSize: 11,
-                      color: '#888',
-                      margin: '0 0 6px',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.4px'
-                    }}>
-                      Performance key
-                    </p>
-                    <h4 style={{
-                      fontSize: 14,
-                      fontWeight: 800,
-                      color: '#111',
-                      margin: '0 0 14px'
-                    }}>
-                      Emissions by Grade
-                    </h4>
+
+                  <div className="rounded-xl border border-[#e8eee9] bg-[#fbfcfb] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+                    <div className="mb-4">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.04em] text-[#6b7280]">
+                        Performance Summary
+                      </p>
+                      <h4 className="mt-1 text-[14px] font-extrabold text-[#111827]">
+                        Grade Insights
+                      </h4>
+                    </div>
+
                     {[
                       {
-                        color: '#1a7a4a',
-                        label: 'Good',
-                        sub: 'Under 2 kg CO₂'
+                        label: 'Lowest Emission',
+                        value: lowestGrade ? `Grade ${lowestGrade.grade}` : '-',
+                        detail: `${formatNumber(lowestGrade?.avgEmission)} kg CO2`,
+                        color: '#1a7a4a'
                       },
                       {
-                        color: '#f59e0b',
-                        label: 'Moderate',
-                        sub: '2 – 3.5 kg CO₂'
+                        label: 'Highest Emission',
+                        value: highestGrade ? `Grade ${highestGrade.grade}` : '-',
+                        detail: `${formatNumber(highestGrade?.avgEmission)} kg CO2`,
+                        color: '#c0392b'
                       },
                       {
-                        color: '#c0392b',
-                        label: 'Needs attention',
-                        sub: 'Above 3.5 kg CO₂'
+                        label: 'Avg CO2',
+                        value: `${formatNumber(gradeAverage)} kg`,
+                        detail: 'Across visible grades',
+                        color: '#0A3D25'
                       }
-                    ].map(l => (
-                      <div key={l.label} style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 10,
-                        marginBottom: 14
-                      }}>
-                        <div style={{
-                          width: 9,
-                          height: 9,
-                          borderRadius: '50%',
-                          background: l.color,
-                          flexShrink: 0,
-                          marginTop: 4
-                        }}/>
-                        <div>
-                          <div style={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: '#111'
-                          }}>
-                            {l.label}
-                          </div>
-                          <div style={{
-                            fontSize: 11,
-                            color: '#888'
-                          }}>
-                            {l.sub}
-                          </div>
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className="mb-3 rounded-lg border border-[#eef2ee] bg-white px-3 py-3 last:mb-0"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[12px] font-semibold text-[#6b7280]">
+                            {item.label}
+                          </span>
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ background: item.color }}
+                          />
+                        </div>
+                        <div className="mt-1 text-[16px] font-extrabold text-[#111827]">
+                          {item.value}
+                        </div>
+                        <div className="mt-0.5 text-[11px] text-[#6b7280]">
+                          {item.detail}
                         </div>
                       </div>
                     ))}
-                    <div style={{
-                      marginTop: 18,
-                      padding: '10px 12px',
-                      background: '#f4f8f5',
-                      borderRadius: 8,
-                      borderLeft: '3px solid #1a7a4a'
-                    }}>
-                      <p style={{
-                        fontSize: 11,
-                        color: '#555',
-                        lineHeight: 1.5,
-                        margin: 0
-                      }}>
-                        Grade 12 has the lowest avg emission.
-                        Grade 8 needs the most improvement.
+
+                    <div className="mt-4 rounded-lg border-l-4 border-[#1a7a4a] bg-[#eef8f1] px-3 py-2">
+                      <p className="text-[11px] leading-5 text-[#355342]">
+                        Green bars are under 2 kg CO2, amber bars are 2-3.5 kg,
+                        and red bars need attention.
                       </p>
                     </div>
                   </div>
