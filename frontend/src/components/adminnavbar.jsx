@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import ProfileDropdown from './ProfileDropdown';
 import { Menu, X } from 'lucide-react';
 
 const getCookie = (name) => {
@@ -77,7 +76,6 @@ const Navbar = () => {
               >
                 Logout
               </button>
-              <ProfileDropdown />
             </>
           ) : (
             <Link href="/login" className="text-sm font-semibold text-[#0A3D25] no-underline hover:text-[#43A047]">
