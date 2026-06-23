@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 import { Menu, X } from 'lucide-react';
+import ProfileAvatar from './ProfileAvatar';
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -20,7 +21,7 @@ const Navbar = () => {
   const isAdmin = role === 'school_admin' || role === 'admin';
   const t = useTranslations('Navbar');
   const [scrolled, setScrolled] = useState(false);
-  const [currentStreak, setCurrentStreak] = useState(user?.streak?.current || 0);
+  const [currentStreak, setCurrentStreak] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const formatNumber = useNumberFormatter();
 
@@ -31,10 +32,6 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    setCurrentStreak(user?.streak?.current || 0);
-  }, [user?.streak?.current]);
 
   useEffect(() => {
     if (!isAuthenticated) return undefined;
@@ -69,6 +66,7 @@ const Navbar = () => {
   };
 
   const activeTab = getActiveTab();
+  const displayedStreak = currentStreak || user?.streak?.current || 0;
 
   return (
     <nav
@@ -127,7 +125,7 @@ const Navbar = () => {
                 <div className="flex items-center gap-1.5 bg-white/70 text-[#0A3D25] px-3.5 py-1.5 rounded-full border border-[#CFE2D5] shadow-sm select-none">
                   <img src={streakIcon.src || streakIcon} alt="Streak" className="w-4 h-4 object-contain" />
                   <span className="text-xs font-semibold tracking-wide">
-                    {t('dayStreak', { count: formatNumber(currentStreak, {}) })}
+                    {t('dayStreak', { count: formatNumber(displayedStreak, {}) })}
                   </span>
                 </div>
 
@@ -163,45 +161,58 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Full Page */}
       {mobileOpen && (
-        <div className="space-y-3 border-t border-[#DCE9E0] bg-white px-4 py-4 animate-[fadeIn_0.2s_ease-in] md:hidden">
-          {[
-            { key: 'dashboard', label: t('dashboard'), path: '/dashboard' },
-            { key: 'calculator', label: t('calculator'), path: '/calculator' },
-            { key: 'mirror', label: t('mirror'), path: '/carbon-mirror' },
-            { key: 'plan', label: t('plan'), path: '/plan' },
-            { key: 'score', label: t('score'), path: '/score' }
-          ].map(({ key, label, path }) => (
-            <Link
-              key={key}
-              href={path}
-              onClick={() => setMobileOpen(false)}
-              className="block py-2 text-sm font-medium text-[#52665B] no-underline transition-colors hover:text-[#0A3D25]"
-            >
-              {label}
-            </Link>
-          ))}
+        <div className="fixed inset-0 top-[64px] z-40 bg-[#FAFAFA] md:hidden flex flex-col h-[calc(100vh-64px)] animate-[fadeIn_0.2s_ease-in]">
+          {/* Main Navigation Links */}
+          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3">
+            {[
+              { key: 'dashboard', label: t('dashboard'), path: '/dashboard' },
+              { key: 'calculator', label: t('calculator'), path: '/calculator' },
+              { key: 'mirror', label: t('mirror'), path: '/carbon-mirror' },
+              { key: 'plan', label: t('plan'), path: '/plan' },
+              { key: 'score', label: t('score'), path: '/score' }
+            ].map(({ key, label, path }) => (
+              <Link
+                key={key}
+                href={path}
+                onClick={() => setMobileOpen(false)}
+                className="block py-3 px-4 text-lg font-medium text-[#52665B] no-underline transition-colors hover:text-[#0A3D25] hover:bg-white rounded-lg"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
 
-          {/* Mobile Streak & Profile Section */}
-          <div className="border-t border-[#DCE9E0] pt-3 mt-3 space-y-3">
+          {/* Bottom Section - Profile, Streak, Language */}
+          <div className="border-t border-[#DCE9E0] bg-white px-4 py-6 space-y-4">
             {isAuthenticated && user ? (
               <>
-                {/* Profile Dropdown */}
-                <div className="pt-1">
-                  <ProfileDropdown />
-                </div>
+                {/* Profile Section */}
+                <Link
+                  href="/profile/account"
+                  onClick={() => setMobileOpen(false)}
+                  className="block w-full no-underline"
+                >
+                  <div className="flex items-center gap-3 bg-[#F4FBF5] border border-[#CFE2D5] rounded-lg p-4 hover:bg-[#E9F5EE] transition-colors">
+                    <ProfileAvatar imageSrc={user.profileImage} alt={user?.firstName || user?.name || 'Profile'} size="md" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[#0A3D25] truncate">{user?.firstName || 'Profile'}</p>
+                      <p className="text-xs text-[#52665B]">Tap to view account</p>
+                    </div>
+                  </div>
+                </Link>
 
                 {/* Streak Counter */}
-                <div className="flex items-center gap-3 bg-white border border-[#DCE9E0] rounded-lg p-3">
-                  <div className="bg-[#F0F7F2] p-2.5 rounded">
-                    <img src={streakIcon.src || streakIcon} alt="Streak" className="w-5 h-5 object-contain" />
+                <div className="flex items-center gap-3 bg-white border border-[#DCE9E0] rounded-lg p-4">
+                  <div className="bg-[#F0F7F2] p-3 rounded-lg">
+                    <img src={streakIcon.src || streakIcon} alt="Streak" className="w-6 h-6 object-contain" />
                   </div>
                   <div className="flex-1">
-                    <span className="text-xs text-[#5D7066]">Streak Activity</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold text-[#0A3D25]">{currentStreak} Days</span>
-                      <svg className="w-4 h-4 text-[#43A047]" fill="currentColor" viewBox="0 0 20 20">
+                    <span className="text-xs text-[#5D7066] font-medium">Streak Activity</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-[#0A3D25]">{displayedStreak} Days</span>
+                      <svg className="w-5 h-5 text-[#43A047]" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
@@ -209,8 +220,8 @@ const Navbar = () => {
                 </div>
 
                 {/* Language Toggle */}
-                <div className="flex items-center justify-between bg-white border border-[#DCE9E0] rounded-lg px-3 py-2.5">
-                  <span className="text-xs font-semibold text-[#5D7066]">Language</span>
+                <div className="flex items-center justify-between bg-white border border-[#DCE9E0] rounded-lg px-4 py-3">
+                  <span className="text-sm font-semibold text-[#0A3D25]">Language</span>
                   <LanguageToggle />
                 </div>
               </>
@@ -220,7 +231,7 @@ const Navbar = () => {
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="block w-full py-2.5 text-center text-sm font-semibold text-white bg-[#0A3D25] rounded-lg no-underline hover:bg-[#072B1A] transition-colors"
+                  className="block w-full py-3 text-center text-base font-semibold text-white bg-[#0A3D25] rounded-lg no-underline hover:bg-[#072B1A] transition-colors"
                 >
                   {t('signIn')}
                 </Link>

@@ -330,7 +330,7 @@ const ScoreHistoryView = () => {
             </span>
           </div>
 
-          <div className="score-gauge relative w-52 h-52 md:w-60 md:h-60 rounded-full flex items-center justify-center select-none">
+          <div className="score-gauge relative mx-auto w-52 h-52 md:mx-0 md:w-60 md:h-60 rounded-full flex items-center justify-center select-none">
             <div className="absolute inset-0 rounded-full bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)] border border-gray-100" />
             <div className="absolute inset-2.5 rounded-full border border-[#E5EFE9]" />
             <div
@@ -554,12 +554,13 @@ const ScoreHistoryView = () => {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="text-xs font-bold text-gray-400 hover:text-gray-600 disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer"
+                className="inline-flex h-9 min-w-9 items-center justify-center rounded-full text-xs font-bold text-gray-400 hover:text-gray-600 disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer md:h-auto md:min-w-0 md:rounded-none"
               >
-                &lt; Previous
+                <span className="md:hidden">&lt;</span>
+                <span className="hidden md:inline">&lt; Previous</span>
               </button>
 
-              <div className="flex items-center gap-1.5">
+              <div className="hidden items-center gap-1.5 md:flex">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
@@ -574,13 +575,17 @@ const ScoreHistoryView = () => {
                   </button>
                 ))}
               </div>
+              <div className="text-xs font-extrabold text-[#0A3D25] md:hidden">
+                {currentPage} / {totalPages}
+              </div>
 
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="text-xs font-bold text-gray-400 hover:text-gray-600 disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer"
+                className="inline-flex h-9 min-w-9 items-center justify-center rounded-full text-xs font-bold text-gray-400 hover:text-gray-600 disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer md:h-auto md:min-w-0 md:rounded-none"
               >
-                Next &gt;
+                <span className="md:hidden">&gt;</span>
+                <span className="hidden md:inline">Next &gt;</span>
               </button>
             </div>
           )}
