@@ -8,6 +8,7 @@ import { Bus, Utensils, Archive, Lightbulb, Sprout, Leaf, Trash2 } from 'lucide-
 import { useRecommendationProgress } from '@/hooks/useRecommendationProgress';
 import ProgressTrackerWrapper from './ProgressTrackerWrapper';
 
+
 // Unified recommendations list matching the Smart Recommendations view
 const PRESETS = [
   {

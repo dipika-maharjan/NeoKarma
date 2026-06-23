@@ -1,15 +1,3 @@
-'use client';
-
-import React from 'react';
-import RecommendationsView from '@/components/RecommendationsView';
-
-export default function PlanPage() {
-  return <RecommendationsView />;
-}
-
-
-
-
 // 'use client';
 
 // import React, { useEffect, useMemo, useState } from 'react';
@@ -384,3 +372,14 @@ export default function PlanPage() {
 //     </>
 //   );
 // }
+
+
+
+'use client';
+
+import React from 'react';
+import RecommendationsView from '@/components/RecommendationsView';
+
+export default function PlanPage() {
+  return <RecommendationsView />;
+}
