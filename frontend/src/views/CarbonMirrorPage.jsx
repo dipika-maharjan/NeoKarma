@@ -37,6 +37,7 @@ import { getActivePlan } from '@/lib/actions/mitigationPlanActions';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
+import { Skeleton } from '@/components/ui';
 import PhaseUnlockCelebration from '@/components/PhaseUnlockCelebration';
 
 const CARD_CLASS = 'rounded-[10px] border border-[#E0E5E2] bg-white';
@@ -338,11 +339,28 @@ const CarbonMirrorPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f8ff] px-6 py-10 font-sans">
-        <div className="mx-auto max-w-[1840px] animate-pulse space-y-8">
-          <div className="h-24 rounded-lg bg-white" />
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="h-[520px] rounded-lg bg-white" />
-            <div className="h-[520px] rounded-lg bg-white" />
+        <div className="mx-auto max-w-[1840px] space-y-8">
+          <div className="rounded-3xl border border-[#E8EDF0] bg-white p-6 shadow-sm">
+            <Skeleton height="h-12" className="mb-6 max-w-[420px]" />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-4 rounded-3xl border border-[#E8EDF0] bg-[#F7F9FA] p-6">
+                <Skeleton height="h-8" className="w-40" />
+                <Skeleton height="h-64" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Skeleton height="h-28" />
+                  <Skeleton height="h-28" />
+                </div>
+              </div>
+              <div className="space-y-4 rounded-3xl border border-[#E8EDF0] bg-[#F7F9FA] p-6">
+                <Skeleton height="h-8" className="w-40" />
+                <Skeleton height="h-64" />
+                <Skeleton height="h-12" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Skeleton height="h-20" />
+                  <Skeleton height="h-20" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
