@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { routing } from '@/i18n/routing';
 
-const PUBLIC = ['/', '/login', '/register'];
+const PUBLIC = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
 const PROTECTED_PREFIXES = [
   '/admin',
   '/dashboard',
@@ -53,7 +53,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  if (token && (pathname === '/login' || pathname === '/register' || pathname === '/')) {
+  if (token && (pathname === '/login' || pathname === '/register' || pathname === '/' || pathname === '/forgot-password' || pathname === '/reset-password')) {
     const dest = role === 'school_admin' ? '/admin/dashboard' : '/dashboard';
     return NextResponse.redirect(new URL(dest, req.url));
   }

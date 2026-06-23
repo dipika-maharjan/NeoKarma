@@ -1,6 +1,8 @@
 export const AUTH_REGISTER = '/auth/register';
 export const AUTH_LOGIN = '/auth/login';
 export const AUTH_PROFILE = '/profile';
+export const AUTH_FORGOT_PASSWORD = '/auth/forgot-password';
+export const AUTH_RESET_PASSWORD = '/auth/reset-password';
 
 export const DAILY_LOG_SUBMIT = '/daily-log';
 export const DAILY_LOG_TODAY = '/daily-log/today';

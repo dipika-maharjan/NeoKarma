@@ -109,7 +109,20 @@
     "selectGrade":"Select grade",
     "urban":"Urban",
     "rural":"Rural",
-    "optional":"(optional)"
+    "optional":"(optional)",
+    "forgotPasswordTitle": "Reset Password",
+    "forgotPasswordSubtitle": "Enter your email address and we'll send you a link to reset your password.",
+    "sendResetLink": "Send Reset Link",
+    "sendingLink": "Sending...",
+    "backToLogin": "Back to Login",
+    "resetSuccess": "A reset link has been sent to your email address.",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "resetPasswordButton": "Reset Password",
+    "resettingPassword": "Resetting...",
+    "resetPasswordSuccess": "Your password has been successfully reset. You can now login with your new password.",
+    "passwordMismatch": "Passwords do not match",
+    "invalidToken": "Reset link is invalid or has expired."
   },
   "Images": {
     "himalayanAlt": "Himalayan Mountains"

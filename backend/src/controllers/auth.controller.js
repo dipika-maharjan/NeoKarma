@@ -71,6 +71,42 @@ class AuthController {
       data: result
     });
   });
+
+  /**
+   * POST /api/auth/forgot-password
+   */
+  forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new AppError('Email is required', 400);
+    }
+
+    await authService.forgotPassword(email);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset link sent to your email.'
+    });
+  });
+
+  /**
+   * POST /api/auth/reset-password
+   */
+  resetPassword = asyncHandler(async (req, res) => {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      throw new AppError('Token and password are required', 400);
+    }
+
+    await authService.resetPassword(token, password);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successful. You can now login.'
+    });
+  });
 }
 
 module.exports = new AuthController();

@@ -3,7 +3,7 @@
  */
 const express = require('express');
 const authController = require('../controllers/auth.controller');
-const { registerValidator, loginValidator } = require('../validators/auth.validator');
+const { registerValidator, loginValidator, forgotPasswordValidator, resetPasswordValidator } = require('../validators/auth.validator');
 const validateMiddleware = require('../middlewares/validate.middleware');
 const rateLimit = require('express-rate-limit');
 
@@ -25,5 +25,15 @@ router.post('/register', registerValidator, validateMiddleware, authController.s
  * POST /api/auth/login
  */
 router.post('/login', authLimiter, loginValidator, validateMiddleware, authController.login);
+
+/**
+ * POST /api/auth/forgot-password
+ */
+router.post('/forgot-password', authLimiter, forgotPasswordValidator, validateMiddleware, authController.forgotPassword);
+
+/**
+ * POST /api/auth/reset-password
+ */
+router.post('/reset-password', authLimiter, resetPasswordValidator, validateMiddleware, authController.resetPassword);
 
 module.exports = router;

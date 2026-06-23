@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 
-const PUBLIC_PREFIXES = ['/', '/login', '/register', '/share'];
+const PUBLIC_PREFIXES = ['/', '/login', '/register', '/share', '/forgot-password', '/reset-password'];
 
 const LayoutShell = ({ children }) => {
   const pathname = usePathname();
@@ -14,7 +14,11 @@ const LayoutShell = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   const isLandingRoute = pathname === '/';
-  const isAuthRoute = pathname === '/login' || pathname === '/register';
+  const isAuthRoute =
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password';
   const isPublicRoute = PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
   );

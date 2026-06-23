@@ -148,9 +148,9 @@ const LoginPage = () => {
                 />
                 {t('remember')}
               </label>
-              <a href="#forgot" className="text-[#0A3D25] no-underline hover:underline">
+              <Link href="/forgot-password" className="text-[#0A3D25] no-underline hover:underline">
                 {t('forgot')}
-              </a>
+              </Link>
             </div>
 
             <button

@@ -38,6 +38,11 @@ const pwaConfig = withPWA({
     { url: '/score', revision: null }
   ],
   runtimeCaching: [
+    // Auth recovery routes — NetworkOnly (never cache or intercept for offline/PWA shell)
+    {
+      urlPattern: /^https?:\/\/[^/]+\/(forgot-password|reset-password)(\/.*)?$/,
+      handler: 'NetworkOnly',
+    },
     // API endpoints — NetworkFirst so data is always fresh when online
     {
       urlPattern: /^https?:\/\/.*\/api\/.*/,

@@ -4,7 +4,7 @@
  */
 require('dotenv').config();
 
-const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASS'];
 
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
@@ -23,6 +23,8 @@ module.exports = {
   // Auth
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRE: process.env.JWT_EXPIRE || '7d',
+  EMAIL_USER: process.env.EMAIL_USER,
+  EMAIL_PASS: process.env.EMAIL_PASS,
 
   // CORS
   FRONTEND_ORIGIN: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',

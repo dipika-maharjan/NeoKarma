@@ -1,4 +1,4 @@
-import { registerUser, loginUser, fetchUserProfile, updateUserProfile } from '../api/authApi';
+import { registerUser, loginUser, fetchUserProfile, updateUserProfile, forgotPassword, resetPassword } from '../api/authApi';
 import { setCookie, removeCookie } from '../api/cookie';
 
 export const register = async (userData) => {
@@ -39,4 +39,14 @@ export const getProfile = async () => {
 export const editProfile = async (profileUpdates) => {
   const response = await updateUserProfile(profileUpdates);
   return response.data.data;
+};
+
+export const forgotPasswordAction = async (email) => {
+  const response = await forgotPassword(email);
+  return response.data;
+};
+
+export const resetPasswordAction = async (resetData) => {
+  const response = await resetPassword(resetData);
+  return response.data;
 };

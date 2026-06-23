@@ -61,6 +61,16 @@ class UserRepository {
   async findByEmailWithPassword(email) {
     return await User.findOne({ email: email.toLowerCase().trim() }).select('+passwordHash');
   }
+
+  /**
+   * Find user by password reset token and ensure it has not expired
+   */
+  async findByResetToken(hashedToken) {
+    return await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+  }
 }
 
 module.exports = new UserRepository();
