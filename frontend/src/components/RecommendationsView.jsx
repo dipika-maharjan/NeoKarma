@@ -780,41 +780,23 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                         {/* Icon/Graphic representation */}
                         <div className="w-32 h-24 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100">
                           {rec.visualType === 'bus' && (
-<<<<<<< HEAD
                             <div className="w-full h-full relative bg-emerald-50 text-emerald-600 flex items-center justify-center">
                               <Bus className="w-10 h-10" />
-=======
-                            <div className="w-full h-full relative bg-emerald-50 flex items-center justify-center">
-                              <Bus size={36} className="text-emerald-600" />
->>>>>>> 6d44b1e12612ebed00dd65b46260ab064ce1572e
                             </div>
                           )}
                           {rec.visualType === 'fork-knife' && (
                             <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center">
-<<<<<<< HEAD
                               <Utensils className="w-6 h-6" />
                             </div>
                           )}
                           {rec.visualType === 'bin' && (
                             <div className="w-full h-full relative bg-stone-50 text-stone-500 flex items-center justify-center">
                               <Trash2 className="w-10 h-10" />
-=======
-                              <Utensils size={24} className="text-indigo-600" />
-                            </div>
-                          )}
-                          {rec.visualType === 'bin' && (
-                            <div className="w-full h-full relative bg-stone-50 flex items-center justify-center">
-                              <Trash2 size={36} className="text-stone-600" />
->>>>>>> 6d44b1e12612ebed00dd65b46260ab064ce1572e
                             </div>
                           )}
                           {rec.visualType === 'lightbulb' && (
                             <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center">
-<<<<<<< HEAD
                               <Lightbulb className="w-6 h-6" />
-=======
-                              <Lightbulb size={24} className="text-amber-600" />
->>>>>>> 6d44b1e12612ebed00dd65b46260ab064ce1572e
                             </div>
                           )}
                         </div>
@@ -932,7 +914,6 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                   </p>
                 </div>
               ) : (
-<<<<<<< HEAD
                 filteredPlanItems.map((item) => {
                   const isCompleted = getItemCompletionStatus(item);
                   return (
@@ -998,95 +979,12 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                           >
                             <Archive className="w-4 h-4" />
                           </button>
-=======
-                filteredPlanItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white border border-gray-100/80 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:shadow-md"
-                  >
-                    {/* Left: Icon and Details */}
-                    <div className="flex items-start gap-4 flex-1">
-                      {/* Icon */}
-                      <div className="w-12 h-12 rounded-2xl bg-[#E2F0D9] border border-[#C5E0B4]/40 flex items-center justify-center text-xl shrink-0 select-none">
-                        {(
-                          (item.icon === '🚌' || item.icon === 'bus' || item.category === 'transport') ? (
-                            <Bus size={18} className="text-[#0A3D25]" />
-                          ) : (item.icon === '💡' || item.icon === 'lightbulb' || item.category === 'energy') ? (
-                            <Lightbulb size={18} className="text-[#0A3D25]" />
-                          ) : (item.icon === '🍽️' || item.icon === 'fork-knife' || item.category === 'food') ? (
-                            <Utensils size={18} className="text-[#0A3D25]" />
-                          ) : (item.icon === '🗑️' || item.icon === 'bin' || item.category === 'waste') ? (
-                            <Trash2 size={18} className="text-[#0A3D25]" />
-                          ) : (
-                            <Leaf size={18} className="text-[#0A3D25]" />
-                          )
-                        )}
-                      </div>
-
-                      {/* Title & Desc */}
-                      <div>
-                        {/* Status Label Row */}
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[9px] font-extrabold text-[#0A3D25] uppercase tracking-wider">
-                            {item.category}
-                          </span>
-                          <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                          <span className={`text-[9px] font-extrabold uppercase tracking-wider ${
-                            item.completed 
-                              ? 'text-green-600' 
-                              : 'text-red-500'
-                          }`}>
-                            {item.completed ? t('completed') : t('pending')}
-                          </span>
->>>>>>> 6d44b1e12612ebed00dd65b46260ab064ce1572e
                         </div>
 
                       </div>
                     </div>
-<<<<<<< HEAD
                   );
                 })
-=======
-
-                    {/* Right: Saving Info & Complete Button */}
-                    <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-gray-50">
-                      
-                      {/* Saving */}
-                      <div className="text-left sm:text-right">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                          {t('potentialSaving')}
-                        </p>
-                        <p className="text-xs font-black text-gray-800 mt-0.5">
-                          {item.saving}kg CO2/mo
-                        </p>
-                      </div>
-
-                      {/* Complete toggle & Trash actions */}
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => toggleTaskCompleted(item.id)}
-                          className={`text-[11px] font-extrabold py-2 px-4 rounded-xl border transition-all cursor-pointer ${
-                            item.completed
-                              ? 'bg-transparent text-gray-500 border-gray-300 hover:border-gray-400 hover:text-gray-600'
-                              : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232]'
-                          }`}
-                        >
-                          {item.completed ? t('completedBtn') : t('markComplete')}
-                        </button>
-                        
-                        <button
-                          onClick={() => deletePlanItem(item.id)}
-                          className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
-                          title={t('deleteAction')}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-                ))
->>>>>>> 6d44b1e12612ebed00dd65b46260ab064ce1572e
               )}
             </div>
           </div>
