@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getCookie } from '@/lib/api/cookie';
 import ProfileDropdown from './ProfileDropdown';
@@ -11,13 +11,14 @@ import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
 import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
-import { Menu, X, Flame, Leaf } from 'lucide-react';
+import { Menu, X, Flame, Leaf, LogOut } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import ProfileAvatar from './ProfileAvatar';
 
 const Navbar = () => {
   const pathname = usePathname();
-  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { user, isAuthenticated, logout } = useAuth();
   const role = user?.role || getCookie('role');
   const isAdmin = role === 'school_admin' || role === 'admin';
   const t = useTranslations('Navbar');
@@ -233,6 +234,20 @@ const Navbar = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Logout Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    logout();
+                    router.push('/login');
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#F4FBF5] border border-[#CFE2D5] px-4 py-3 text-sm font-semibold text-[#0A3D25] hover:bg-[#E9F5EE] transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
 
                 {/* Language Toggle */}
                 <div className="flex items-center justify-between bg-white border border-[#DCE9E0] rounded-lg px-4 py-3">

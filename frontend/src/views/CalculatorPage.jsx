@@ -400,7 +400,7 @@ const CalculatorPage = () => {
                 <h2 className="text-[24px] font-extrabold leading-none">{t('transportTitle')}</h2>
               </div>
               <p className="mb-[18px] text-[16px] text-[#4A5550]">{t('transportQuestion')}</p>
-              <div className="mb-6 grid grid-cols-5 gap-2">
+              <div className="mb-6 grid grid-cols-3 gap-2 md:grid-cols-5">
                 {transportationOptions.map(option => {
                   const selected = formData.transportationMode === option.value;
                   return (
@@ -408,14 +408,14 @@ const CalculatorPage = () => {
                       key={option.value}
                       type="button"
                       onClick={() => setField('transportationMode', option.value)}
-                      className={`flex h-[75px] min-w-0 flex-col items-center justify-center rounded-[10px] border text-[12px] font-semibold transition-all ${
+                      className={`flex min-h-[75px] min-w-0 flex-col items-center justify-center rounded-[10px] border px-2 text-[12px] font-semibold transition-all ${
                         selected
                           ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25]'
                           : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
                       }`}
                     >
                       <span className="mb-1 flex h-6 items-center justify-center text-[#0A3D25]">{option.icon}</span>
-                      <span>{option.label}</span>
+                      <span className="break-words text-center">{option.label}</span>
                     </button>
                   );
                 })}

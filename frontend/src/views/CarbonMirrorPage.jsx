@@ -455,11 +455,11 @@ const CarbonMirrorPage = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center gap-4">
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <button
                     type="button"
                     onClick={() => router.push('/carbon-mirror/intro')}
-                    className="inline-flex h-12 items-center justify-center rounded-full border border-[#0A3D25] bg-white px-6 text-[15px] font-semibold text-[#0A3D25] transition-colors hover:bg-[#F6FFF7] shadow-sm"
+                    className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#0A3D25] bg-white px-6 text-[15px] font-semibold text-[#0A3D25] transition-colors hover:bg-[#F6FFF7] shadow-sm sm:w-auto"
                   >
                     See how Carbon Mirror works
                   </button>
@@ -467,7 +467,7 @@ const CarbonMirrorPage = () => {
                     <button
                       type="button"
                       onClick={() => router.push('/calculator/result')}
-                      className="inline-flex h-12 items-center justify-center rounded-full bg-[#0A3D25] px-6 text-[15px] font-bold text-white transition-colors hover:bg-[#072B1A] shadow"
+                      className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0A3D25] px-6 text-[15px] font-bold text-white transition-colors hover:bg-[#072B1A] shadow sm:w-auto"
                     >
                       See today&apos;s log
                     </button>
@@ -475,7 +475,7 @@ const CarbonMirrorPage = () => {
                     <button
                       type="button"
                       onClick={() => router.push('/calculator')}
-                      className="inline-flex h-12 items-center justify-center rounded-full bg-[#0A3D25] px-6 text-[15px] font-bold text-white transition-colors hover:bg-[#072B1A] shadow"
+                      className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0A3D25] px-6 text-[15px] font-bold text-white transition-colors hover:bg-[#072B1A] shadow sm:w-auto"
                     >
                       Log Today →
                     </button>
