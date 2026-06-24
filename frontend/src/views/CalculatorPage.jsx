@@ -220,7 +220,7 @@ const CalculatorPage = () => {
           unread: true
         });
       } else {
-          showToast('✅ Log saved! Great job!', { type: 'success', duration: 3000 });
+          showToast('Log saved! Great job!', { type: 'success', duration: 3000 });
         showNotification({
           id: `log-saved-${new Date().toISOString()}`,
           type: 'success',

@@ -153,7 +153,7 @@ const CarbonMirrorPage = () => {
           if (data) {
             setMirrorData(data);
                         // Show toast when mirror updates
-                        showToast('📊 Carbon Mirror updated with latest data', { type: 'info', duration: 3000 });
+                        showToast('Carbon Mirror updated with latest data', { type: 'info', duration: 3000 });
             // Trigger notification for mirror update
             showNotification({
               id: `mirror-updated-${new Date().toISOString()}`,
