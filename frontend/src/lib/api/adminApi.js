@@ -5,3 +5,6 @@ export const fetchAdminDashboard = (days = '30') =>
 
 export const fetchAdminReports = (days = '30') =>
   apiClient.get('/admin/reports', { params: { days } });
+
+export const syncAdminStreaks = () =>
+  apiClient.post('/admin/sync-streaks');
