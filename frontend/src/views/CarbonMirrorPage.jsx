@@ -152,8 +152,8 @@ const CarbonMirrorPage = () => {
           const data = await getCarbonMirror(locale || 'en');
           if (data) {
             setMirrorData(data);
-                        // Show toast when mirror updates
-                        showToast('Carbon Mirror updated with latest data', { type: 'info', duration: 3000 });
+            // Show toast when mirror updates
+            showToast('📊 Carbon Mirror updated with latest data', { type: 'info', duration: 3000 });
             // Trigger notification for mirror update
             showNotification({
               id: `mirror-updated-${new Date().toISOString()}`,
@@ -166,7 +166,7 @@ const CarbonMirrorPage = () => {
               unread: true
             });
           }
-          
+
           // Fetch active plan recommendations from the plan page
           try {
             let planData = await getActivePlan();
@@ -210,10 +210,10 @@ const CarbonMirrorPage = () => {
             setActivePlan({ recommendations: mappedFallback });
           }
           setCarouselIndex(0);
-          
+
           try {
             const historyResp = await getDailyLogHistory();
-              if (historyResp && historyResp.data) {
+            if (historyResp && historyResp.data) {
               // Ensure data is ordered oldest->newest so chart reads left-to-right
               const raw = Array.isArray(historyResp.data) ? historyResp.data.slice() : [];
               raw.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -227,16 +227,16 @@ const CarbonMirrorPage = () => {
 
               if (mapped.length === 0) {
                 try {
-                  setDebugHistoryRaw(JSON.stringify(historyResp.data?.slice?.(0,12) || historyResp.data, null, 2));
+                  setDebugHistoryRaw(JSON.stringify(historyResp.data?.slice?.(0, 12) || historyResp.data, null, 2));
                 } catch (e) {
                   setDebugHistoryRaw(String(historyResp.data));
                 }
               } else {
                 setDebugHistoryRaw(null);
                 try {
-                  setDebugMappedRaw(JSON.stringify(mapped.slice(0,12), null, 2));
+                  setDebugMappedRaw(JSON.stringify(mapped.slice(0, 12), null, 2));
                 } catch (e) {
-                  setDebugMappedRaw(String(mapped.slice(0,12)));
+                  setDebugMappedRaw(String(mapped.slice(0, 12)));
                 }
                 // log min/max
                 try {
@@ -244,7 +244,7 @@ const CarbonMirrorPage = () => {
                   const min = Math.min(...vals);
                   const max = Math.max(...vals);
                   // min/max calculated for potential debugging, no console output.
-                } catch (e) {}
+                } catch (e) { }
               }
               // mapped points processed; no verbose logging.
 
@@ -756,17 +756,17 @@ const CarbonMirrorPage = () => {
           <div className={`${CARD_CLASS} border-[#E0E5E2] p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]`}>
             <h3 className={`mb-6 ${EYEBROW_CLASS}`}>{t('monthlyTrend')}</h3>
             <div className="min-h-[88px] rounded-xl border border-dashed border-[#E1E8E5] bg-[#F7FCF8] p-6 text-[14px] leading-relaxed text-[#4A5550]">
-                {/* Debug stats for mapped history */}
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="text-sm text-[#2F5F3F] font-semibold">
-                    {t('mappedPointsLabel', { count: dailyHistory.length })}
-                  </div>
-                  {dailyHistory.length > 0 && (
-                    <div className="text-sm text-[#4A5563]">
-                      {t('minLabel')}: {Math.min(...dailyHistory.map(d=>d.totalEmissionKg))} kg • {t('maxLabel')}: {Math.max(...dailyHistory.map(d=>d.totalEmissionKg))} kg
-                    </div>
-                  )}
+              {/* Debug stats for mapped history */}
+              <div className="mb-3 flex items-center justify-between">
+                <div className="text-sm text-[#2F5F3F] font-semibold">
+                  {t('mappedPointsLabel', { count: dailyHistory.length })}
                 </div>
+                {dailyHistory.length > 0 && (
+                  <div className="text-sm text-[#4A5563]">
+                    {t('minLabel')}: {Math.min(...dailyHistory.map(d => d.totalEmissionKg))} kg • {t('maxLabel')}: {Math.max(...dailyHistory.map(d => d.totalEmissionKg))} kg
+                  </div>
+                )}
+              </div>
               {dailyHistory.length > 0 ? (
                 <div className="h-[180px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -802,7 +802,7 @@ const CarbonMirrorPage = () => {
           <div className="relative overflow-hidden rounded-[10px] bg-[#0A3D25] p-5 md:p-6 text-white shadow-sm">
             <div className="absolute -bottom-7 -right-8 h-24 w-24 rounded-full border-[11px] border-white/10" />
             <h3 className={`${CARD_TITLE_CLASS} mb-2 !text-white`}>{t('nextMilestone')}</h3>
-            
+
             {/* Always show plan recommendations carousel if available - real-time from plan page */}
             {activePlan?.recommendations && activePlan.recommendations.length > 0 ? (
               <div className="space-y-4 mt-6">
@@ -810,18 +810,17 @@ const CarbonMirrorPage = () => {
                 <div className="bg-white border border-gray-100/80 shadow-sm rounded-3xl p-6 flex flex-col justify-between">
                   <div>
                     {/* Badge - Dynamic color based on effort level */}
-                    <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                      activePlan.recommendations[carouselIndex]?.effortLevel === 'easy' 
+                    <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${activePlan.recommendations[carouselIndex]?.effortLevel === 'easy'
                         ? 'bg-green-50 text-green-600 border border-green-100'
                         : activePlan.recommendations[carouselIndex]?.effortLevel === 'medium'
-                        ? 'bg-[#E2F0D9] text-[#0A3D25] border border-[#C5E0B4]'
-                        : 'bg-red-50 text-red-500 border border-red-100'
-                    }`}>
+                          ? 'bg-[#E2F0D9] text-[#0A3D25] border border-[#C5E0B4]'
+                          : 'bg-red-50 text-red-500 border border-red-100'
+                      }`}>
                       {activePlan.recommendations[carouselIndex]?.effortLevel === 'easy'
                         ? tPlan('easyWin')
                         : activePlan.recommendations[carouselIndex]?.effortLevel === 'medium'
-                        ? tPlan('mediumImpact')
-                        : tPlan('highImpact')}
+                          ? tPlan('mediumImpact')
+                          : tPlan('highImpact')}
                     </span>
 
                     {/* Main Title & Description */}
@@ -901,7 +900,7 @@ const CarbonMirrorPage = () => {
                   </button>
                 </div>
 
-             
+
               </div>
             ) : (
               /* Show appropriate message based on user eligibility */
