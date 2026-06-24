@@ -28,15 +28,7 @@ class AuthService {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const schoolAdmin = await User.findOne({
-      role: 'school_admin',
-      schoolName
-    });
-
-    if (!schoolAdmin) {
-      throw new AppError('School not found. Please select a valid school.', 400);
-    }
-
+    // schoolName is optional free-text — no validation against school_admin records
     // Create user
     const user = await userRepository.create({
       name,
@@ -45,8 +37,8 @@ class AuthService {
       grade,
       section,
       locationType,
-      schoolName: schoolName || null,
-      schoolId: schoolAdmin._id,
+      schoolName: schoolName ? schoolName.trim() : null,
+      schoolId: null,
       extraProfile: extraProfile || null,
       role: 'student',
       streak: {
@@ -82,8 +74,7 @@ class AuthService {
 
     return {
       user: userObj,
-      token,
-      role: user.role
+      token
     };
   }
 
@@ -119,7 +110,6 @@ class AuthService {
 
     return {
       token,
-      role: user.role,
       user: userObj
     };
   }

@@ -502,28 +502,6 @@ class AdminController {
           : 0
     };
 
-    const impactRow = impactAgg[0] || {
-      totalLogs: 0,
-      targetMetLogs: 0,
-      ecoTransportLogs: 0,
-      vegDayLogs: 0,
-      noPlasticLogs: 0
-    };
-
-    const totalLogs = impactRow.totalLogs || 0;
-    const targetMetPct = totalLogs
-      ? Math.round((impactRow.targetMetLogs / totalLogs) * 100)
-      : 0;
-    const ecoTransportPct = totalLogs
-      ? Math.round((impactRow.ecoTransportLogs / totalLogs) * 100)
-      : 0;
-    const vegDaysPct = totalLogs
-      ? Math.round((impactRow.vegDayLogs / totalLogs) * 100)
-      : 0;
-    const noPlasticPct = totalLogs
-      ? Math.round((impactRow.noPlasticLogs / totalLogs) * 100)
-      : 0;
-
     res.status(200).json({
       schoolName: schoolName || '',
       adminName: schoolAdmin?.name || schoolName || 'Admin',
@@ -551,13 +529,7 @@ class AdminController {
       ecoActions,
       studentStreaks,
       liveActivity,
-      emissionSources,
-      systemImpact: {
-        targetMetPct,
-        ecoTransportPct,
-        vegDaysPct,
-        noPlasticPct
-      }
+      emissionSources
     });
   });
 

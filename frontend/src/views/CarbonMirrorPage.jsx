@@ -14,7 +14,7 @@ import {
   Share2,
   TreePine,
   Utensils,
-  Trash2,
+  Recycle,
   Lightbulb,
   Sprout
 } from 'lucide-react';
@@ -37,7 +37,10 @@ import { getActivePlan } from '@/lib/actions/mitigationPlanActions';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
+import { Skeleton } from '@/components/ui';
 import PhaseUnlockCelebration from '@/components/PhaseUnlockCelebration';
+import { useNotifications } from '@/context/NotificationContext';
+import { useToast } from '@/context/ToastContext';
 
 const CARD_CLASS = 'rounded-[10px] border border-[#E0E5E2] bg-white';
 const CARD_PADDING = 'p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]';
@@ -108,7 +111,10 @@ const CarbonMirrorPage = () => {
   const t = useTranslations('CarbonMirror');
   const tImg = useTranslations('Images');
   const tResult = useTranslations('Result');
+  const tPlan = useTranslations('Plan');
   const formatNumber = useNumberFormatter();
+  const { showNotification } = useNotifications();
+  const { showToast } = useToast();
 
   // Check if user has been active for 30+ days
   const isEligibleForNextMilestone = () => {
@@ -146,6 +152,19 @@ const CarbonMirrorPage = () => {
           const data = await getCarbonMirror(locale || 'en');
           if (data) {
             setMirrorData(data);
+                        // Show toast when mirror updates
+                        showToast('📊 Carbon Mirror updated with latest data', { type: 'info', duration: 3000 });
+            // Trigger notification for mirror update
+            showNotification({
+              id: `mirror-updated-${new Date().toISOString()}`,
+              type: 'info',
+              title: 'Carbon Mirror updated',
+              message: 'Your Carbon Mirror has refreshed with the latest emissions data and insights.',
+              actionLabel: 'View mirror',
+              actionHref: '/carbon-mirror',
+              createdAt: new Date().toISOString(),
+              unread: true
+            });
           }
           
           // Fetch active plan recommendations from the plan page
@@ -338,11 +357,28 @@ const CarbonMirrorPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f8ff] px-6 py-10 font-sans">
-        <div className="mx-auto max-w-[1840px] animate-pulse space-y-8">
-          <div className="h-24 rounded-lg bg-white" />
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="h-[520px] rounded-lg bg-white" />
-            <div className="h-[520px] rounded-lg bg-white" />
+        <div className="mx-auto max-w-[1840px] space-y-8">
+          <div className="rounded-3xl border border-[#E8EDF0] bg-white p-6 shadow-sm">
+            <Skeleton height="h-12" className="mb-6 max-w-[420px]" />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-4 rounded-3xl border border-[#E8EDF0] bg-[#F7F9FA] p-6">
+                <Skeleton height="h-8" className="w-40" />
+                <Skeleton height="h-64" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Skeleton height="h-28" />
+                  <Skeleton height="h-28" />
+                </div>
+              </div>
+              <div className="space-y-4 rounded-3xl border border-[#E8EDF0] bg-[#F7F9FA] p-6">
+                <Skeleton height="h-8" className="w-40" />
+                <Skeleton height="h-64" />
+                <Skeleton height="h-12" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Skeleton height="h-20" />
+                  <Skeleton height="h-20" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -393,7 +429,7 @@ const CarbonMirrorPage = () => {
                 <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-[#0A3D25]/75">
                   Personalized insights unlock soon
                 </p>
-                <h1 className="text-[32px] font-extrabold leading-tight text-[#0A3D25] md:text-[38px]">
+                <h1 className="text-[26px] font-extrabold leading-tight text-[#0A3D25] md:text-[32px] lg:text-[38px]">
                   Your Carbon Mirror is forming
                 </h1>
                 <p className="hidden">
@@ -605,10 +641,11 @@ const CarbonMirrorPage = () => {
             <button
               type="button"
               onClick={shareInsight}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#072B1A]"
+              aria-label={t('shareInsight')}
+              className="inline-flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-0 text-[14px] font-bold text-white transition-colors hover:bg-[#072B1A] sm:w-auto sm:px-5"
             >
               <Share2 size={16} />
-              {t('shareInsight')}
+              <span className="hidden sm:inline">{t('shareInsight')}</span>
             </button>
           </div>
         </section>
@@ -781,10 +818,10 @@ const CarbonMirrorPage = () => {
                         : 'bg-red-50 text-red-500 border border-red-100'
                     }`}>
                       {activePlan.recommendations[carouselIndex]?.effortLevel === 'easy'
-                        ? 'Easy Win'
+                        ? tPlan('easyWin')
                         : activePlan.recommendations[carouselIndex]?.effortLevel === 'medium'
-                        ? 'Medium Impact'
-                        : 'High Impact'}
+                        ? tPlan('mediumImpact')
+                        : tPlan('highImpact')}
                     </span>
 
                     {/* Main Title & Description */}
@@ -800,12 +837,12 @@ const CarbonMirrorPage = () => {
                   <div className="mt-6 flex items-end justify-between">
                     <div>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                        Impact Reduction
+                        {tPlan('impactReduction')}
                       </p>
                       <p className="text-lg font-extrabold text-gray-800 mt-0.5">
-                        -{formatNumber(activePlan.recommendations[carouselIndex]?.estimatedReductionKg, { maximumFractionDigits: 1 })} kg CO₂
+                        -{formatNumber(activePlan.recommendations[carouselIndex]?.estimatedReductionKg || activePlan.recommendations[carouselIndex]?.saving || 0, { maximumFractionDigits: 1 })} kg CO₂
                         <span className="text-xs font-semibold text-gray-400 ml-1">
-                          /month
+                          /{tPlan('kgPerMo').split('/')[1]?.trim() || 'mo'}
                         </span>
                       </p>
                     </div>
@@ -823,8 +860,8 @@ const CarbonMirrorPage = () => {
                         </div>
                       )}
                       {activePlan.recommendations[carouselIndex]?.category === 'waste' && (
-                        <div className="w-full h-full relative bg-stone-50 text-stone-500 flex items-center justify-center">
-                          <Trash2 className="w-8 h-8" />
+                        <div className="w-full h-full relative bg-green-50 text-green-600 flex items-center justify-center">
+                          <Recycle className="w-8 h-8" />
                         </div>
                       )}
                       {activePlan.recommendations[carouselIndex]?.category === 'energy' && (
@@ -842,11 +879,11 @@ const CarbonMirrorPage = () => {
                 </div>
 
                 {/* Carousel Navigation - Centered below card */}
-                <div className="flex items-center justify-center gap-8 mt-8">
+                <div className="flex items-center justify-center gap-4 md:gap-8 mt-8">
                   <button
                     onClick={() => setCarouselIndex(Math.max(0, carouselIndex - 1))}
                     disabled={carouselIndex === 0}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
+                    className="flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
                   >
                     ←
                   </button>
@@ -858,7 +895,7 @@ const CarbonMirrorPage = () => {
                   <button
                     onClick={() => setCarouselIndex(Math.min(activePlan.recommendations.length - 1, carouselIndex + 1))}
                     disabled={carouselIndex === activePlan.recommendations.length - 1}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
+                    className="flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-full bg-[#0A3D25] text-white transition-all disabled:bg-gray-300 disabled:text-gray-500 hover:disabled:bg-gray-300 hover:bg-[#0D5232] text-lg"
                   >
                     →
                   </button>

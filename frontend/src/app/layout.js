@@ -4,6 +4,9 @@ import { AuthProvider } from "@/context/AuthContext";
 import LayoutShell from "@/components/layout/LayoutShell";
 import OfflineSyncProvider from '@/components/OfflineSyncProvider';
 import OfflineBanner from '@/components/OfflineBanner';
+import { NotificationProvider } from '@/context/NotificationContext';
+import { ToastProvider } from '@/context/ToastContext';
+import ToastContainer from '@/components/ToastContainer';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 
@@ -40,10 +43,15 @@ export default async function RootLayout({ children }) {
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AuthProvider>
             <OfflineSyncProvider>
-              <LayoutShell>
-                <OfflineBanner />
-                {children}
-              </LayoutShell>
+              <NotificationProvider>
+               <ToastProvider>
+                 <LayoutShell>
+                   <OfflineBanner />
+                   <ToastContainer />
+                   {children}
+                 </LayoutShell>
+               </ToastProvider>
+              </NotificationProvider>
             </OfflineSyncProvider>
           </AuthProvider>
         </NextIntlClientProvider>

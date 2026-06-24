@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowDown, ArrowUpRight, Plus } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
+import { useNotifications } from '@/context/NotificationContext';
+import { useToast } from '@/context/ToastContext';
 
 const DashboardPage = () => {
   const { user, isAuthenticated } = useAuth();
@@ -20,6 +22,8 @@ const DashboardPage = () => {
   const locale = useLocale();
   const formatNumber = useNumberFormatter();
   const carbonMirrorT = useTranslations('CarbonMirror');
+  const { showNotification } = useNotifications();
+    const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [streakData, setStreakData] = useState(null);
@@ -56,6 +60,38 @@ const DashboardPage = () => {
         setTodayLog(today);
         if (config) {
           setScoreConfig(config);
+        }
+
+        // Trigger milestone notifications
+        if (streakInfo) {
+          // 30-day milestone notification
+          if (streakInfo.currentStreak === 30) {
+                        showToast('🏆 Wow! 30-day streak achieved!', { type: 'success', duration: 5000 });
+            showNotification({
+              id: `milestone-30day-${new Date().toISOString()}`,
+              type: 'success',
+              title: '🏆 30-Day Milestone!',
+              message: 'You\'ve logged for 30 consecutive days. Your personalized AI recommendations are now active!',
+              actionLabel: 'View recommendations',
+              actionHref: '/plan',
+              createdAt: new Date().toISOString(),
+              unread: true
+            });
+          }
+          // 7-day milestone
+          else if (streakInfo.currentStreak === 7) {
+                        showToast('🔥 7-day streak! You\'re on fire!', { type: 'success', duration: 4000 });
+            showNotification({
+              id: `milestone-7day-${new Date().toISOString()}`,
+              type: 'success',
+              title: '🔥 7-Day Streak!',
+              message: 'You\'re on fire! Keep logging daily to build your streak.',
+              actionLabel: 'Keep going',
+              actionHref: '/calculator',
+              createdAt: new Date().toISOString(),
+              unread: true
+            });
+          }
         }
         
         if (historyResponse && historyResponse.data) {
@@ -222,12 +258,12 @@ const DashboardPage = () => {
     <div className="min-h-[calc(100vh-76px)] bg-[#FAFAFA] px-4 py-8 md:px-8 lg:px-12 xl:px-16">
       <div className="mx-auto w-full max-w-[1500px]">
         <div className="mb-12 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-[32px] font-extrabold tracking-tight text-[#17202A] md:text-[34px]">
+          <h1 className="text-[26px] font-extrabold tracking-tight text-[#17202A] md:text-[30px] lg:text-[34px]">
             {t('greeting', { name: studentName })}
           </h1>
           <Link
             href="/calculator"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-8 text-[15px] font-bold text-white shadow-[0_3px_8px_rgba(10,61,37,0.2)] transition-colors hover:bg-[#072B1A]"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0A3D25] px-6 md:px-8 text-[15px] font-bold text-white shadow-[0_3px_8px_rgba(10,61,37,0.2)] transition-colors hover:bg-[#072B1A]"
           >
             <Plus size={20} />
             {t('logToday')}

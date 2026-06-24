@@ -17,10 +17,13 @@ import {
   Minus,
   Plus,
   Trash2,
-  Zap
+  Zap,
+  Flame
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
+import { useNotifications } from '@/context/NotificationContext';
+import { useToast } from '@/context/ToastContext';
 
 const CalculatorPage = () => {
   const { isAuthenticated } = useAuth();
@@ -28,6 +31,8 @@ const CalculatorPage = () => {
   const t = useTranslations('Calculator');
   const locale = useLocale();
   const formatNumber = useNumberFormatter();
+  const { showNotification } = useNotifications();
+    const { showToast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState({ type: '', message: '' });
@@ -202,6 +207,31 @@ const CalculatorPage = () => {
       // set banner type: duplicate -> neutral/info, new -> success
       const isDuplicate = message.toLowerCase().includes('already exists');
       setStatus({ type: isDuplicate ? 'info' : 'success', message });
+
+      // Trigger notification
+      if (isDuplicate) {
+          showToast('You already logged today. Come back tomorrow!', { type: 'info', duration: 3000 });
+        showNotification({
+          id: `log-duplicate-${new Date().toISOString()}`,
+          type: 'info',
+          title: 'Already logged today',
+          message: 'You have already logged your carbon footprint today. Logs reset daily.',
+          createdAt: new Date().toISOString(),
+          unread: true
+        });
+      } else {
+          showToast('✅ Log saved! Great job!', { type: 'success', duration: 3000 });
+        showNotification({
+          id: `log-saved-${new Date().toISOString()}`,
+          type: 'success',
+          title: 'Daily log saved',
+          message: 'Great job! Your latest log is now part of your progress tracking.',
+          actionLabel: 'See result',
+          actionHref: '/calculator/result',
+          createdAt: new Date().toISOString(),
+          unread: true
+        });
+      }
 
       // update in-place mirror and streak from response data (avoid re-fetch)
       if (response.data && response.data.mirror) {
@@ -515,7 +545,7 @@ const CalculatorPage = () => {
             <section className="relative overflow-hidden rounded-xl bg-[#E8F5E9] border border-[#BEE8D3] p-6 text-[#1B5E20]">
               <div className="absolute -bottom-10 -right-10 h-28 w-28 opacity-10 rounded-full bg-[#1B5E20]" />
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🔥</span>
+                <Flame size={20} className="text-[#1B5E20]" />
                 <div>
                   <p className="text-[16px] font-extrabold text-[#1B5E20]">
                     {t('streakTitle')}

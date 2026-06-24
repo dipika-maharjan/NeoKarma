@@ -18,9 +18,6 @@ const baseConfig = {
         }
       ]
     };
-  },
-  turbopack: {
-    root: __dirname
   }
 };
 

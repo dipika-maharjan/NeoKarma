@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 
 /**
  * Hook to calculate recommendation progress based on actual daily log data
@@ -9,6 +10,9 @@ import { useMemo } from 'react';
  * - Option B: Dynamic trackingConfig from recommendations (for AI-generated)
  */
 export const useRecommendationProgress = (planItem, dailyLogs = []) => {
+  const t = useTranslations('Plan');
+  const locale = useLocale();
+
   const progress = useMemo(() => {
     // DEBUG: Log raw input to verify dailyLogs is being passed
     console.log(`🔍 useRecommendationProgress called for [${planItem?.title}]:`, {
@@ -21,12 +25,12 @@ export const useRecommendationProgress = (planItem, dailyLogs = []) => {
     // Show tracking even with 1+ log entries (not 7+)
     if (!dailyLogs || dailyLogs.length === 0) {
       console.log(`⚠️ No daily logs available`);
-      return { percentage: 0, current: 0, target: 0, message: 'Start logging to see progress', unit: 'days' };
+      return { percentage: 0, current: 0, target: 0, message: t('startLoggingToSee'), unit: t('days') };
     }
 
     // Option B: If recommendation has explicit trackingConfig, use it (for AI recommendations)
     if (planItem.trackingConfig) {
-      const result = calculateDynamicProgress(planItem.trackingConfig, dailyLogs);
+      const result = calculateDynamicProgress(planItem.trackingConfig, dailyLogs, t);
       console.log(`📊 Tracking [${planItem.title}]:`, {
         config: planItem.trackingConfig,
         logsCount: dailyLogs.length,
@@ -36,36 +40,28 @@ export const useRecommendationProgress = (planItem, dailyLogs = []) => {
     }
 
     // Option A: Fallback to hardcoded category-based tracking (for presets)
-    const result = calculateCategoryBasedProgress(planItem.category, dailyLogs);
+    const result = calculateCategoryBasedProgress(planItem.category, dailyLogs, t);
     console.log(`📊 Category-Based Tracking [${planItem.title}] (${planItem.category}):`, {
       logsCount: dailyLogs.length,
       result
     });
     return result;
-  }, [planItem, dailyLogs]);
+  }, [planItem, dailyLogs, t, locale]);
 
   return progress;
 };
 
 /**
  * Option A: Hardcoded category-based tracking for presets
- * Calculates progress based on MONTHLY goals, not daily/weekly
- * Monthly Goals:
- * - Transport: 20 days (5/week * 4 weeks)
- * - Food: 8 days (2/week * 4 weeks)
- * - Energy: 20 days (5/week * 4 weeks)
- * - Waste: 28 days (7/week * 4 weeks)
  */
-function calculateCategoryBasedProgress(category, dailyLogs) {
-  // Use ALL logs to count achieved days (not just last 7)
+function calculateCategoryBasedProgress(category, dailyLogs, t) {
   const allDays = dailyLogs;
   
-  // MONTHLY GOALS (full month targets)
   const monthlyGoals = {
-    transport: 20,      // 5 eco days/week * 4 weeks
-    food: 8,           // 2 vegetarian days/week * 4 weeks
-    energy: 20,        // 5 low-energy days/week * 4 weeks
-    waste: 28          // 7 segregated days/week * 4 weeks
+    transport: 20,
+    food: 8,
+    energy: 20,
+    waste: 28
   };
 
   switch (category) {
@@ -79,8 +75,8 @@ function calculateCategoryBasedProgress(category, dailyLogs) {
         percentage: Math.min((vegetarianDays / target) * 100, 100),
         current: vegetarianDays,
         target,
-        message: `${vegetarianDays} of ${target} vegetarian days this month`,
-        unit: 'days'
+        message: t('categoryDaysMessage', { current: vegetarianDays, target, type: t('vegetarianDays') }),
+        unit: t('days')
       };
     }
 
@@ -94,8 +90,8 @@ function calculateCategoryBasedProgress(category, dailyLogs) {
         percentage: Math.min((lowEnergyDays / target) * 100, 100),
         current: lowEnergyDays,
         target,
-        message: `${lowEnergyDays} of ${target} low-energy days this month`,
-        unit: 'days'
+        message: t('categoryDaysMessage', { current: lowEnergyDays, target, type: t('lowEnergyDays') }),
+        unit: t('days')
       };
     }
 
@@ -109,8 +105,8 @@ function calculateCategoryBasedProgress(category, dailyLogs) {
         percentage: Math.min((publicTransitDays / target) * 100, 100),
         current: publicTransitDays,
         target,
-        message: `${publicTransitDays} of ${target} eco-friendly commute days this month`,
-        unit: 'days'
+        message: t('categoryDaysMessage', { current: publicTransitDays, target, type: t('ecoCommuteDays') }),
+        unit: t('days')
       };
     }
 
@@ -123,19 +119,18 @@ function calculateCategoryBasedProgress(category, dailyLogs) {
         percentage: Math.min((segregatedDays / target) * 100, 100),
         current: segregatedDays,
         target,
-        message: `${segregatedDays} of ${target} days with waste segregation this month`,
-        unit: 'days'
+        message: t('categoryDaysMessage', { current: segregatedDays, target, type: t('wasteSegregatedDays') }),
+        unit: t('days')
       };
     }
 
     default:
-      return { percentage: 0, current: 0, target: 0, message: 'No tracking available', unit: '' };
+      return { percentage: 0, current: 0, target: 0, message: t('noTracking'), unit: '' };
   }
 }
 
 /**
  * Helper: Get nested field value from object
- * Supports paths like "food.mealType" or "transportation.mode"
  */
 function getFieldValue(obj, fieldPath) {
   if (!obj || !fieldPath) return undefined;
@@ -150,37 +145,24 @@ function getFieldValue(obj, fieldPath) {
 
 /**
  * Option B: Dynamic tracking using trackingConfig object
- * Works from day 1 by adapting targets based on available data
- * 
- * trackingConfig structure:
- * {
- *   field: string,           // Nested path like "food.mealType" or "transportation.mode"
- *   value: string|number,    // What value to look for (e.g., 'vegetarian', 'bus')
- *   goal: number,            // Target count for full period
- *   period: 'week'|'month',  // Tracking period
- *   operator?: '==', '>=', '<=', 'includes'  // Comparison operator (default: '==')
- * }
  */
-function calculateDynamicProgress(config, dailyLogs) {
+function calculateDynamicProgress(config, dailyLogs, t) {
   if (!config || !config.field) {
-    return { percentage: 0, current: 0, target: 0, message: 'Invalid tracking config', unit: '' };
+    return { percentage: 0, current: 0, target: 0, message: t('noTracking'), unit: '' };
   }
 
   const { field, value, goal, period = 'week', operator = '==' } = config;
   
-  // Use all available logs up to the period (min 1, max 7 or 30)
   const maxLookback = period === 'month' ? 30 : 7;
   const lookbackDays = Math.min(dailyLogs.length, maxLookback);
   const logs = dailyLogs.slice(-lookbackDays);
   
   if (logs.length === 0) {
-    return { percentage: 0, current: 0, target: goal || 1, message: 'Start logging to see progress', unit: period === 'week' ? 'days' : 'month' };
+    return { percentage: 0, current: 0, target: goal || 1, message: t('startLoggingToSee'), unit: period === 'week' ? t('days') : t('kgPerMo') };
   }
 
-  // Count matching entries based on operator
   let current = 0;
   logs.forEach((log) => {
-    // Support nested paths like "food.mealType" or "transportation.mode"
     const logValue = getFieldValue(log, field);
     let matches = false;
 
@@ -204,19 +186,18 @@ function calculateDynamicProgress(config, dailyLogs) {
     if (matches) current++;
   });
 
-  // Adapt target proportionally for partial data (e.g., if only 3 days available out of 7)
   const adaptedTarget = lookbackDays < maxLookback 
     ? Math.ceil((goal / maxLookback) * lookbackDays) 
     : goal;
   
   const percentage = adaptedTarget > 0 ? Math.min((current / adaptedTarget) * 100, 100) : 0;
-  const periodLabel = period === 'week' ? `${lookbackDays} days` : 'month';
+  const periodLabel = period === 'week' ? t('days') : t('kgPerMo');
 
   return {
     percentage,
     current,
     target: adaptedTarget,
-    message: `${current} of ${adaptedTarget} "${value}" logs this ${periodLabel}`,
+    message: t('trackingMessage', { current, target: adaptedTarget, value, period: periodLabel }),
     unit: periodLabel
   };
 }

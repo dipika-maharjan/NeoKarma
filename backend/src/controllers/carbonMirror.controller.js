@@ -18,7 +18,7 @@ class CarbonMirrorController {
    */
   getMirror = asyncHandler(async (req, res) => {
     const userId = req.user.userId;
-    const locale = req.query.locale || req.body.locale || req.cookies?.locale || 'en'; // Default to English
+    const locale = req.query.locale || req.locale || 'en';
     const today = getTodayStr();
 
     // Get today's log if exists
@@ -46,7 +46,7 @@ class CarbonMirrorController {
 
       const prevSnapshot = await monthlySnapshotRepository.findByUserAndMonth(userId, prevMonthStr);
       if (prevSnapshot) {
-        previousMonthComparison = carbonMirrorService.generateMonthComparison(
+        previousMonthComparison = await carbonMirrorService.generateMonthComparison(
           snapshot.totalEmissionKg,
           prevSnapshot.totalEmissionKg,
           locale
@@ -54,7 +54,7 @@ class CarbonMirrorController {
       } else {
         const prevMonthAggregate = await carbonMirrorService.getMonthlyAggregate(userId, prevMonthStr);
         if (prevMonthAggregate) {
-          previousMonthComparison = carbonMirrorService.generateMonthComparison(
+          previousMonthComparison = await carbonMirrorService.generateMonthComparison(
             snapshot.totalEmissionKg,
             prevMonthAggregate.totalEmissionKg,
             locale
@@ -70,7 +70,7 @@ class CarbonMirrorController {
 
         const prevSnapshot = await monthlySnapshotRepository.findByUserAndMonth(userId, prevMonthStr);
         if (prevSnapshot) {
-          previousMonthComparison = carbonMirrorService.generateMonthComparison(
+          previousMonthComparison = await carbonMirrorService.generateMonthComparison(
             monthlyMirror.totalEmissionKg,
             prevSnapshot.totalEmissionKg,
             locale
@@ -78,7 +78,7 @@ class CarbonMirrorController {
         } else {
           const prevMonthAggregate = await carbonMirrorService.getMonthlyAggregate(userId, prevMonthStr);
           if (prevMonthAggregate) {
-            previousMonthComparison = carbonMirrorService.generateMonthComparison(
+            previousMonthComparison = await carbonMirrorService.generateMonthComparison(
               monthlyMirror.totalEmissionKg,
               prevMonthAggregate.totalEmissionKg,
               locale
