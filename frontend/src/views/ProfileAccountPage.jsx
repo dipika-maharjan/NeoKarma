@@ -235,11 +235,10 @@ const ProfileAccountPage = () => {
 
             {status.message && (
               <div
-                className={`mb-5 rounded-lg border px-4 py-3 text-[13px] font-semibold ${
-                  status.type === 'success'
-                    ? 'border-[#BEE8D3] bg-[#E8F5E9] text-[#0A3D25]'
-                    : 'border-red-200 bg-red-50 text-red-700'
-                }`}
+                className={`mb-5 rounded-lg border px-4 py-3 text-[13px] font-semibold ${status.type === 'success'
+                  ? 'border-[#BEE8D3] bg-[#E8F5E9] text-[#0A3D25]'
+                  : 'border-red-200 bg-red-50 text-red-700'
+                  }`}
               >
                 {status.message}
               </div>
@@ -247,7 +246,7 @@ const ProfileAccountPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                  <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
+                <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
                   <User size={16} />
                   {t('nameLabel')}
                 </label>
@@ -262,7 +261,7 @@ const ProfileAccountPage = () => {
               </div>
 
               <div>
-                  <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
+                <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
                   <School size={16} />
                   {t('schoolLabel')}
                 </label>
@@ -277,7 +276,7 @@ const ProfileAccountPage = () => {
               </div>
 
               <div>
-                  <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
+                <label className="mb-2 flex items-center gap-2 text-[13px] font-extrabold text-[#303542]">
                   <Mail size={16} />
                   {t('emailLabel')}
                 </label>

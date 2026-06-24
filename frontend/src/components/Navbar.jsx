@@ -11,7 +11,7 @@ import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
 import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Flame, Leaf } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import ProfileAvatar from './ProfileAvatar';
 
@@ -63,7 +63,8 @@ const Navbar = () => {
     if (pathname.includes('/carbon-mirror') || pathname.includes('/mirror')) return 'mirror';
     if (pathname.includes('/plan')) return 'plan';
     if (pathname.includes('/score')) return 'score';
-    return 'dashboard'; // default
+    if (pathname.includes('/dashboard')) return 'dashboard';
+    return null; // no highlight for unmatched routes (e.g. /notifications, /profile)
   };
 
   const activeTab = getActiveTab();
@@ -128,9 +129,9 @@ const Navbar = () => {
                   : 'bg-white/70 text-[#0A3D25] border-[#CFE2D5]'
                   }`}
                 >
-                  <span className="text-base h-4 w-4 flex items-center">
-                    {displayedStreak > 0 ? '🔥' : '🌱'}
-                  </span>
+                  {displayedStreak > 0
+                    ? <Flame className="w-4 h-4 fill-current text-orange-400" />
+                    : <Leaf className="w-4 h-4" />}
                   <span className="text-xs font-semibold tracking-wide">
                     {t('dayStreak', { count: formatNumber(displayedStreak, {}) })}
                   </span>
@@ -157,14 +158,22 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="cursor-pointer rounded-full p-2 text-[#0A3D25] transition-colors hover:bg-[#E9EDE4] md:hidden"
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {/* Mobile Right Actions: Notification + Menu */}
+        <div className="flex items-center gap-1 md:hidden">
+          <a href="/notifications" className="rounded-full p-2 text-[#0A3D25] transition-colors hover:bg-[#E9EDE4]" aria-label="Notifications">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 01-3.46 0" />
+            </svg>
+          </a>
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="cursor-pointer rounded-full p-2 text-[#0A3D25] transition-colors hover:bg-[#E9EDE4]"
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu - Full Page */}
