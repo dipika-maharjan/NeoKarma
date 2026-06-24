@@ -10,11 +10,16 @@ const withNextIntl = createNextIntlPlugin();
 /** @type {import('next').NextConfig} */
 const baseConfig = {
   rewrites: async () => {
+    // Determine backend URL based on environment
+    const backendUrl = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:5000'
+      : (process.env.BACKEND_URL || 'http://localhost:5000'); // Falls back to localhost if BACKEND_URL not set
+
     return {
       beforeFiles: [
         {
           source: '/api/:path*',
-          destination: 'http://localhost:5000/api/:path*'
+          destination: `${backendUrl}/api/:path*`
         }
       ]
     };

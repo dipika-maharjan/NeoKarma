@@ -1,5 +1,5 @@
-import { getRequestConfig } from 'next-intl/server';
-
-export default getRequestConfig(async ({ locale }) => ({
-  messages: (await import(`./messages/${locale}.json`)).default,
-}));
+/** @type {import('next-intl').NextIntlConfig} */
+export default {
+  locales: ['en', 'ne'],
+  defaultLocale: 'en'
+}; 
