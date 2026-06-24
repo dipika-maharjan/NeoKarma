@@ -59,10 +59,16 @@ export const AuthProvider = ({ children }) => {
           setToken(savedToken);
           setUser(profileData);
           // Warm offline cache and request persistent storage on successful session restore
+          // Fire-and-forget: don't await to avoid delaying page load
+          // Service worker will intercept and cache the fetch requests
           try {
             if (typeof window !== 'undefined' && navigator.onLine) {
-              warmOfflineCache();
-              requestPersistentStorage();
+              warmOfflineCache().catch(err => 
+                console.warn('Warning: offline cache warm-up failed', err)
+              );
+              requestPersistentStorage().catch(err =>
+                console.warn('Warning: persistent storage request failed', err)
+              );
             }
           } catch (err) {
             console.warn('Failed to warm cache on session restore', err);
@@ -98,10 +104,16 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       setToken(authToken);
       // Warm offline cache and request persistent storage when user logs in
+      // Fire-and-forget: don't await to return login success immediately
+      // Service worker will intercept and cache the fetch requests in background
       try {
         if (typeof window !== 'undefined' && navigator.onLine) {
-          warmOfflineCache();
-          requestPersistentStorage();
+          warmOfflineCache().catch(err =>
+            console.warn('Warning: offline cache warm-up failed after login', err)
+          );
+          requestPersistentStorage().catch(err =>
+            console.warn('Warning: persistent storage request failed after login', err)
+          );
         }
       } catch (err) {
         console.warn('Failed to warm cache on login', err);
