@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import LandingNavbar from '@/components/LandingNavbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 
@@ -26,16 +27,18 @@ const LayoutShell = ({ children }) => {
   const router = useRouter();
   const { isAuthenticated, loading } = useAuth();
 
-  const isLandingRoute = pathname === '/';
+  const normalizedPathname = pathname.replace(/^\/(en|ne)(?=\/|$)/, '') || '/';
+
+  const isLandingRoute = normalizedPathname === '/';
   const isAuthRoute =
-    pathname === '/login' ||
-    pathname === '/register' ||
-    pathname === '/forgot-password' ||
-    pathname === '/reset-password';
+    normalizedPathname === '/login' ||
+    normalizedPathname === '/register' ||
+    normalizedPathname === '/forgot-password' ||
+    normalizedPathname === '/reset-password';
   const isPublicRoute = PUBLIC_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
+    (prefix) => normalizedPathname === prefix || normalizedPathname.startsWith(prefix + '/')
   );
-  const isAdminRoute = pathname.startsWith('/admin');
+  const isAdminRoute = normalizedPathname.startsWith('/admin');
   const isProtectedRoute = !isPublicRoute && !isAdminRoute;
 
   useEffect(() => {
@@ -54,7 +57,7 @@ const LayoutShell = ({ children }) => {
 
   return (
     <>
-      <Navbar />
+      {isProtectedRoute ? <Navbar /> : <LandingNavbar />}
       <main className="flex-grow">
         {children}
       </main>
