@@ -11,7 +11,7 @@ import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
 import { getCachedStreak, STREAK_UPDATED_EVENT } from '@/lib/actions/calculatorActions';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Flame, Leaf } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import ProfileAvatar from './ProfileAvatar';
 
@@ -63,7 +63,8 @@ const Navbar = () => {
     if (pathname.includes('/carbon-mirror') || pathname.includes('/mirror')) return 'mirror';
     if (pathname.includes('/plan')) return 'plan';
     if (pathname.includes('/score')) return 'score';
-    return 'dashboard'; // default
+    if (pathname.includes('/dashboard')) return 'dashboard';
+    return null; // no highlight for unmatched routes (e.g. /notifications, /profile)
   };
 
   const activeTab = getActiveTab();
@@ -128,9 +129,9 @@ const Navbar = () => {
                   : 'bg-white/70 text-[#0A3D25] border-[#CFE2D5]'
                   }`}
                 >
-                  <span className="text-base h-4 w-4 flex items-center">
-                    {displayedStreak > 0 ? '🔥' : '🌱'}
-                  </span>
+                  {displayedStreak > 0
+                    ? <Flame className="w-4 h-4 fill-current text-orange-400" />
+                    : <Leaf className="w-4 h-4" />}
                   <span className="text-xs font-semibold tracking-wide">
                     {t('dayStreak', { count: formatNumber(displayedStreak, {}) })}
                   </span>
