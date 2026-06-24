@@ -50,7 +50,7 @@ const Toast = ({ message, type = 'info', duration = 4000, onClose }) => {
 
   return (
     <div
-      className={`fixed top-6 left-4 right-4 md:left-auto md:right-6 md:max-w-md rounded-lg ${style.bg} border ${style.border} text-white p-4 shadow-lg animate-pulse z-50`}
+      className={`fixed top-20 left-4 right-4 md:left-auto md:right-6 md:max-w-md rounded-lg ${style.bg} border ${style.border} text-white p-4 shadow-lg animate-pulse z-40`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1">

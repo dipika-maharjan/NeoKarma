@@ -66,7 +66,7 @@ const DashboardPage = () => {
         if (streakInfo) {
           // 30-day milestone notification
           if (streakInfo.currentStreak === 30) {
-                        showToast('🏆 Wow! 30-day streak achieved!', { type: 'success', duration: 5000 });
+                        showToast('Wow! 30-day streak achieved!', { type: 'success', duration: 5000 });
             showNotification({
               id: `milestone-30day-${new Date().toISOString()}`,
               type: 'success',
@@ -80,7 +80,7 @@ const DashboardPage = () => {
           }
           // 7-day milestone
           else if (streakInfo.currentStreak === 7) {
-                        showToast('🔥 7-day streak! You\'re on fire!', { type: 'success', duration: 4000 });
+                        showToast('7-day streak! You\'re on fire!', { type: 'success', duration: 4000 });
             showNotification({
               id: `milestone-7day-${new Date().toISOString()}`,
               type: 'success',

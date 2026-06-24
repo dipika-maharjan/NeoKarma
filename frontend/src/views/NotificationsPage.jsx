@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bell, CheckCircle2, AlertCircle, Info, ChevronRight, Trash2 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
@@ -35,35 +35,39 @@ const typeStyles = {
 };
 
 const typeIcons = {
-  info: <Info size={18} />,
-  success: <CheckCircle2 size={18} />,
-  warning: <AlertCircle size={18} />,
-  error: <AlertCircle size={18} />
+  info: <Info size={24} />,
+  success: <CheckCircle2 size={24} />,
+  warning: <AlertCircle size={24} />,
+  error: <AlertCircle size={24} />
 };
 
 const NotificationsPage = () => {
   const router = useRouter();
-  const { notifications, dismissNotification } = useNotifications();
+  const { notifications, dismissNotification, markAsRead } = useNotifications();
   const t = useTranslations('common');
 
+  // Mark all notifications as read when page is viewed
+  useEffect(() => {
+    notifications.forEach((notification) => {
+      if (notification.unread) {
+        markAsRead(notification.id);
+      }
+    });
+  }, [notifications, markAsRead]);
+
   const getTypeStyle = (type) => typeStyles[type] || typeStyles.info;
-  const style = getTypeStyle(notifications[0]?.type);
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-[#FAFAFA] px-4 py-10 md:px-8 lg:px-12 xl:px-16">
-      <div className="mx-auto w-full max-w-[900px]">
+    <div className="min-h-[calc(100vh-76px)] bg-[#F9FAFB] px-4 py-8 md:px-8 lg:px-12 xl:px-16">
+      <div className="mx-auto w-full max-w-3xl">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-[32px] font-extrabold leading-tight text-[#0A3D25] md:text-[34px]">
-              Notifications
-            </h1>
-            <p className="mt-1 text-[16px] text-[#4A5550]">
-              {notifications.length === 0 ? 'No notifications yet' : `${notifications.length} update${notifications.length !== 1 ? 's' : ''}`}
-            </p>
-          </div>
-
-
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-[#0A3D25]">
+            Notifications
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-[#4A5550]">
+            {notifications.length === 0 ? 'No notifications yet' : `${notifications.length} update${notifications.length !== 1 ? 's' : ''}`}
+          </p>
         </div>
 
         {/* Notifications List */}
@@ -72,8 +76,8 @@ const NotificationsPage = () => {
             <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#E6F4EA]">
               <Bell size={32} className="text-[#1B5E20]" />
             </div>
-            <h2 className="text-[20px] font-bold text-[#17202A]">No notifications yet</h2>
-            <p className="mt-2 text-[15px] text-[#4A5550]">
+            <h2 className="text-lg font-bold text-[#17202A]">No notifications yet</h2>
+            <p className="mt-2 text-sm text-[#4A5550]">
               Check back when you log activities or milestones are reached.
             </p>
             <button
@@ -103,14 +107,11 @@ const NotificationsPage = () => {
                       {/* Content */}
                       <div className="flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className={`text-[18px] font-bold ${style.title}`}>
+                          <h3 className={`text-base font-bold leading-tight ${style.title}`}>
                             {notification.title}
                           </h3>
-                          {notification.unread && (
-                            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#D32F2F] flex-shrink-0 mt-1.5" />
-                          )}
                         </div>
-                        <p className="mt-2 text-[15px] leading-relaxed text-[#4A5550]">
+                        <p className="mt-2 text-sm leading-relaxed text-[#4A5550]">
                           {notification.message}
                         </p>
 
@@ -149,8 +150,6 @@ const NotificationsPage = () => {
           </div>
         )}
       </div>
-
-
     </div>
   );
 };
