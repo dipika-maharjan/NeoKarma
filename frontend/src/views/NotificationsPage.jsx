@@ -138,7 +138,7 @@ const NotificationsPage = () => {
                     <button
                       type="button"
                       onClick={() => dismissNotification(notification.id)}
-                      className="flex-shrink-0 rounded-full p-2 text-[#4A5550] transition hover:bg-white hover:text-[#0A3D25]"
+                      className=" hidden flex-shrink-0 rounded-full p-2 text-[#4A5550] transition hover:bg-white hover:text-[#0A3D25]"
                       aria-label="Dismiss notification"
                     >
                       <Trash2 size={18} />

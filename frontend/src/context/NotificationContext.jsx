@@ -1,40 +1,64 @@
 'use client';
 
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext(null);
-const STORAGE_KEY = 'neokarma_notifications';
+
+// Get storage key specific to user (ensures isolation between users)
+const getStorageKey = (userId) => `neokarma_notifications_${userId}`;
 
 // Start with empty - only genuine user actions create notifications
 const initialNotifications = [];
 
 export const NotificationProvider = ({ children }) => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
-  // Load from localStorage on mount
+  // Detect user changes and clear stale notifications
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setNotifications(parsed);
-      }
-    } catch (error) {
-      console.error('Failed to load notifications from storage:', error);
+    if (!user) {
+      // User logged out - clear notifications
+      setNotifications([]);
+      setCurrentUserId(null);
+      return;
     }
-    setIsHydrated(true);
-  }, []);
 
-  // Persist to localStorage whenever notifications change
+    const userId = user._id || user.id;
+    
+    // User changed - load notifications for new user
+    if (userId !== currentUserId) {
+      try {
+        const storageKey = getStorageKey(userId);
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setNotifications(parsed);
+        } else {
+          setNotifications([]);
+        }
+      } catch (error) {
+        console.error('Failed to load notifications from storage:', error);
+        setNotifications([]);
+      }
+      setCurrentUserId(userId);
+    }
+
+    setIsHydrated(true);
+  }, [user, currentUserId]);
+
+  // Persist to localStorage whenever notifications change (only for current user)
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || !currentUserId) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+      const storageKey = getStorageKey(currentUserId);
+      localStorage.setItem(storageKey, JSON.stringify(notifications));
     } catch (error) {
       console.error('Failed to save notifications to storage:', error);
     }
-  }, [notifications, isHydrated]);
+  }, [notifications, isHydrated, currentUserId]);
 
   const showNotification = (notification) => {
     setNotifications((current) => [

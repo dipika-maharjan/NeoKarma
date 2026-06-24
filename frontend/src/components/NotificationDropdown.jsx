@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Trash2, CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { Bell, CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import Link from 'next/link';
 
@@ -107,7 +107,7 @@ const NotificationDropdown = () => {
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-[500px] overflow-y-auto">
+          <div className="max-h-[420px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#D7E3DD] scrollbar-track-transparent hover:scrollbar-thumb-[#4A5550]">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
                 <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#E6F4EA]">
@@ -120,7 +120,7 @@ const NotificationDropdown = () => {
               </div>
             ) : (
               <div className="divide-y divide-[#E0E5E2]">
-                {notifications.slice(0, 6).map((notification) => {
+                {notifications.slice(0, 3).map((notification) => {
                   const style = getTypeStyle(notification.type);
                   return (
                     <div
@@ -156,17 +156,7 @@ const NotificationDropdown = () => {
                         </p>
                       </div>
 
-                      {/* Dismiss Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          dismissNotification(notification.id);
-                        }}
-                        className="flex-shrink-0 rounded-full p-1.5 text-[#4A5550] transition hover:bg-white hover:text-[#D32F2F]"
-                        aria-label="Dismiss notification"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+
                     </div>
                   );
                 })}

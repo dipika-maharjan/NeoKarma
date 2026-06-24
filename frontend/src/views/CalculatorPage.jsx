@@ -38,6 +38,7 @@ const CalculatorPage = () => {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [submissionMirror, setSubmissionMirror] = useState(null);
   const [submissionStreak, setSubmissionStreak] = useState(null);
+  const [lastSubmissionTime, setLastSubmissionTime] = useState(0);
   const statusRef = useRef(null);
   const [emissionFactors, setEmissionFactors] = useState(null);
 
@@ -177,6 +178,13 @@ const CalculatorPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent rapid resubmission (within 2 seconds of last successful submission)
+    const now = Date.now();
+    if (now - lastSubmissionTime < 2000) {
+      return;
+    }
+    
     if (!validateForm()) return;
 
     setSubmitting(true);
@@ -231,6 +239,8 @@ const CalculatorPage = () => {
           createdAt: new Date().toISOString(),
           unread: true
         });
+        // Update last submission time on successful new log
+        setLastSubmissionTime(Date.now());
       }
 
       // update in-place mirror and streak from response data (avoid re-fetch)

@@ -37,6 +37,27 @@ class DailyLogController {
 
     const date = req.body.date || getTodayStr();
 
+    // Check for existing log BEFORE calculation to detect duplicates early
+    const existingLog = await dailyLogRepository.findByUserAndDate(userId, date);
+    
+    // If log exists, return early to prevent duplicate processing
+    if (existingLog) {
+      const locale = req.query.locale || req.locale || 'en';
+      const messageEn = 'Daily log already exists for this date, your entry was updated successfully.';
+      const message = await translate(messageEn, locale);
+      const mirror = await carbonMirrorService.generateMirror(existingLog.totalEmissionKg, locale);
+      
+      return res.status(200).json({
+        success: true,
+        message,
+        data: {
+          log: existingLog,
+          mirror,
+          updatedStreak: null
+        }
+      });
+    }
+
     const emissionResult = await emissionCalculationService.calculateEmissions({
       transportationMode,
       transportationDistanceKm,
@@ -45,9 +66,6 @@ class DailyLogController {
       energyUsageHours,
       energyUsageKg: energyUsageKg || 0
     });
-
-    const existingLog = await dailyLogRepository.findByUserAndDate(userId, date);
-    const isExistingLog = !!existingLog;
 
     const logPayload = {
       userId,
@@ -61,30 +79,26 @@ class DailyLogController {
       totalEmissionKg: emissionResult.totalEmissionKg
     };
 
+    // Use upsert for atomic operation but we already checked for existing log above
     const upsertResult = await dailyLogRepository.upsertByUserAndDate(userId, date, logPayload);
     let createdLog = upsertResult?.value;
     if (!createdLog) {
       createdLog = await dailyLogRepository.findByUserAndDate(userId, date);
     }
 
-    let updatedStreak = null;
-    if (!isExistingLog) {
-      const updatedUser = await streakService.updateStreakAfterLogCreation(userId);
-      updatedStreak = updatedUser?.streak || null;
-    }
+    // New log - update streak
+    const updatedUser = await streakService.updateStreakAfterLogCreation(userId);
+    const updatedStreak = updatedUser?.streak || null;
 
     await carbonMirrorService.updateSnapshotAfterLog(userId, date, emissionResult);
 
     const locale = req.query.locale || req.locale || 'en';
     const mirror = await carbonMirrorService.generateMirror(createdLog.totalEmissionKg, locale);
-    const statusCode = isExistingLog ? 200 : 201;
 
-    const messageEn = isExistingLog
-      ? 'Daily log already exists for this date, your entry was updated successfully.'
-      : 'Daily log submitted successfully.';
+    const messageEn = 'Daily log submitted successfully.';
     const message = await translate(messageEn, locale);
 
-    res.status(statusCode).json({
+    res.status(201).json({
       success: true,
       message,
       data: {
