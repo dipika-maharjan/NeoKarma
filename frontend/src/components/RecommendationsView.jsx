@@ -478,8 +478,8 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
           try {
             const newPlan = await generatePlan();
             planData = newPlan;
-                        // Show toast notification when plan is generated
-                        showToast('🎉 Your personalized plan is ready!', { type: 'success', duration: 4000 });
+            // Show toast notification when plan is generated
+            showToast('🎉 Your personalized plan is ready!', { type: 'success', duration: 4000 });
             // Show notification when plan is generated
             showNotification({
               id: `plan-ready-${new Date().toISOString()}`,
@@ -544,8 +544,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
   // Add recommendation to Plan list dynamically
   const addToPlan = (rec) => {
-    if (planItems.some(item => item.id === rec.id)) {
-      setActiveTab('plan');
+    if (planItems.some(item => item.id === rec.id || item.title === rec.title)) {
       return;
     }
 
@@ -562,7 +561,6 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
     };
 
     setPlanItems([newItem, ...planItems]);
-    setActiveTab('plan'); // Direct redirect to show plan
     // Notify user and show quick toast
     try {
       showNotification({
@@ -578,7 +576,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
     } catch (e) {
       // ignore if notifications context unavailable
     }
-    try { showToast('Added to your plan', { type: 'success', duration: 3000 }); } catch (e) {}
+    try { showToast('Added to your plan', { type: 'success', duration: 3000 }); } catch (e) { }
   };
 
   // Toggle completion of a task in the plan
@@ -605,16 +603,16 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   // Helper to calculate if an item should be marked as completed based on tracking progress
   const getItemCompletionStatus = (item) => {
     if (!dailyLogs || dailyLogs.length === 0) return item.completed || false;
-    
+
     // Calculate progress using the same logic as the tracking hook
     let percentage = 0;
-    
+
     if (item.trackingConfig) {
       // Dynamic tracking config
       const fieldPath = item.trackingConfig.field;
       const operator = item.trackingConfig.operator;
       const value = item.trackingConfig.value;
-      
+
       const matchingDays = dailyLogs.filter((log) => {
         const logValue = getFieldValueForTracking(log, fieldPath);
         if (operator === '==') return logValue === value;
@@ -623,7 +621,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
         if (operator === 'includes') return Array.isArray(logValue) && logValue.includes(value);
         return false;
       }).length;
-      
+
       const goal = item.trackingConfig.goal || 20;
       percentage = Math.min((matchingDays / goal) * 100, 100);
     } else if (item.category) {
@@ -631,9 +629,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
       const monthlyGoals = { transport: 20, food: 8, energy: 20, waste: 28 };
       let current = 0;
       const target = monthlyGoals[item.category] || 20;
-      
+
       if (item.category === 'food') {
-        current = dailyLogs.filter(log => 
+        current = dailyLogs.filter(log =>
           log.food?.mealType === 'vegetarian' || log.food?.mealType === 'vegan'
         ).length;
       } else if (item.category === 'energy') {
@@ -646,10 +644,10 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
       } else if (item.category === 'waste') {
         current = dailyLogs.filter(log => log.wasteAndPlastic?.segregated === true).length;
       }
-      
+
       percentage = Math.min((current / target) * 100, 100);
     }
-    
+
     // Mark as completed if progress >= 100%
     return percentage >= 100;
   };
@@ -783,7 +781,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                 </div>
               ) : (
                 recommendations.map((rec) => {
-                  const isAdded = planItems.some(item => item.id === rec.id);
+                  const isAdded = planItems.some(item => item.id === rec.id || item.title === rec.title);
                   return (
                     <div
                       key={rec.id}
@@ -817,9 +815,10 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                             </span>
                           </p>
                           <button
-                            onClick={() => addToPlan(rec)}
+                            onClick={() => !isAdded && addToPlan(rec)}
+                            disabled={isAdded}
                             className={`mt-3 text-xs font-bold py-2.5 px-5 h-10 rounded-full transition-all border flex items-center justify-center ${isAdded
-                              ? 'bg-[#E2F0D9] text-[#0A3D25] border-[#C5E0B4]'
+                              ? 'bg-[#E2F0D9] text-[#0A3D25] border-[#C5E0B4] opacity-80 cursor-default'
                               : 'bg-[#0A3D25] text-white border-transparent hover:bg-[#0D5232] cursor-pointer'
                               }`}
                           >
