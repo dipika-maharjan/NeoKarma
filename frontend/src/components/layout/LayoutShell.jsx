@@ -68,7 +68,7 @@ const LayoutShell = ({ children }) => {
 
   return (
     <>
-      {showNavbar ? <Navbar /> : <LandingNavbar />}
+      {isProtectedRoute || isAuthenticated ? <Navbar /> : <LandingNavbar />}
       <main className="flex-grow">
         {children}
       </main>

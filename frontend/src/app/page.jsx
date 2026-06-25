@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import LandingNavbar from '@/components/LandingNavbar';
 import Footer from '@/components/Footer';
 import { getLocaleCookie } from '@/lib/api/cookie';
+import { useAuth } from '../context/AuthContext';
 import {
   ArrowRight,
   Award,
@@ -25,6 +26,8 @@ import {
 
 export default function Home() {
   const t = useTranslations('Landing');
+  const tNav = useTranslations('Navbar');
+  const { isAuthenticated } = useAuth();
   const [transport, setTransport] = useState('walk');
   const [lunch, setLunch] = useState('vegetarian');
   const [plasticWaste, setPlasticWaste] = useState('no');
@@ -142,7 +145,7 @@ export default function Home() {
 
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/login?next=/calculator"
+                  href={isAuthenticated ? "/calculator" : "/login?next=/calculator"}
                   className="inline-flex items-center gap-2 rounded-full bg-[#0A3D25] px-7 py-3 text-[15px] font-bold text-white no-underline shadow-sm transition hover:bg-[#072B1A]"
                 >
                   {t('tryCalculator')}
@@ -151,7 +154,7 @@ export default function Home() {
 
                 <Link
                   href="#preview"
-                  className="rounded-full border border-[#BFCBC5] bg-white/40 px-7 py-3 text-[15px] font-bold text-[#4A5550] no-underline transition hover:bg-white"
+                  className="hidden rounded-full border border-[#BFCBC5] bg-white/40 px-7 py-3 text-[15px] font-bold text-[#4A5550] no-underline transition hover:bg-white"
                 >
                   {t('tryQuick')}
                 </Link>
@@ -290,10 +293,10 @@ export default function Home() {
                   </div>
                 </div>
                 <Link
-                  href="/register"
+                  href={isAuthenticated ? "/dashboard" : "/register"}
                   className="block rounded-full bg-white py-3 text-[14px] font-bold text-[#0A3D25] no-underline transition hover:bg-gray-50"
                 >
-                  {t('getStarted')}
+                  {isAuthenticated ? tNav('dashboard') : t('getStarted')}
                 </Link>
               </div>
             </div>
