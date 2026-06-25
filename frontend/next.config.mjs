@@ -18,7 +18,7 @@ const baseConfig = {
     return {
       beforeFiles: [
         {
-          source: '/api/:path((?!cron\\b).*)',
+          source: '/api/:path*',
           destination: `${backendUrl}/api/:path*`
         }
       ]
