@@ -1,12 +1,10 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getActivePlan, generatePlan } from '@/lib/actions/mitigationPlanActions';
 import { useTranslations, useLocale } from 'next-intl';
 import { useNotifications } from '@/context/NotificationContext';
 import { useToast } from '@/context/ToastContext';
 import { useRecommendationProgress } from '@/hooks/useRecommendationProgress';
+import { useApi } from '@/hooks/useApi';
 import {
   Archive,
   ArrowLeft,
@@ -27,7 +25,6 @@ import {
 } from 'lucide-react';
 import ProgressTrackerWrapper from './ProgressTrackerWrapper';
 
-
 // Unified recommendations list matching the Smart Recommendations view
 const PRESETS = [
   {
@@ -45,6 +42,7 @@ const PRESETS = [
     trackingConfig: {
       field: 'transportation.mode',
       value: 'bus',
+      defaultWeight: 42,
       goal: 5,
       period: 'week',
       operator: '=='
@@ -365,7 +363,6 @@ const renderIcon = (iconStr) => {
 const mapBackendRecToCard = (rec, index) => {
   const id = rec._id || rec.id || `backend-rec-${index}`;
 
-  // Use rich fields from backend if available to support custom visuals and colors
   const badge = rec.badge || (
     rec.effortLevel === 'medium' ? 'MEDIUM IMPACT' :
       rec.effortLevel === 'high' ? 'HIGH IMPACT' : 'EASY WIN'
@@ -403,7 +400,8 @@ const mapBackendRecToCard = (rec, index) => {
     reductionUnit,
     visualType,
     personalSaving,
-    actionDesc: rec.actionDesc || rec.description
+    actionDesc: rec.actionDesc || rec.description,
+    trackingConfig: rec.trackingConfig
   };
 };
 
@@ -417,18 +415,75 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   const [addedIds, setAddedIds] = useState(new Set());
   const [planItems, setPlanItems] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'transport', 'energy', 'waste', 'food'
-
-  const [recommendations, setRecommendations] = useState(PRESETS);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
-  // New two-tier states
-  const [planType, setPlanType] = useState(null);
-  const [logsCount, setLogsCount] = useState(0);
-  const [motivationalMessage, setMotivationalMessage] = useState('');
-  const [topContributors, setTopContributors] = useState([]);
-  const [dailyLogs, setDailyLogs] = useState([]);
+  // Load plan active data using useApi SWR hook
+  const { data: planData, error: planError, isLoading: isPlanLoading, mutate: mutatePlan, post: triggerGenerate } = useApi(
+    user ? '/mitigation-plan' : null
+  );
+
+  // Auto-generation fallback logic
+  useEffect(() => {
+    const autoGenerate = async () => {
+      if (planData === null && !isPlanLoading && !generating) {
+        setGenerating(true);
+        try {
+          await triggerGenerate(null, { url: '/mitigation-plan/generate' });
+          showToast('🎉 Your personalized plan is ready!', { type: 'success', duration: 4000 });
+          showNotification({
+            id: `plan-ready-${new Date().toISOString()}`,
+            type: 'success',
+            title: 'Your personalized plan is ready',
+            message: "Based on your 30 days of logging, we've created a custom action plan just for you.",
+            actionLabel: 'View plan',
+            actionHref: '/recommendations',
+            createdAt: new Date().toISOString(),
+            unread: true
+          });
+        } catch (genErr) {
+          console.warn('Could not generate plan automatically:', genErr);
+        } finally {
+          setGenerating(false);
+        }
+      }
+    };
+    autoGenerate();
+  }, [planData, isPlanLoading, triggerGenerate, showToast, showNotification, generating]);
+
+  // Dynamically compute recommendations list from planData SWR response
+  const recommendations = useMemo(() => {
+    if (!planData) return PRESETS;
+
+    if (planData.type === 'GENERAL_PLAN') {
+      const plan = planData.plan || {};
+      const flatRecs = [
+        ...(plan.transport || []),
+        ...(plan.energy || []),
+        ...(plan.diet || []),
+        ...(plan.waste || [])
+      ];
+      return flatRecs.map((rec, index) => mapBackendRecToCard(rec, index));
+    } else if (planData.type === 'WEEKLY_PLAN' || planData.type === 'MONTHLY_PLAN') {
+      const recs = planData.plan?.recommendations || [];
+      return recs.map((rec, index) => mapBackendRecToCard(rec, index));
+    } else {
+      const recs = planData.recommendations || [];
+      if (recs.length > 0) {
+        return recs.map((rec, index) => mapBackendRecToCard(rec, index));
+      }
+      return PRESETS;
+    }
+  }, [planData]);
+
+  const planType = planData?.type || null;
+  const logsCount = planData?.logsCount || 0;
+  const dailyLogs = planData?.dailyLogs || [];
+  const motivationalMessage = planData?.message || '';
+  const topContributors = planData?.plan?.topContributors || [];
+
+  const loading = isPlanLoading || generating;
+  const error = planError?.message;
 
   // Load planItems from localStorage unique to the logged-in user
   useEffect(() => {
@@ -440,12 +495,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
         setPlanItems(JSON.parse(stored));
       } catch (e) {
         console.error('Error parsing stored plan items:', e);
-        // Initialize with empty plan, not pre-filled items
         setPlanItems([]);
       }
     } else {
-      // FIX: Start with empty action plan for new users
-      // Users must explicitly add recommendations from the recommendations tab
       setPlanItems([]);
     }
     setIsLoaded(true);
@@ -462,85 +514,6 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   useEffect(() => {
     setAddedIds(new Set(planItems.map(item => item.id)));
   }, [planItems]);
-
-  // Fetch or generate recommendations from the backend
-  useEffect(() => {
-    const loadPlan = async () => {
-      if (!user) return;
-
-      setLoading(true);
-      setError(null);
-      try {
-        let planData = await getActivePlan();
-
-        // Auto-generation fallback logic if planData is completely empty
-        if (!planData) {
-          try {
-            const newPlan = await generatePlan();
-            planData = newPlan;
-            // Show toast notification when plan is generated
-            showToast('🎉 Your personalized plan is ready!', { type: 'success', duration: 4000 });
-            // Show notification when plan is generated
-            showNotification({
-              id: `plan-ready-${new Date().toISOString()}`,
-              type: 'success',
-              title: 'Your personalized plan is ready',
-              message: "Based on your 30 days of logging, we've created a custom action plan just for you.",
-              actionLabel: 'View plan',
-              actionHref: '/recommendations',
-              createdAt: new Date().toISOString(),
-              unread: true
-            });
-          } catch (genErr) {
-            console.warn('Could not generate plan automatically:', genErr);
-          }
-        }
-
-        if (planData) {
-          setPlanType(planData.type || null);
-          setLogsCount(planData.logsCount || 0);
-          setDailyLogs(planData.dailyLogs || []);
-          setMotivationalMessage(planData.message || '');
-
-          if (planData.type === 'GENERAL_PLAN') {
-            const plan = planData.plan || {};
-            const flatRecs = [
-              ...(plan.transport || []),
-              ...(plan.energy || []),
-              ...(plan.diet || []),
-              ...(plan.waste || [])
-            ];
-            const cards = flatRecs.map((rec, index) => mapBackendRecToCard(rec, index));
-            setRecommendations(cards);
-          } else if (planData.type === 'WEEKLY_PLAN' || planData.type === 'MONTHLY_PLAN') {
-            const recs = planData.plan?.recommendations || [];
-            const cards = recs.map((rec, index) => mapBackendRecToCard(rec, index));
-            setRecommendations(cards);
-            setTopContributors(planData.plan?.topContributors || []);
-          } else {
-            // Fallback to old format if backend returns plain active plan
-            const recs = planData.recommendations || [];
-            if (recs.length > 0) {
-              const cards = recs.map((rec, index) => mapBackendRecToCard(rec, index));
-              setRecommendations(cards);
-            } else {
-              setRecommendations(PRESETS);
-            }
-          }
-        } else {
-          setRecommendations(PRESETS);
-        }
-      } catch (err) {
-        console.error('Error loading recommendations:', err);
-        setError(err.message || 'Failed to load recommendations');
-        setRecommendations(PRESETS);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPlan();
-  }, [user]);
 
   // Add recommendation to Plan list dynamically
   const addToPlan = (rec) => {

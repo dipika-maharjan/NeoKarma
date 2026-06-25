@@ -9,6 +9,7 @@ import { ToastProvider } from '@/context/ToastContext';
 import ToastContainer from '@/components/ToastContainer';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import { SWRProvider } from '@/context/SWRProvider';
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
@@ -45,11 +46,13 @@ export default async function RootLayout({ children }) {
             <OfflineSyncProvider>
               <NotificationProvider>
                <ToastProvider>
-                 <LayoutShell>
-                   <OfflineBanner />
-                   <ToastContainer />
-                   {children}
-                 </LayoutShell>
+                 <SWRProvider>
+                   <LayoutShell>
+                     <OfflineBanner />
+                     <ToastContainer />
+                     {children}
+                   </LayoutShell>
+                 </SWRProvider>
                </ToastProvider>
               </NotificationProvider>
             </OfflineSyncProvider>

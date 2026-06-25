@@ -92,9 +92,8 @@ class DashboardController {
       }
     };
 
-    const locale = req.query.locale || req.body.locale || req.cookies?.locale || 'en';
+    const locale = req.query?.locale || req.body?.locale || req.cookies?.locale || 'en';
     const responseData = translateSummaryFields(summaryData, locale);
-
     res.status(200).json({
       success: true,
       data: responseData

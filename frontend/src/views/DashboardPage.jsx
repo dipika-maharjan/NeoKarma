@@ -2,10 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getDashboardSummary } from '@/lib/actions/dashboardActions';
-import { getStreak } from '@/lib/actions/streakActions';
-import { getTodayLog, getCachedStreak, getDailyLogHistory } from '@/lib/actions/calculatorActions';
-import { getScoreConfig } from '@/lib/actions/scoreConfigActions';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowDown, ArrowUpRight, Plus } from 'lucide-react';
@@ -13,6 +9,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 import { useNotifications } from '@/context/NotificationContext';
 import { useToast } from '@/context/ToastContext';
+import { useApi } from '@/hooks/useApi';
 
 const DashboardPage = () => {
   const { user, isAuthenticated } = useAuth();
@@ -23,50 +20,49 @@ const DashboardPage = () => {
   const formatNumber = useNumberFormatter();
   const carbonMirrorT = useTranslations('CarbonMirror');
   const { showNotification } = useNotifications();
-    const { showToast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState(null);
-  const [streakData, setStreakData] = useState(null);
-  const [todayLog, setTodayLog] = useState(null);
-  const [scoreConfig, setScoreConfig] = useState(null);
-  const [error, setError] = useState(null);
-  const [historyLogs, setHistoryLogs] = useState([]);
+  const { showToast } = useToast();
+
   const [planItems, setPlanItems] = useState([]);
 
+  // Fetch data using the useApi SWR hook for automatic caching & deduplication
+  const { data: dashboardData, error: dashboardError, isLoading: isDashboardLoading } = useApi(
+    isAuthenticated ? ['/dashboard/summary', { locale }] : null
+  );
+  
+  const { data: todayLog, error: todayLogError } = useApi(
+    isAuthenticated ? '/daily-log/today' : null
+  );
+
+  const { data: scoreConfig, error: scoreConfigError } = useApi(
+    isAuthenticated ? '/score-config' : null
+  );
+
+  const { data: historyResponse, error: historyError } = useApi(
+    isAuthenticated ? '/daily-log/history' : null
+  );
+
+  const { data: streakData, error: streakError } = useApi(
+    isAuthenticated ? '/streak' : null
+  );
+
+  // Compute loading & error states based on SWR status
+  const loading = isDashboardLoading || !dashboardData || !streakData || !scoreConfig || !historyResponse;
+  const error = dashboardError?.message || todayLogError?.message || scoreConfigError?.message || historyError?.message || streakError?.message;
+
+  const historyLogs = historyResponse?.data || [];
+
+  // Watch streakData to trigger milestone notifications exactly once per session
   useEffect(() => {
-    const fetchData = async () => {
-      if (!isAuthenticated) {
-        router.push('/login');
-        return;
-      }
-
-      try {
-        const cachedStreak = getCachedStreak();
-        
-        const [dashData, today, config, historyResponse] = await Promise.all([
-          getDashboardSummary(locale),
-          getTodayLog(),
-          getScoreConfig(),
-          getDailyLogHistory()
-        ]);
-        
-        let streakInfo = cachedStreak;
-        if (!streakInfo) {
-          streakInfo = await getStreak();
-        }
-        
-        setDashboardData(dashData);
-        setStreakData(streakInfo);
-        setTodayLog(today);
-        if (config) {
-          setScoreConfig(config);
-        }
-
-        // Trigger milestone notifications
-        if (streakInfo) {
-          // 30-day milestone notification
-          if (streakInfo.currentStreak === 30) {
-                        showToast('Wow! 30-day streak achieved!', { type: 'success', duration: 5000 });
+    if (streakData) {
+      const currentStreak = streakData.currentStreak || streakData.current || 0;
+      const shownKey = `neokarma_streak_milestone_shown_${currentStreak}`;
+      
+      if (typeof window !== 'undefined' && (currentStreak === 7 || currentStreak === 30)) {
+        if (!sessionStorage.getItem(shownKey)) {
+          sessionStorage.setItem(shownKey, 'true');
+          
+          if (currentStreak === 30) {
+            showToast('Wow! 30-day streak achieved!', { type: 'success', duration: 5000 });
             showNotification({
               id: `milestone-30day-${new Date().toISOString()}`,
               type: 'success',
@@ -77,10 +73,8 @@ const DashboardPage = () => {
               createdAt: new Date().toISOString(),
               unread: true
             });
-          }
-          // 7-day milestone
-          else if (streakInfo.currentStreak === 7) {
-                        showToast('7-day streak! You\'re on fire!', { type: 'success', duration: 4000 });
+          } else if (currentStreak === 7) {
+            showToast('7-day streak! You\'re on fire!', { type: 'success', duration: 4000 });
             showNotification({
               id: `milestone-7day-${new Date().toISOString()}`,
               type: 'success',
@@ -93,22 +87,13 @@ const DashboardPage = () => {
             });
           }
         }
-        
-        if (historyResponse && historyResponse.data) {
-          setHistoryLogs(historyResponse.data);
-        }
-      } catch (err) {
-        console.error('Error loading dashboard:', err);
-        setError(t('failedToLoadDashboard'));
-      } finally {
-        setLoading(false);
       }
-    };
+    }
+  }, [streakData, showNotification, showToast]);
 
+  // Load static plan items check states from localStorage
+  useEffect(() => {
     if (isAuthenticated) {
-      fetchData();
-      
-      // Load plan items from localStorage
       const storageKey = `neokarma_plan_items_${user?._id || user?.id || 'default'}`;
       const stored = localStorage.getItem(storageKey);
       if (stored) {
@@ -119,7 +104,7 @@ const DashboardPage = () => {
         }
       }
     }
-  }, [isAuthenticated, router, locale, t]);
+  }, [isAuthenticated, user]);
 
   if (!isAuthenticated) {
     return null;

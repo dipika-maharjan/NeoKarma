@@ -28,12 +28,6 @@ import {
   ResponsiveContainer,
   CartesianGrid
 } from 'recharts';
-import { getCarbonMirror } from '@/lib/actions/mirrorActions';
-import { getDailyLogHistory } from '@/lib/actions/calculatorActions';
-import { getAppConfig } from '@/lib/actions/configActions';
-import { getDashboardSummary } from '@/lib/actions/dashboardActions';
-import { getTodayLog } from '@/lib/actions/calculatorActions';
-import { getActivePlan } from '@/lib/actions/mitigationPlanActions';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslations, useLocale } from 'next-intl';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
@@ -41,6 +35,8 @@ import { Skeleton } from '@/components/ui';
 import PhaseUnlockCelebration from '@/components/PhaseUnlockCelebration';
 import { useNotifications } from '@/context/NotificationContext';
 import { useToast } from '@/context/ToastContext';
+import { useApi } from '@/hooks/useApi';
+import { useMemo } from 'react';
 
 const CARD_CLASS = 'rounded-[10px] border border-[#E0E5E2] bg-white';
 const CARD_PADDING = 'p-5 md:p-6 shadow-[0_2px_8px_rgba(15,23,42,0.06)]';
@@ -96,17 +92,9 @@ const CarbonMirrorPage = () => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const locale = useLocale();
-  const [loading, setLoading] = useState(true);
-  const [mirrorData, setMirrorData] = useState(null);
-  const [dailyHistory, setDailyHistory] = useState([]);
-  const [appConfig, setAppConfig] = useState(null);
-  const [phaseData, setPhaseData] = useState(null);
-  const [hasLoggedToday, setHasLoggedToday] = useState(false);
-  const [error, setError] = useState(null);
+  
   const [debugHistoryRaw, setDebugHistoryRaw] = useState(null);
   const [debugMappedRaw, setDebugMappedRaw] = useState(null);
-  const [activePlan, setActivePlan] = useState(null);
-  const [pendingRecommendations, setPendingRecommendations] = useState([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const t = useTranslations('CarbonMirror');
   const tImg = useTranslations('Images');
@@ -116,174 +104,129 @@ const CarbonMirrorPage = () => {
   const { showNotification } = useNotifications();
   const { showToast } = useToast();
 
+  // Fetch all required data points through useApi SWR hooks
+  const { data: phaseData, error: phaseError, isLoading: isPhaseLoading } = useApi(
+    isAuthenticated ? ['/dashboard/summary', { locale }] : null
+  );
+
+  const { data: todayLog } = useApi(
+    isAuthenticated ? '/daily-log/today' : null
+  );
+  const hasLoggedToday = !!todayLog;
+
+  const isOnboarding = phaseData?.phase === 'onboarding';
+
+  const { data: mirrorData, error: mirrorError } = useApi(
+    isAuthenticated && !isOnboarding ? ['/carbon-mirror', { locale }] : null
+  );
+
+  const { data: planData } = useApi(
+    isAuthenticated && !isOnboarding ? '/mitigation-plan' : null
+  );
+
+  const { data: historyResponse, error: historyError } = useApi(
+    isAuthenticated && !isOnboarding ? '/daily-log/history' : null
+  );
+
+  const { data: appConfig, error: configError } = useApi(
+    isAuthenticated ? '/config' : null
+  );
+
+  // Compute overall state based on sub-requests
+  const loading = isPhaseLoading || !phaseData || !appConfig || (!isOnboarding && (!mirrorData || !historyResponse));
+  const error = phaseError?.message || configError?.message || mirrorError?.message || historyError?.message;
+
   // Check if user has been active for 30+ days
   const isEligibleForNextMilestone = () => {
     if (!phaseData) return false;
-    // If user has a streak or daily logs count >= 30, they're eligible
     return phaseData.streakCount >= 30 || (phaseData.logsCount && phaseData.logsCount >= 30);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!isAuthenticated) {
-        router.push('/login');
-        return;
-      }
+  // Map dailyHistory from SWR response
+  const dailyHistory = useMemo(() => {
+    if (!historyResponse || !historyResponse.data) return [];
+    const raw = Array.isArray(historyResponse.data) ? historyResponse.data.slice() : [];
+    raw.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      try {
-        setError(null);
-        const attempts = 2;
-        let summary = null;
-        let todayLog = null;
-        for (let i = 0; i < attempts; i++) {
-          try {
-            [summary, todayLog] = await Promise.all([getDashboardSummary(locale), getTodayLog()]);
-            break;
-          } catch (e) {
-            if (i === attempts - 1) throw e;
-            await new Promise((r) => setTimeout(r, 250));
-          }
-        }
+    return raw.map((item) => {
+      const date = item.date || item._doc?.date || item.log?.date || null;
+      const value = item.totalEmissionKg ?? item._doc?.totalEmissionKg ?? item.log?.totalEmissionKg ?? item.totalEmission ?? null;
+      return { date, totalEmissionKg: value === null || value === undefined ? null : Number(value) };
+    }).filter((p) => p.date && Number.isFinite(p.totalEmissionKg));
+  }, [historyResponse]);
 
-        setPhaseData(summary);
-        setHasLoggedToday(!!todayLog);
-
-        if (summary?.phase !== 'onboarding') {
-          const data = await getCarbonMirror(locale || 'en');
-          if (data) {
-            setMirrorData(data);
-            // Show toast when mirror updates
-            showToast('Carbon Mirror updated with latest data', { type: 'info', duration: 3000 });
-            // Trigger notification for mirror update
-            showNotification({
-              id: `mirror-updated-${new Date().toISOString()}`,
-              type: 'info',
-              title: 'Carbon Mirror updated',
-              message: 'Your Carbon Mirror has refreshed with the latest emissions data and insights.',
-              actionLabel: 'View mirror',
-              actionHref: '/carbon-mirror',
-              createdAt: new Date().toISOString(),
-              unread: true
-            });
-          }
-
-          // Fetch active plan recommendations from the plan page
-          try {
-            let planData = await getActivePlan();
-
-            if (planData) {
-              // Extract recommendations based on plan type
-              let recommendations = [];
-
-              if (planData.type === 'GENERAL_PLAN') {
-                const plan = planData.plan || {};
-                recommendations = [
-                  ...(plan.transport || []),
-                  ...(plan.energy || []),
-                  ...(plan.diet || []),
-                  ...(plan.waste || [])
-                ];
-              } else if (planData.type === 'WEEKLY_PLAN' || planData.type === 'MONTHLY_PLAN') {
-                recommendations = planData.plan?.recommendations || [];
-              } else {
-                // Fallback to plain recommendations array if backend returns plain format
-                recommendations = planData.recommendations || [];
-              }
-
-              // Map and validate recommendations, use fallback if empty
-              if (recommendations && recommendations.length > 0) {
-                const mappedRecs = recommendations.map(mapRecommendationForCarousel);
-                setActivePlan({ recommendations: mappedRecs });
-              } else {
-                const mappedFallback = FALLBACK_RECOMMENDATIONS.map(mapRecommendationForCarousel);
-                setActivePlan({ recommendations: mappedFallback });
-              }
-            } else {
-              // No plan data at all, use fallback
-              const mappedFallback = FALLBACK_RECOMMENDATIONS.map(mapRecommendationForCarousel);
-              setActivePlan({ recommendations: mappedFallback });
-            }
-          } catch (err) {
-            // If plan fetch fails, use fallback recommendations
-            console.warn('Error fetching plan recommendations:', err);
-            const mappedFallback = FALLBACK_RECOMMENDATIONS.map(mapRecommendationForCarousel);
-            setActivePlan({ recommendations: mappedFallback });
-          }
-          setCarouselIndex(0);
-
-          try {
-            const historyResp = await getDailyLogHistory();
-            if (historyResp && historyResp.data) {
-              // Ensure data is ordered oldest->newest so chart reads left-to-right
-              const raw = Array.isArray(historyResp.data) ? historyResp.data.slice() : [];
-              raw.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-              // Map into the chart shape { date, totalEmissionKg }
-              const mapped = raw.map((item) => {
-                const date = item.date || item._doc?.date || item.log?.date || null;
-                const value = item.totalEmissionKg ?? item._doc?.totalEmissionKg ?? item.log?.totalEmissionKg ?? item.totalEmission ?? null;
-                return { date, totalEmissionKg: value === null || value === undefined ? null : Number(value) };
-              }).filter((p) => p.date && Number.isFinite(p.totalEmissionKg));
-
-              if (mapped.length === 0) {
-                try {
-                  setDebugHistoryRaw(JSON.stringify(historyResp.data?.slice?.(0, 12) || historyResp.data, null, 2));
-                } catch (e) {
-                  setDebugHistoryRaw(String(historyResp.data));
-                }
-              } else {
-                setDebugHistoryRaw(null);
-                try {
-                  setDebugMappedRaw(JSON.stringify(mapped.slice(0, 12), null, 2));
-                } catch (e) {
-                  setDebugMappedRaw(String(mapped.slice(0, 12)));
-                }
-                // log min/max
-                try {
-                  const vals = mapped.map(m => m.totalEmissionKg);
-                  const min = Math.min(...vals);
-                  const max = Math.max(...vals);
-                  // min/max calculated for potential debugging, no console output.
-                } catch (e) { }
-              }
-              // mapped points processed; no verbose logging.
-
-              setDailyHistory(mapped);
-            }
-          } catch (err) {
-            console.error('Unable to load daily history for monthly trend:', err);
-          }
-        }
-      } catch (err) {
-        console.error('Error loading mirror data:', err);
-        setError(err?.message || 'Failed to load mirror data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (isAuthenticated) {
-      fetchData();
+  // Map activePlan recommendations dynamically from planData SWR
+  const activePlan = useMemo(() => {
+    if (!planData) {
+      const mappedFallback = FALLBACK_RECOMMENDATIONS.map(mapRecommendationForCarousel);
+      return { recommendations: mappedFallback };
     }
-  }, [isAuthenticated, router, locale]);
 
+    let recommendations = [];
+    if (planData.type === 'GENERAL_PLAN') {
+      const plan = planData.plan || {};
+      recommendations = [
+        ...(plan.transport || []),
+        ...(plan.energy || []),
+        ...(plan.diet || []),
+        ...(plan.waste || [])
+      ];
+    } else if (planData.type === 'WEEKLY_PLAN' || planData.type === 'MONTHLY_PLAN') {
+      recommendations = planData.plan?.recommendations || [];
+    } else {
+      recommendations = planData.recommendations || [];
+    }
+
+    if (recommendations && recommendations.length > 0) {
+      const mappedRecs = recommendations.map(mapRecommendationForCarousel);
+      return { recommendations: mappedRecs };
+    }
+
+    const mappedFallback = FALLBACK_RECOMMENDATIONS.map(mapRecommendationForCarousel);
+    return { recommendations: mappedFallback };
+  }, [planData]);
+
+  // Set debug mapping outputs
   useEffect(() => {
-    let mounted = true;
-
-    const loadConfig = async () => {
-      try {
-        const config = await getAppConfig();
-        if (mounted) setAppConfig(config);
-      } catch (err) {
-        console.error('Unable to load app config for mirror page:', err);
+    if (historyResponse && historyResponse.data) {
+      if (dailyHistory.length === 0) {
+        try {
+          setDebugHistoryRaw(JSON.stringify(historyResponse.data?.slice?.(0, 12) || historyResponse.data, null, 2));
+        } catch (e) {
+          setDebugHistoryRaw(String(historyResponse.data));
+        }
+      } else {
+        setDebugHistoryRaw(null);
+        try {
+          setDebugMappedRaw(JSON.stringify(dailyHistory.slice(0, 12), null, 2));
+        } catch (e) {
+          setDebugMappedRaw(String(dailyHistory.slice(0, 12)));
+        }
       }
-    };
+    }
+  }, [historyResponse, dailyHistory]);
 
-    loadConfig();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // Notify user when mirrorData changes
+  useEffect(() => {
+    if (mirrorData) {
+      const updateId = mirrorData.updatedAt || new Date().toDateString();
+      const storageKey = `neokarma_mirror_notified_${updateId}`;
+      if (typeof window !== 'undefined' && !sessionStorage.getItem(storageKey)) {
+        sessionStorage.setItem(storageKey, 'true');
+        showToast('Carbon Mirror updated with latest data', { type: 'info', duration: 3000 });
+        showNotification({
+          id: `mirror-updated-${new Date().toISOString()}`,
+          type: 'info',
+          title: 'Carbon Mirror updated',
+          message: 'Your Carbon Mirror has refreshed with the latest emissions data and insights.',
+          actionLabel: 'View mirror',
+          actionHref: '/carbon-mirror',
+          createdAt: new Date().toISOString(),
+          unread: true
+        });
+      }
+    }
+  }, [mirrorData, showNotification, showToast]);
 
   if (!isAuthenticated) {
     return null;

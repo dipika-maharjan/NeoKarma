@@ -137,12 +137,12 @@ const SharePage = ({ params }) => {
                 🌱 Environmental Impact
               </p>
               <div className="space-y-1">
-                  <p className="text-[13px] text-[#F57F17]">
-                    <span className="font-bold">{shareData.treesEquivalent}</span> {t('treesTracked')}
-                  </p>
-                  <p className="text-[13px] text-[#F57F17] opacity-80">
-                    ≈ {shareData.estimatedTotalCo2Kg} {t('kgCO2Avoided')}
-                  </p>
+                <p className="text-[13px] text-[#F57F17]">
+                  <span className="font-bold">{shareData.treesEquivalent}</span> {t('treesTracked')}
+                </p>
+                <p className="text-[13px] text-[#F57F17] opacity-80">
+                  ≈ {shareData.estimatedTotalCo2Kg} {t('kgCO2Avoided')}
+                </p>
               </div>
             </div>
 

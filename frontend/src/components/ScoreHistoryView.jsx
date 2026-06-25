@@ -17,9 +17,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { getStreak } from '@/lib/actions/streakActions';
-import { getDailyLogHistory } from '@/lib/actions/calculatorActions';
-import { getScoreConfig } from '@/lib/actions/scoreConfigActions';
+import { useApi } from '@/hooks/useApi';
 import { useNumberFormatter } from '@/lib/utils/numberFormatter';
 
 const formatDateString = (dateStr) => {
@@ -46,56 +44,40 @@ const ScoreHistoryView = () => {
   const formatNumber = useNumberFormatter();
   const [currentPage, setCurrentPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const [streakData, setStreakData] = useState({ current: 0, longest: 0, participationScore: 0 });
-  const [historyLogs, setHistoryLogs] = useState([]);
   const [planItems, setPlanItems] = useState([]);
-  const [scoreConfig, setScoreConfig] = useState(null);
-
   const itemsPerPage = 5;
 
+  // SWR-based API data loading
+  const { data: streakDataVal, isLoading: isStreakLoading } = useApi(
+    user ? '/streak' : null
+  );
+  const streakData = streakDataVal || { current: 0, longest: 0, participationScore: 0 };
+
+  const { data: historyResponse, isLoading: isHistoryLoading } = useApi(
+    user ? '/daily-log/history' : null
+  );
+  const historyLogs = historyResponse?.data || [];
+
+  const { data: scoreConfig, isLoading: isConfigLoading } = useApi(
+    user ? '/score-config' : null
+  );
+
+  const loading = isStreakLoading || isHistoryLoading || isConfigLoading || !streakDataVal || !historyResponse || !scoreConfig;
+
+  // Load static plan items check states from localStorage
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-
-      setLoading(true);
-      try {
-        const [streakInfo, historyResponse, config] = await Promise.all([
-          getStreak(),
-          getDailyLogHistory(),
-          getScoreConfig()
-        ]);
-
-        if (streakInfo) {
-          setStreakData(streakInfo);
+    if (user) {
+      const storageKey = `neokarma_plan_items_${user?._id || user?.id || 'default'}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          setPlanItems(JSON.parse(stored));
+        } catch (e) {
+          console.error('Error parsing stored plan items:', e);
         }
-
-        if (historyResponse && historyResponse.data) {
-          setHistoryLogs(historyResponse.data);
-        }
-
-        if (config) {
-          setScoreConfig(config);
-        }
-      } catch (err) {
-        console.error('Error fetching score/history data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-
-    const storageKey = `neokarma_plan_items_${user?._id || user?.id || 'default'}`;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        setPlanItems(JSON.parse(stored));
-      } catch (e) {
-        console.error('Error parsing stored plan items:', e);
       }
     }
   }, [user]);

@@ -9,8 +9,8 @@ import {
   Users,
   Zap
 } from 'lucide-react';
-import apiClient from '@/lib/api/axios';
 import { useAuth } from '@/context/AuthContext';
+import { useApi } from '@/hooks/useApi';
 
 const formatNumber = (value) =>
   new Intl.NumberFormat('en-US', {
@@ -32,31 +32,19 @@ const formatDate = (value) => {
 export default function AdminStudentsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/login');
-      return;
     }
-
-    const fetchStudents = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.get('/admin/students');
-        setStudents(Array.isArray(response.data) ? response.data : []);
-      } catch (err) {
-        setError(err?.message || 'Failed to load students.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStudents();
   }, [isAuthenticated, router]);
+
+  const { data: studentsData, error, isLoading } = useApi(
+    isAuthenticated ? '/admin/students' : null
+  );
+
+  const students = useMemo(() => Array.isArray(studentsData) ? studentsData : [], [studentsData]);
 
   const filteredStudents = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -84,7 +72,7 @@ export default function AdminStudentsPage() {
     };
   }, [students]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <main className="min-h-screen bg-[#f5f7f6] p-6">
         <div className="mx-auto max-w-7xl space-y-4">
@@ -103,7 +91,7 @@ export default function AdminStudentsPage() {
     return (
       <main className="min-h-screen bg-[#f5f7f6] p-6">
         <div className="mx-auto max-w-7xl rounded-2xl bg-red-50 p-4 text-sm text-red-700">
-          {error}
+          {error.message || 'Failed to load students.'}
         </div>
       </main>
     );
