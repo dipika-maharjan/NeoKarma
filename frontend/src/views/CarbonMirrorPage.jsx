@@ -297,6 +297,125 @@ const CarbonMirrorPage = () => {
     }
   };
 
+  const generateBubbles = (emission) => {
+    const count = Math.min(10, Math.max(4, Math.round((emission || 3.5) * 1.5)));
+    const sizes = [28, 44, 72, 96, 140];
+    return Array.from({ length: count }, (_, index) => {
+      const seed = (index + 1) * 37;
+      const size = sizes[index % sizes.length];
+      const left = 3 + (seed % 82);
+      const dur = 6 + ((seed * 7) % 90) / 10;
+      const delay = -(((seed * 11) % 100) / 100) * dur;
+      const opacity = 0.04 + ((seed * 13) % 60) / 1000;
+      return { size, left, dur, delay, opacity, anim: `rise-sway-${(index % 4) + 1}` };
+    });
+  };
+
+  const todayBubbles = generateBubbles(todayMirror?.kgCO2);
+  const monthlyBubbles = generateBubbles(monthlyMirror?.kgCO2);
+  const emissionPlumes = [
+    { left: 18, bottom: 24, width: 170, height: 48, delay: -0.8, duration: 13.5, opacity: 0.15 },
+    { left: 33, bottom: 56, width: 210, height: 54, delay: -3.1, duration: 15.8, opacity: 0.13 },
+    { left: 49, bottom: 30, width: 230, height: 58, delay: -5.4, duration: 16.2, opacity: 0.14 },
+    { left: 64, bottom: 54, width: 190, height: 48, delay: -1.9, duration: 14.7, opacity: 0.12 },
+    { left: 78, bottom: 28, width: 180, height: 46, delay: -6.8, duration: 15.4, opacity: 0.13 },
+    { left: 86, bottom: 60, width: 130, height: 34, delay: -9.2, duration: 13.2, opacity: 0.1 }
+  ];
+  const emissionWisps = [
+    { left: 8, top: 34, width: 260, delay: -1.2, duration: 15 },
+    { left: 27, top: 62, width: 320, delay: -4.5, duration: 17 },
+    { left: 48, top: 42, width: 300, delay: -7.6, duration: 16 },
+    { left: 68, top: 68, width: 280, delay: -8.7, duration: 15.5 },
+    { left: 76, top: 28, width: 220, delay: -10.1, duration: 14 }
+  ];
+
+  const renderAnimation = (bubbles, type = 'default') => {
+    if (type === 'firefly') {
+      return (
+        <div className="gas-wrap z-0" aria-hidden>
+          {bubbles.map((bubble, index) => (
+            <div
+              key={`f-${index}`}
+              className="firefly-sparkle"
+              style={{
+                width: `${bubble.size * 0.15}px`,
+                height: `${bubble.size * 0.15}px`,
+                left: `${bubble.left}%`,
+                animationDelay: `${bubble.delay.toFixed(2)}s, ${((index * 0.5) % 3).toFixed(2)}s`,
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    const prefix = type === 'black' ? 'black-' : '';
+    
+    return (
+      <>
+        <div className="gas-wrap z-0" aria-hidden>
+          {bubbles.map((bubble, index) => (
+            <div
+              key={`b-${index}`}
+              className={`${prefix}gas-bubble`}
+              style={{
+                width: `${bubble.size}px`,
+                height: `${bubble.size}px`,
+                left: `${bubble.left}%`,
+                animation: `${bubble.anim} ${bubble.dur.toFixed(2)}s linear ${bubble.delay.toFixed(2)}s infinite`,
+                opacity: bubble.opacity
+              }}
+            />
+          ))}
+        </div>
+        <div className="smoke-wrap z-0" aria-hidden>
+          {[0, 1, 2].map((puff) => (
+            <div
+              key={puff}
+              className={`${prefix}smoke-puff`}
+              style={{
+                left: `${12 + puff * 30}%`,
+                width: `${42 + puff * 18}px`,
+                height: `${42 + puff * 18}px`,
+                animationDelay: `-${puff * 2.5}s`
+              }}
+            />
+          ))}
+        </div>
+        <div className="emission-wrap z-0" aria-hidden>
+          {emissionPlumes.map((plume, index) => (
+            <div
+              key={`plume-${index}`}
+              className={`${prefix}emission-plume`}
+              style={{
+                left: `${plume.left}%`,
+                bottom: `${plume.bottom}%`,
+                width: `${plume.width}px`,
+                height: `${plume.height}px`,
+                animationDelay: `${plume.delay}s`,
+                animationDuration: `${plume.duration}s`,
+                opacity: plume.opacity
+              }}
+            />
+          ))}
+          {emissionWisps.map((wisp, index) => (
+            <div
+              key={`wisp-${index}`}
+              className={`${prefix}emission-wisp`}
+              style={{
+                left: `${wisp.left}%`,
+                top: `${wisp.top}%`,
+                width: `${wisp.width}px`,
+                animationDelay: `${wisp.delay}s`,
+                animationDuration: `${wisp.duration}s`
+              }}
+            />
+          ))}
+        </div>
+      </>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f8ff] px-6 py-10 font-sans">
@@ -404,7 +523,7 @@ const CarbonMirrorPage = () => {
                     onClick={() => router.push('/carbon-mirror/intro')}
                     className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#0A3D25] bg-white px-6 text-[15px] font-semibold text-[#0A3D25] transition-colors hover:bg-[#F6FFF7] shadow-sm sm:w-auto"
                   >
-                    See how Carbon Mirror works
+                    How Carbon Mirror works
                   </button>
                   {hasLoggedToday ? (
                     <button
@@ -611,7 +730,8 @@ const CarbonMirrorPage = () => {
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4 text-white">
+              {renderAnimation(todayBubbles, 'black')}
+              <div className="absolute bottom-4 left-4 text-white z-10">
                 <p className="text-[18px] font-extrabold leading-tight !text-white">
                   {todayMirror.treesEquivalent ? t('treesEquivalentToday', { count: formatNumber(todayMirror.treesEquivalent, {}) }) : t('currentTreeEquivalence')}
                 </p>
@@ -650,7 +770,8 @@ const CarbonMirrorPage = () => {
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4 text-white">
+              {renderAnimation(monthlyBubbles, 'firefly')}
+              <div className="absolute bottom-4 left-4 text-white z-10">
                 <p className="text-[18px] font-extrabold leading-tight !text-white">
                   {monthlyMirror.treesEquivalent ? t('treesEquivalentThisMonth', { count: formatNumber(monthlyMirror.treesEquivalent, {}) }) : t('monthlyMirrorSummary')}
                 </p>

@@ -3,7 +3,20 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { routing } from '@/i18n/routing';
 
-const PUBLIC = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
+const PUBLIC = [
+  '/', 
+  '/login', 
+  '/register', 
+  '/forgot-password', 
+  '/reset-password',
+  '/support',
+  '/about',
+  '/contact',
+  '/terms',
+  '/sustainability',
+  '/curriculum',
+  '/share'
+];
 const PROTECTED_PREFIXES = [
   '/admin',
   '/dashboard',
@@ -12,8 +25,8 @@ const PROTECTED_PREFIXES = [
   '/plan',
   '/result',
   '/score',
-  '/share',
-  '/profile'
+  '/profile',
+  '/notifications'
 ];
 
 const isProtectedRoute = (path: string) =>
@@ -24,6 +37,14 @@ const handleI18n = createMiddleware(routing);
 
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
+  
+  // Extract the actual path without locale prefix
+  // Next-intl paths are like /en/login, /ne/dashboard, etc.
+  let pathWithoutLocale = pathname;
+  const localeMatch = pathname.match(/^\/(en|ne)(\/.*)?$/);
+  if (localeMatch) {
+    pathWithoutLocale = localeMatch[2] || '/';
+  }
 
   // Let next-intl handle the response first
   const response = handleI18n(req);
@@ -49,11 +70,11 @@ export function middleware(req: NextRequest) {
   }
 
   // Handle auth redirects
-  if (!token && isProtectedRoute(pathname)) {
+  if (!token && isProtectedRoute(pathWithoutLocale)) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  if (token && (pathname === '/login' || pathname === '/register' || pathname === '/' || pathname === '/forgot-password' || pathname === '/reset-password')) {
+  if (token && (pathWithoutLocale === '/login' || pathWithoutLocale === '/register' || pathWithoutLocale === '/' || pathWithoutLocale === '/forgot-password' || pathWithoutLocale === '/reset-password')) {
     const dest = role === 'school_admin' ? '/admin/dashboard' : '/dashboard';
     return NextResponse.redirect(new URL(dest, req.url));
   }

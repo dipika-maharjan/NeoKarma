@@ -1,5 +1,6 @@
 import { registerUser, loginUser, fetchUserProfile, updateUserProfile, forgotPassword, resetPassword } from '../api/authApi';
 import { setCookie, removeCookie } from '../api/cookie';
+import { mutate } from 'swr';
 
 export const register = async (userData) => {
   const response = await registerUser(userData);
@@ -26,6 +27,8 @@ export const login = async (credentials) => {
 export const logout = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token');
+    // Clear SWR cache globally to prevent state leakage across user sessions
+    mutate(() => true, undefined, { revalidate: false }).catch(() => {});
   }
   removeCookie('token');
   removeCookie('role');

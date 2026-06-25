@@ -10,7 +10,7 @@ const faqs = [
   },
   {
     q: 'How is my carbon footprint calculated?',
-    a: 'NeoKarma uses verified emission factors for each activity — transport mode, distance, meal type, energy use, and plastic waste — to compute your daily CO₂ equivalent in kilograms.',
+    a: 'NeoKarma uses verified emission factors for each activity, including transport mode, distance, meal type, energy use, and plastic waste, to compute your daily CO₂ equivalent in kilograms.',
   },
   {
     q: 'Why should students track emissions?',
@@ -88,7 +88,7 @@ export default function SupportPage() {
     <main className="bg-[#FAFAFA] px-4 py-12 md:px-8 md:py-16 lg:px-12">
       <section className="mx-auto w-full max-w-screen-2xl">
 
-        {/* ── Header — matches FooterInfoPage exactly ── */}
+        {/* ── Header matches FooterInfoPage exactly ── */}
         <div className="border-b border-[#DCE9E0] pb-8 md:pb-10">
           <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-[#5C8A72]">
             Support
@@ -101,7 +101,7 @@ export default function SupportPage() {
         {/* ── Intro ── */}
         <div className="py-8 md:py-10">
           <p className="max-w-3xl text-[17px] leading-8 text-[#4A5550] md:text-[18px]">
-            Find answers to the most common questions about NeoKarma.
+            Find answers to the most common questions about Neoकर्म.
           </p>
         </div>
 
@@ -125,7 +125,7 @@ export default function SupportPage() {
             Still have questions?
           </p>
           <p className="mt-3 max-w-xl text-[17px] leading-7 text-[#1E3322]">
-            Reach out to your school coordinator or contact us directly — we're happy to help.
+            Reach out to your school coordinator or contact us directly; we're happy to help.
           </p>
           <a
             href="/contact"
