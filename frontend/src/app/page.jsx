@@ -151,7 +151,7 @@ export default function Home() {
 
                 <Link
                   href="#preview"
-                  className="rounded-full border border-[#BFCBC5] bg-white/40 px-7 py-3 text-[15px] font-bold text-[#4A5550] no-underline transition hover:bg-white"
+                  className="hidden rounded-full border border-[#BFCBC5] bg-white/40 px-7 py-3 text-[15px] font-bold text-[#4A5550] no-underline transition hover:bg-white"
                 >
                   {t('tryQuick')}
                 </Link>
