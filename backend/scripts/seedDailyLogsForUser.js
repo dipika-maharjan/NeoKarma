@@ -6,7 +6,7 @@ require('dotenv').config({ path: '../.env' });
 const mongoose = require('mongoose');
 const User = require('../src/models/User');
 const DailyLog = require('../src/models/DailyLog');
-const emissionFactorRepository = require('../src/repositories/emissionFactor.repository');
+const emissionCalculationService = require('../src/services/emissionCalculation.service');
 
 const NUM_DAYS = 90;
 
@@ -56,32 +56,6 @@ function pickMeal(p) {
 }
 
 /**
- * Calculate emissions using factors
- */
-async function calculateBreakdown(mode, distance, meal, plastic, energy) {
-  const transportFactor = await emissionFactorRepository.findActive('transportation', mode);
-  const foodFactor = await emissionFactorRepository.findActive('food', meal);
-  const wasteFactor = await emissionFactorRepository.findActive('waste', 'plastic');
-  const energyFactor = await emissionFactorRepository.findActive('energy', 'electricity');
-
-  const breakdown = {
-    transportKg: transportFactor ? +(transportFactor.factorValue * distance).toFixed(3) : 0,
-    foodKg: foodFactor ? +foodFactor.factorValue.toFixed(3) : 0,
-    wasteKg: wasteFactor ? +(wasteFactor.factorValue * plastic).toFixed(3) : 0,
-    energyKg: energyFactor ? +(energyFactor.factorValue * energy).toFixed(3) : 0
-  };
-
-  const totalEmissionKg = +(
-    breakdown.transportKg +
-    breakdown.foodKg +
-    breakdown.wasteKg +
-    breakdown.energyKg
-  ).toFixed(3);
-
-  return { breakdown, totalEmissionKg };
-}
-
-/**
  * Main log builder
  */
 function buildLogEntry(dayIndex, dateStr) {
@@ -119,8 +93,9 @@ async function seedDailyLogs() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
 
-    const user = await User.findOne({ email: 'guragainaruna@gmail.com' });
-    if (!user) throw new Error('User not found');
+    const targetEmail = process.argv[2] || 'guragainaruna@gmail.com';
+    const user = await User.findOne({ email: targetEmail });
+    if (!user) throw new Error(`User not found for email: ${targetEmail}`);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -138,13 +113,14 @@ async function seedDailyLogs() {
     for (let i = 0; i < dates.length; i++) {
       const entry = buildLogEntry(i, dates[i]);
 
-      const result = await calculateBreakdown(
-        entry.transportation.mode,
-        entry.transportation.distanceKm,
-        entry.food.mealType,
-        entry.wasteAndPlastic.plasticItemCount,
-        entry.energy.usageHours
-      );
+      const emissionResult = await emissionCalculationService.calculateEmissions({
+        transportationMode: entry.transportation.mode,
+        transportationDistanceKm: entry.transportation.distanceKm,
+        foodMealType: entry.food.mealType,
+        wasteAndPlasticCount: entry.wasteAndPlastic.plasticItemCount,
+        energyUsageHours: entry.energy.usageHours,
+        energyUsageKg: 0
+      });
 
       const log = await DailyLog.findOneAndUpdate(
         { userId: user._id, date: entry.date },
@@ -152,8 +128,8 @@ async function seedDailyLogs() {
           userId: user._id,
           date: entry.date,
           ...entry,
-          breakdown: result.breakdown,
-          totalEmissionKg: result.totalEmissionKg,
+          breakdown: emissionResult.breakdown,
+          totalEmissionKg: emissionResult.totalEmissionKg,
           createdAt: new Date()
         },
         { upsert: true, new: true }
