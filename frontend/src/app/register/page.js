@@ -1,26 +1,27 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { register } from '@/lib/actions/authActions';
-import { Loader2, Eye, EyeOff, Check } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useAuth } from '@/context/AuthContext';
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { register } from "@/lib/actions/authActions";
+import { Loader2, Eye, EyeOff, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useAuth } from "@/context/AuthContext";
+import { ADMIN_DASHBOARD_ROUTE, USER_DASHBOARD_ROUTE } from "@/constants/consts";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    grade: '',
-    locationType: 'urban',
-    schoolName: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    grade: "",
+    locationType: "urban",
+    schoolName: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -30,15 +31,30 @@ const RegisterPage = () => {
   const isLowercaseValid = /[a-z]/.test(password);
   const isNumberValid = /[0-9]/.test(password);
   const isSpecialValid = /[!@#$%^&*(),.?":{}|<>_+-]/.test(password);
-  const isPasswordValid = isLengthValid && isUppercaseValid && isLowercaseValid && isNumberValid && isSpecialValid;
+  const isPasswordValid =
+    isLengthValid &&
+    isUppercaseValid &&
+    isLowercaseValid &&
+    isNumberValid &&
+    isSpecialValid;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const t = useTranslations('Auth');
-  const imgT = useTranslations('Images');
-  const { login: authContextLogin } = useAuth();
+  const t = useTranslations("Auth");
+  const imgT = useTranslations("Images");
+  const { login: authContextLogin, user, isAuthenticated } = useAuth();
 
+  const isAdmin = user?.role === "school_admin";
 
-  const { isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (isAdmin) {
+        router.push(ADMIN_DASHBOARD_ROUTE);
+        return;
+      }
+
+      router.push(USER_DASHBOARD_ROUTE);
+    }
+  }, [isAuthenticated, router]);
 
   const gradeOptions = Array.from({ length: 5 }, (_, i) => ({
     value: String(i + 8),
@@ -54,45 +70,49 @@ const RegisterPage = () => {
   };
 
   const getHomeRoute = (user) => {
-    if (!user) return '/dashboard';
+    if (!user) return USER_DASHBOARD_ROUTE;
     if (
-      user.role === 'school_admin' ||
-      user.role === 'admin' ||
+      user.role === "school_admin" ||
+      user.role === "admin" ||
       user.isAdmin ||
       user.admin
     )
-      return '/admin';
-    return '/dashboard';
+      return ADMIN_DASHBOARD_ROUTE;
+    return USER_DASHBOARD_ROUTE;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Name validation: min 2 chars, must contain at least one letter
     const nameTrimmed = formData.name.trim();
     const nameRegex = /^[\p{L}\p{M}'\-.\s]{2,}$/u;
-    if (!nameTrimmed || !nameRegex.test(nameTrimmed) || !/\p{L}/u.test(nameTrimmed)) {
-      setError(t('nameInvalid'));
+    if (
+      !nameTrimmed ||
+      !nameRegex.test(nameTrimmed) ||
+      !/\p{L}/u.test(nameTrimmed)
+    ) {
+      setError(t("nameInvalid"));
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError(t('invalidEmail'));
+      setError(t("invalidEmail"));
       return;
     }
 
     // Password strength check
     if (!isPasswordValid) {
-      setError(t('passwordWeak'));
+      setError(t("passwordWeak"));
       return;
     }
 
     // Passwords matching check
     if (formData.password !== formData.confirmPassword) {
-      setError(t('passwordMismatch'));
+      setError(t("passwordMismatch"));
       return;
     }
 
@@ -101,39 +121,32 @@ const RegisterPage = () => {
     try {
       const { confirmPassword, ...submitData } = formData;
       const result = await register(submitData);
-      
+
       // Update AuthContext with newly registered user
       if (result?.token && result?.user) {
-        await authContextLogin({ email: formData.email, password: formData.password });
+        await authContextLogin({
+          email: formData.email,
+          password: formData.password,
+        });
       }
-      
-      const nextParam = searchParams.get('next');
+
+      const nextParam = searchParams.get("next");
       const defaultRoute = getHomeRoute(result.user);
       router.push(nextParam || defaultRoute);
     } catch (err) {
-      setError(err.message || 'Registration failed');
+      setError(err.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
-
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, router]);
-
   if (!isAuthenticated) {
-
-
     return (
       <div className="flex h-screen overflow-hidden bg-[#f8f9ff]">
         <section className="relative hidden w-[52%] overflow-hidden bg-[#0A3D25] lg:block">
           <Image
             src="/Himalayan Mountains.png"
-            alt={imgT('himalayanAlt')}
+            alt={imgT("himalayanAlt")}
             fill
             sizes="(min-width: 1024px) 52vw, 0vw"
             className="object-cover opacity-80"
@@ -144,12 +157,12 @@ const RegisterPage = () => {
 
           <div className="relative z-10 flex h-full flex-col justify-center px-[20%] text-center">
             <h1 className="mb-6 text-[42px] font-extrabold leading-[1.08] !text-white">
-              {t('heroLine1')}
+              {t("heroLine1")}
               <br />
-              {t('heroLine2')}
+              {t("heroLine2")}
             </h1>
             <p className="mx-auto max-w-[340px] text-[14px] font-medium leading-6 !text-white/85">
-              {t('marketingParagraph')}
+              {t("marketingParagraph")}
             </p>
           </div>
         </section>
@@ -159,23 +172,23 @@ const RegisterPage = () => {
             <div className="mb-4 text-center">
               <Link href="/" className="no-underline">
                 <h1 className="mb-1.5 text-[23px] font-extrabold text-[#202434]">
-                  {t('welcome')}
+                  {t("welcome")}
                 </h1>
               </Link>
               <p className="text-[12px] font-medium leading-4 text-[#68706d]">
-                {t('joinMission')}
+                {t("joinMission")}
               </p>
             </div>
 
             <div className="mb-4 grid grid-cols-2 rounded-md bg-[#e9eefb] p-1">
               <div className="rounded-md bg-[#0A3D25] py-2 text-center text-[11px] font-bold text-white shadow-sm">
-                {t('signUp')}
+                {t("signUp")}
               </div>
               <Link
                 href="/login"
                 className="rounded-md py-2 text-center text-[11px] font-bold text-[#6c7370] no-underline transition hover:text-[#0A3D25]"
               >
-                {t('login')}
+                {t("login")}
               </Link>
             </div>
 
@@ -188,14 +201,14 @@ const RegisterPage = () => {
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                  {t('fullName')}
+                  {t("fullName")}
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder={t('fullName')}
+                  placeholder={t("fullName")}
                   required
                   className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                 />
@@ -203,14 +216,14 @@ const RegisterPage = () => {
 
               <div>
                 <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                  {t('email')}
+                  {t("email")}
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder={t('emailPlaceholder')}
+                  placeholder={t("emailPlaceholder")}
                   required
                   className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                 />
@@ -219,15 +232,15 @@ const RegisterPage = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                    {t('password')}
+                    {t("password")}
                   </label>
                   <div className="relative">
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      placeholder={t('passwordPlaceholder')}
+                      placeholder={t("passwordPlaceholder")}
                       required
                       className="h-9 w-full rounded-md border border-[#cfd7df] bg-white pl-3 pr-8 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                     />
@@ -235,7 +248,9 @@ const RegisterPage = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
@@ -244,25 +259,33 @@ const RegisterPage = () => {
 
                 <div>
                   <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                    {t('confirm')}
+                    {t("confirm")}
                   </label>
                   <div className="relative">
                     <input
-                      type={showConfirmPassword ? 'text' : 'password'}
+                      type={showConfirmPassword ? "text" : "password"}
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      placeholder={t('passwordPlaceholder')}
+                      placeholder={t("passwordPlaceholder")}
                       required
                       className="h-9 w-full rounded-md border border-[#cfd7df] bg-white pl-3 pr-8 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showConfirmPassword ? "Hide password" : "Show password"
+                      }
                     >
-                      {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      {showConfirmPassword ? (
+                        <EyeOff size={14} />
+                      ) : (
+                        <Eye size={14} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -271,7 +294,7 @@ const RegisterPage = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                    {t('grade')}
+                    {t("grade")}
                   </label>
                   <select
                     name="grade"
@@ -280,10 +303,10 @@ const RegisterPage = () => {
                     required
                     className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                   >
-                    <option value="">{t('selectGrade')}</option>
+                    <option value="">{t("selectGrade")}</option>
                     {gradeOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
-                        {t('grade') + ' ' + opt.value}
+                        {t("grade") + " " + opt.value}
                       </option>
                     ))}
                   </select>
@@ -291,7 +314,7 @@ const RegisterPage = () => {
 
                 <div>
                   <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                    {t('location')}
+                    {t("location")}
                   </label>
                   <select
                     name="locationType"
@@ -300,22 +323,23 @@ const RegisterPage = () => {
                     required
                     className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                   >
-                    <option value="urban">{t('urban')}</option>
-                    <option value="rural">{t('rural')}</option>
+                    <option value="urban">{t("urban")}</option>
+                    <option value="rural">{t("rural")}</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="mb-1 block text-[11px] font-extrabold text-[#303542]">
-                  {t('schoolName')} <span className="font-medium text-[#8b9490]">(optional)</span>
+                  {t("schoolName")}{" "}
+                  <span className="font-medium text-[#8b9490]">(optional)</span>
                 </label>
                 <input
                   type="text"
                   name="schoolName"
                   value={formData.schoolName}
                   onChange={handleChange}
-                  placeholder={t('schoolName')}
+                  placeholder={t("schoolName")}
                   className="h-9 w-full rounded-md border border-[#cfd7df] bg-white px-3 text-[12px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#063f2f] focus:ring-2 focus:ring-[#063f2f]/10"
                 />
               </div>
@@ -328,35 +352,38 @@ const RegisterPage = () => {
                 {loading ? (
                   <>
                     <Loader2 size={15} className="animate-spin" />
-                    {t('creating')}
+                    {t("creating")}
                   </>
                 ) : (
-                  t('createAccount')
+                  t("createAccount")
                 )}
               </button>
             </form>
 
             <p className="mt-3 text-center text-[11px] font-medium text-[#68706d]">
-              {t('alreadyHaveAccount')}{' '}
+              {t("alreadyHaveAccount")}{" "}
               <Link
-                href={searchParams.get('next') ? `/login?next=${encodeURIComponent(searchParams.get('next'))}` : '/login'}
+                href={
+                  searchParams.get("next")
+                    ? `/login?next=${encodeURIComponent(searchParams.get("next"))}`
+                    : "/login"
+                }
                 className="font-extrabold text-[#0A3D25] no-underline hover:underline"
               >
-                {t('login')}
+                {t("login")}
               </Link>
             </p>
 
             <p className="mx-auto mt-3 max-w-[280px] text-center text-[10px] font-medium leading-4 text-[#68706d]">
-              {t('termsText')}
+              {t("termsText")}
             </p>
           </div>
         </section>
       </div>
-    )
-  };
+    );
+  }
 
-
-  return <></>
+  return <></>;
 };
 
 export default RegisterPage;
