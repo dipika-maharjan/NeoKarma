@@ -77,8 +77,13 @@ const ScoreHistoryView = () => {
           setPlanItems(JSON.parse(stored));
         } catch (e) {
           console.error('Error parsing stored plan items:', e);
+          setPlanItems([]);
         }
+      } else {
+        setPlanItems([]);
       }
+    } else {
+      setPlanItems([]);
     }
   }, [user]);
 

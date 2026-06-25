@@ -93,7 +93,7 @@ const DashboardPage = () => {
 
   // Load static plan items check states from localStorage
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
       const storageKey = `neokarma_plan_items_${user?._id || user?.id || 'default'}`;
       const stored = localStorage.getItem(storageKey);
       if (stored) {
@@ -101,8 +101,13 @@ const DashboardPage = () => {
           setPlanItems(JSON.parse(stored));
         } catch (e) {
           console.error('Error parsing stored plan items:', e);
+          setPlanItems([]);
         }
+      } else {
+        setPlanItems([]);
       }
+    } else {
+      setPlanItems([]);
     }
   }, [isAuthenticated, user]);
 
