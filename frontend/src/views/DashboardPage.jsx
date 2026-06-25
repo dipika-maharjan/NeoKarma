@@ -150,7 +150,7 @@ const DashboardPage = () => {
     const completedActions = planItems.filter((item) => item.completed);
     const completedCount = completedActions.length;
     const actionsWeight = scoreConfig?.actionsWeight ?? 35;
-    const actionsDefaultPts = scoreConfig?.actionsDefaultPoints ?? 15;
+    const actionsDefaultPts = scoreConfig?.actionsDefaultPoints ?? 0;
     const actionsPts = totalActions > 0
       ? Math.round((completedCount / totalActions) * actionsWeight)
       : actionsDefaultPts;
