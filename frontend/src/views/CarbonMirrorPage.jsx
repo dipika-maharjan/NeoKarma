@@ -404,7 +404,7 @@ const CarbonMirrorPage = () => {
                     onClick={() => router.push('/carbon-mirror/intro')}
                     className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#0A3D25] bg-white px-6 text-[15px] font-semibold text-[#0A3D25] transition-colors hover:bg-[#F6FFF7] shadow-sm sm:w-auto"
                   >
-                    See how Carbon Mirror works
+                    How Carbon Mirror works
                   </button>
                   {hasLoggedToday ? (
                     <button

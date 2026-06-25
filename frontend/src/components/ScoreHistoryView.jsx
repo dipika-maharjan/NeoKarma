@@ -434,9 +434,9 @@ const ScoreHistoryView = () => {
               <h2 className="text-xl font-bold text-[#0A3D25]">{t('dailyHistoryTitle')}</h2>
               <p className="text-xs text-gray-400 mt-0.5">{t('dailyHistorySubtitle')}</p>
             </div>
-            <div className="flex flex-col min-[420px]:flex-row items-stretch min-[420px]:items-center gap-3 w-full sm:w-auto">
+            <div className="flex flex-row flex-wrap justify-end items-center gap-3 w-full sm:w-auto">
               <div
-                className="relative flex-1 sm:flex-initial"
+                className="relative flex-initial"
                 onBlur={(event) => {
                   if (!event.currentTarget.contains(event.relatedTarget)) {
                     setFilterOpen(false);
@@ -446,19 +446,12 @@ const ScoreHistoryView = () => {
                 <button
                   type="button"
                   onClick={() => setFilterOpen((open) => !open)}
-                  className="flex h-10 w-full min-w-32 items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-[#0A3D25] shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:border-[#0A3D25] focus:outline-none focus:ring-4 focus:ring-[#0A3D25]/10 sm:w-auto"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-[#0A3D25] shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:border-[#0A3D25] focus:outline-none focus:ring-4 focus:ring-[#0A3D25]/10"
                   aria-expanded={filterOpen}
                   aria-haspopup="listbox"
+                  aria-label="Filter"
                 >
-                  <span className="flex items-center gap-2">
-                  <ListFilter size={16} strokeWidth={2.3} />
-                  Filter
-                  </span>
-                  <ChevronDown
-                    size={15}
-                    strokeWidth={2.4}
-                    className={`text-gray-400 transition-transform ${filterOpen ? 'rotate-180' : ''}`}
-                  />
+                  <ListFilter size={18} strokeWidth={2.3} />
                 </button>
                 {filterOpen && (
                   <div
@@ -491,9 +484,10 @@ const ScoreHistoryView = () => {
               <button
                 onClick={exportPDF}
                 disabled={isExporting}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-[#0A3D25] hover:bg-[#0D5232] disabled:bg-gray-400 text-white font-bold text-xs h-10 px-4 rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                className="flex-initial flex h-10 w-10 items-center justify-center rounded-xl bg-[#0A3D25] hover:bg-[#0D5232] disabled:bg-gray-400 text-white font-bold text-xs transition-all cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                aria-label="Export PDF"
               >
-                <Download size={16} strokeWidth={2.4} /> {isExporting ? t('exporting') : t('exportPDF')}
+                <Download size={18} strokeWidth={2.4} />
               </button>
             </div>
           </div>
