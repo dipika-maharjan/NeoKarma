@@ -22,6 +22,7 @@ NeoKarma is a **full-stack carbon footprint tracking and behavior-change platfor
 ## Core Features
 
 ### **Carbon Calculator**
+
 - Track daily emissions across 4 categories:
   - 🚗 **Transportation** (vehicles, public transit)
   - 🍽️ **Food** (dietary choices)
@@ -31,18 +32,21 @@ NeoKarma is a **full-stack carbon footprint tracking and behavior-change platfor
 - Monthly snapshot tracking for trend analysis
 
 ### **Carbon Mirror**
+
 - Visual representation of carbon impact compared to tree absorption rates
 - "Carbon debt" vs. "carbon credit" visualization
 - Personal carbon offsetting progress
 - Achievement badges and milestones
 
 ### **AI-Powered Mitigation Plans**
+
 - Intelligent recommendations for carbon reduction
 - Personalized action plans based on user behavior
 - Smart suggestions ranked by impact potential
 - Integration with external AI service (configurable)
 
 ### **Gamified Streaks & Scoring**
+
 - Daily participation streaks for consistent engagement
 - **School integration**: Participation scores contribute to school grading
 - Streak reminders via email notifications
@@ -50,6 +54,7 @@ NeoKarma is a **full-stack carbon footprint tracking and behavior-change platfor
 - Achievement tracking
 
 ### **Admin Panel**
+
 - User management and role assignment
 - Class/section management
 - Emission factor configuration
@@ -57,11 +62,13 @@ NeoKarma is a **full-stack carbon footprint tracking and behavior-change platfor
 - Streak monitoring and reset
 
 ### **Bilingual Support**
+
 - Full support for **English** and **Nepali**
 - Context-aware translations
 - Culturally adapted content
 
 ### **Progressive Web App (PWA)**
+
 - Offline-first functionality with IndexedDB
 - Works on mobile and desktop
 - Install as native app on any device
@@ -71,51 +78,55 @@ NeoKarma is a **full-stack carbon footprint tracking and behavior-change platfor
 ## Tech Stack
 
 ### Backend
-| Layer | Technology |
-|-------|-----------|
-| **Runtime** | Node.js (v16+) |
-| **Framework** | Express.js 5.2.1 |
-| **Database** | MongoDB + Mongoose 9.7.0 |
-| **Auth** | JWT (jsonwebtoken 9.0.3) + bcryptjs |
-| **API Validation** | express-validator 7.0.0 |
-| **Email** | Nodemailer 9.0.1 |
-| **Scheduling** | node-cron 3.0.2 |
-| **Security** | Helmet.js 7.1.0, express-rate-limit |
-| **Logging** | Morgan 1.10.0 |
-| **Storage** | IndexedDB (idb 8.0.3) |
+
+| Layer              | Technology                          |
+| ------------------ | ----------------------------------- |
+| **Runtime**        | Node.js (v16+)                      |
+| **Framework**      | Express.js 5.2.1                    |
+| **Database**       | MongoDB + Mongoose 9.7.0            |
+| **Auth**           | JWT (jsonwebtoken 9.0.3) + bcryptjs |
+| **API Validation** | express-validator 7.0.0             |
+| **Email**          | Nodemailer 9.0.1                    |
+| **Scheduling**     | node-cron 3.0.2                     |
+| **Security**       | Helmet.js 7.1.0, express-rate-limit |
+| **Logging**        | Morgan 1.10.0                       |
+| **Storage**        | IndexedDB (idb 8.0.3)               |
 
 ### Frontend
-| Layer | Technology |
-|-------|-----------|
-| **Framework** | Next.js 16.2.9 |
-| **UI Library** | React 19.2.4 |
-| **Styling** | Tailwind CSS 4.0 |
-| **Icons** | Lucide React |
-| **Charts** | Recharts 3.8.1 |
-| **HTTP Client** | Axios 1.17.0 |
-| **i18n** | next-intl 4.13.0 |
-| **PDF Export** | jsPDF 4.2.1 |
-| **PWA** | next-pwa 5.6.0 |
-| **Cookies** | js-cookie 3.0.7 |
-| **Linting** | ESLint 9.0 |
+
+| Layer           | Technology       |
+| --------------- | ---------------- |
+| **Framework**   | Next.js 16.2.9   |
+| **UI Library**  | React 19.2.4     |
+| **Styling**     | Tailwind CSS 4.0 |
+| **Icons**       | Lucide React     |
+| **Charts**      | Recharts 3.8.1   |
+| **HTTP Client** | Axios 1.17.0     |
+| **i18n**        | next-intl 4.13.0 |
+| **PDF Export**  | jsPDF 4.2.1      |
+| **PWA**         | next-pwa 5.6.0   |
+| **Cookies**     | js-cookie 3.0.7  |
+| **Linting**     | ESLint 9.0       |
 
 ---
 
 ## 🚀 Deployment
 
 ### Current Status
+
 - **Frontend:** Deployed on [Vercel](https://vercel.com)
 - **Backend:** Deployed on [Render](https://render.com)
 
 ### 🌐 Live Demo
-https://neo-karma.vercel.app/
 
+https://neo-karma.vercel.app/
 
 ---
 
 ## ⚙️ Getting Started
 
 ### Prerequisites
+
 - **Node.js** v16+ and npm
 - **MongoDB Atlas** account (or local MongoDB)
 - Git
@@ -123,6 +134,7 @@ https://neo-karma.vercel.app/
 ### Local Setup
 
 #### 1️⃣ Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd NeoKarma
@@ -177,25 +189,28 @@ npm run dev
 ## 🔐 Environment Variables
 
 See the example files for complete configuration:
+
 - **Backend:** [backend/.env.example](./backend/.env.example)
 - **Frontend:** [frontend/.env.example](./frontend/.env.example)
 
 ### Backend Key Variables
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `MONGO_URI` | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/db` |
-| `JWT_SECRET` | JWT authentication secret | Random 32+ character string |
-| `JWT_EXPIRE` | Token expiration time | `7d`, `30d`, `24h` |
-| `FRONTEND_ORIGIN` | Allowed CORS origins | `http://localhost:3000,https://neo-karma.vercel.app` |
-| `EMAIL_USER` | Gmail address for notifications | `your-email@gmail.com` |
-| `EMAIL_PASS` | Gmail app password | Generated from Google Account |
-| `AI_SERVICE_URL` | External AI service endpoint | `https://api.ai-service.com` |
+
+| Variable          | Description                     | Example                                              |
+| ----------------- | ------------------------------- | ---------------------------------------------------- |
+| `MONGO_URI`       | MongoDB connection string       | `mongodb+srv://user:pass@cluster.mongodb.net/db`     |
+| `JWT_SECRET`      | JWT authentication secret       | Random 32+ character string                          |
+| `JWT_EXPIRE`      | Token expiration time           | `7d`, `30d`, `24h`                                   |
+| `FRONTEND_ORIGIN` | Allowed CORS origins            | `http://localhost:3000,https://neo-karma.vercel.app` |
+| `EMAIL_USER`      | Gmail address for notifications | `your-email@gmail.com`                               |
+| `EMAIL_PASS`      | Gmail app password              | Generated from Google Account                        |
+| `AI_SERVICE_URL`  | External AI service endpoint    | `https://api.ai-service.com`                         |
 
 ### Frontend Key Variables
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:5000` |
-| `NEXT_PUBLIC_DEFAULT_LANGUAGE` | Default UI language | `en` or `ne` |
+
+| Variable                       | Description         | Example                 |
+| ------------------------------ | ------------------- | ----------------------- |
+| `NEXT_PUBLIC_API_URL`          | Backend API URL     | `http://localhost:5000` |
+| `NEXT_PUBLIC_DEFAULT_LANGUAGE` | Default UI language | `en` or `ne`            |
 
 ---
 
@@ -265,12 +280,14 @@ NeoKarma/
 ## 🔌 API Overview
 
 ### Authentication Routes (`/api/auth`)
+
 - `POST /register` - User registration
 - `POST /login` - User login
 - `POST /logout` - User logout
 - `POST /refresh-token` - Refresh JWT token
 
 ### Daily Log Routes (`/api/daily-logs`)
+
 - `GET /` - Get all daily logs (with filters)
 - `POST /` - Create new daily log
 - `PUT /:id` - Update daily log
@@ -278,32 +295,37 @@ NeoKarma/
 - `GET /stats` - Get statistics
 
 ### Dashboard Routes (`/api/dashboard`)
+
 - `GET /` - Get dashboard summary
 - `GET /analytics` - Get detailed analytics
 - `GET /monthly-snapshot` - Get monthly data
 
 ### Mitigation Plan Routes (`/api/mitigation-plans`)
+
 - `GET /` - Get mitigation plans
 - `POST /` - Create new plan
 - `PUT /:id` - Update plan
 
 ### Carbon Mirror Routes (`/api/carbon-mirror`)
+
 - `GET /` - Get carbon mirror visualization data
 - `POST /calculate` - Calculate offset status
 
 ### Streak Routes (`/api/streaks`)
+
 - `GET /` - Get streak information
 - `POST /remind` - Send streak reminder email
 
 ### Admin Routes (`/api/admin`)
+
 - User management endpoints
 - Emission factor management
 - Score configuration
 
-
 ## Database Models
 
 ### User
+
 ```javascript
 {
   _id, name, email, password, role,
@@ -314,6 +336,7 @@ NeoKarma/
 ```
 
 ### DailyLog
+
 ```javascript
 {
   _id, userId, date,
@@ -328,6 +351,7 @@ NeoKarma/
 ```
 
 ### MitigationPlan
+
 ```javascript
 {
   _id, userId,
@@ -338,6 +362,7 @@ NeoKarma/
 ```
 
 ### MonthlySnapshot
+
 ```javascript
 {
   _id, userId, month, year,
@@ -347,13 +372,14 @@ NeoKarma/
 }
 ```
 
-*See backend models for complete schema definitions*
+_See backend models for complete schema definitions_
 
 ---
 
 ## Key Workflows
 
 ### 1. Student Daily Log Entry
+
 1. Student logs emissions (4 categories)
 2. System calculates total CO₂ based on emission factors
 3. Daily log saved to database
@@ -361,12 +387,14 @@ NeoKarma/
 5. Streak counter incremented (if not already logged today)
 
 ### 2. Carbon Mirror Visualization
+
 1. System retrieves all user's logs
 2. Calculates total emissions vs. tree absorption equivalent
 3. Shows carbon "debt" or "credit" status
 4. Displays progress towards carbon neutrality
 
 ### 3. AI Mitigation Plan Generation
+
 1. User requests mitigation plan
 2. AI service analyzes user's emission patterns
 3. Generates personalized action recommendations
@@ -374,6 +402,7 @@ NeoKarma/
 5. User can accept/modify/track progress
 
 ### 4. Streak & Gamification
+
 1. Background job checks for daily participation
 2. Extends streak if user logged today
 3. Resets streak if missed day
@@ -387,6 +416,7 @@ NeoKarma/
 ### Scripts
 
 #### Backend
+
 ```bash
 npm start    # Production server
 npm run dev  # Development with auto-reload (nodemon)
@@ -394,6 +424,7 @@ npm run seed # Seed database with emission factors
 ```
 
 #### Frontend
+
 ```bash
 npm run dev    # Development server (http://localhost:3000)
 npm run build  # Production build
@@ -406,6 +437,7 @@ npm run lint   # Run ESLint
 ## Development Status
 
 ### Implemented
+
 - Carbon calculator with 4 emission categories
 - User authentication (JWT + bcryptjs)
 - Daily log tracking and aggregation
@@ -416,36 +448,31 @@ npm run lint   # Run ESLint
 - PWA functionality (offline support)
 - PDF export for reports
 
-### 🔄 In Progress / Future Enhancements
-- Advanced analytics and insights
-- School leaderboard system
-- Teacher dashboard
-- Batch import for class management
-- Mobile app optimization
-- Real-time notifications
-- Social sharing features
-
 ---
 
 ## 🐛 Troubleshooting
 
 ### Backend Won't Start
+
 - Check MongoDB connection: `MONGO_URI` in `.env`
 - Ensure `JWT_SECRET` is set
 - Verify Node.js version: `node --version` (should be v16+)
 - Check port 5000 is not in use: `netstat -ano | findstr :5000`
 
 ### Frontend Build Issues
+
 - Clear `.next` directory: `rm -rf .next`
 - Reinstall dependencies: `rm -rf node_modules && npm install`
 - Check API URL: Ensure `NEXT_PUBLIC_API_URL` points to running backend
 
 ### Database Seed Failed
+
 - Ensure MongoDB is running and accessible
 - Check `MONGO_URI` format
 - Verify network access if using MongoDB Atlas
 
 ### Email Reminders Not Working
+
 - Ensure `EMAIL_USER` and `EMAIL_PASS` are set
 - Use Gmail app-specific password (not regular password)
 - Check spam folder for test emails
@@ -472,17 +499,10 @@ MIT License - See LICENSE file for details
 
 ---
 
-## 📞 Support & Contact
-
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Contact the development team
-
----
-
 ## 🌱 Contributing to Carbon Reduction
 
 Beyond the platform, we encourage all users to:
+
 - 🚴 Use public transport or carpool
 - 🌱 Adopt sustainable eating habits
 - ♻️ Reduce, reuse, recycle
@@ -492,6 +512,5 @@ Beyond the platform, we encourage all users to:
 **Together, we can create a more sustainable future for Nepal and the world.**
 
 ---
-  
+
 **Status:** MVP (Minimum Viable Product)
-test deploy
