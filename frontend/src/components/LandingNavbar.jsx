@@ -7,11 +7,15 @@ import { Menu, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import LanguageToggle from './LanguageToggle';
 
+import { useAuth } from '../context/AuthContext';
+
 const LandingNavbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const t = useTranslations('Landing');
+  const tNav = useTranslations('Navbar');
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,18 +65,29 @@ const LandingNavbar = () => {
         <div className="hidden items-center gap-6 md:flex">
           <LanguageToggle />
           <span className="h-6 w-px bg-transparent" />
-          <Link
-            href="/login"
-            className="text-sm font-medium text-gray-600 no-underline transition-colors hover:text-[#0A3D25]"
-          >
-            {t('login')}
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-full bg-[#0A3D25] px-4 py-1.5 text-sm font-semibold text-white no-underline shadow-sm transition-all duration-200 hover:bg-[#072B1A]"
-          >
-            {t('getStarted')}
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              href="/dashboard"
+              className="rounded-full bg-[#0A3D25] px-5 py-1.5 text-sm font-semibold text-white no-underline shadow-sm transition-all duration-200 hover:bg-[#072B1A]"
+            >
+              {tNav('dashboard')}
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm font-medium text-gray-600 no-underline transition-colors hover:text-[#0A3D25]"
+              >
+                {t('login')}
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-full bg-[#0A3D25] px-4 py-1.5 text-sm font-semibold text-white no-underline shadow-sm transition-all duration-200 hover:bg-[#072B1A]"
+              >
+                {t('getStarted')}
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -101,20 +116,32 @@ const LandingNavbar = () => {
             );
           })}
           <hr className="border-gray-100" />
-          <Link
-            href="/login"
-            onClick={() => setMobileOpen(false)}
-            className="block py-2 text-sm font-medium text-gray-700 no-underline"
-          >
-            {t('login')}
-          </Link>
-          <Link
-            href="/register"
-            onClick={() => setMobileOpen(false)}
-            className="block rounded-full bg-[#0A3D25] px-6 py-2.5 text-center text-sm font-semibold text-white no-underline"
-          >
-            {t('getStarted')}
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-full bg-[#0A3D25] px-6 py-2.5 text-center text-sm font-semibold text-white no-underline"
+            >
+              {tNav('dashboard')}
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="block py-2 text-sm font-medium text-gray-700 no-underline"
+              >
+                {t('login')}
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileOpen(false)}
+                className="block rounded-full bg-[#0A3D25] px-6 py-2.5 text-center text-sm font-semibold text-white no-underline"
+              >
+                {t('getStarted')}
+              </Link>
+            </>
+          )}
         </div>
       )}
     </nav>
