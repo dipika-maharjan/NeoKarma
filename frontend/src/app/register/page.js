@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { register } from '@/lib/actions/authActions';
-import { useAuth } from '@/context/AuthContext';
 import { Loader2, Eye, EyeOff, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context/AuthContext';
