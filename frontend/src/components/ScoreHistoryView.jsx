@@ -91,7 +91,7 @@ const ScoreHistoryView = () => {
   const completedActions = planItems.filter((item) => item.completed);
   const completedCount = completedActions.length;
   const actionsWeight = scoreConfig?.actionsWeight ?? 35;
-  const actionsDefaultPts = scoreConfig?.actionsDefaultPoints ?? 15;
+  const actionsDefaultPts = scoreConfig?.actionsDefaultPoints ?? 0;
   const actionsPts = totalActions > 0
     ? Math.round((completedCount / totalActions) * actionsWeight)
     : actionsDefaultPts;
@@ -110,7 +110,7 @@ const ScoreHistoryView = () => {
     : Math.min(currentStreak * completenessLowMultiplier, completenessLowMaxPts);
 
   const overallMaxScore = scoreConfig?.overallMaxScore ?? 100;
-  const overallScore = Math.min(streakPts + actionsPts + consistencyPts + completenessPts, overallMaxScore);
+  const overallScore = Math.max(0, Math.min(Math.round(streakPts + actionsPts + consistencyPts + completenessPts), overallMaxScore));
   const gaugeLabel = overallScore >= 80 ? 'Excellent' : overallScore >= 50 ? 'Good impact' : 'Keep going';
   const pdfPointsPerLog = scoreConfig?.pdfPointsPerLog ?? 10;
 

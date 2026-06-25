@@ -22,7 +22,7 @@ class ScoreConfigController {
 
       // Actions Points Calculation
       actionsWeight: process.env.SCORE_ACTIONS_WEIGHT ? parseInt(process.env.SCORE_ACTIONS_WEIGHT, 10) : 35,
-      actionsDefaultPoints: process.env.SCORE_ACTIONS_DEFAULT_POINTS ? parseInt(process.env.SCORE_ACTIONS_DEFAULT_POINTS, 10) : 15,
+      actionsDefaultPoints: process.env.SCORE_ACTIONS_DEFAULT_POINTS ? parseInt(process.env.SCORE_ACTIONS_DEFAULT_POINTS, 10) : 0,
 
       // Completeness Points Calculation
       completenessThreshold: process.env.SCORE_COMPLETENESS_THRESHOLD ? parseInt(process.env.SCORE_COMPLETENESS_THRESHOLD, 10) : 3,
