@@ -23,7 +23,7 @@ NeoKarma is a **full-stack carbon footprint tracking and behavior-change platfor
 
 ### Live Carbon Preview
 
-![Live Carbon Preview](./frontend/public/assets/landing/live-carbon.png)
+![Live Carbon Preview](./frontend/public/assets/live-carbon.png)
 
 ### How It Works
 
@@ -75,14 +75,14 @@ NeoKarma is a **full-stack carbon footprint tracking and behavior-change platfor
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 ### Current Status
 
 - **Frontend:** Deployed on [Vercel](https://vercel.com)
 - **Backend:** Deployed on [Render](https://render.com)
 
-### 🌐 Live Demo
+### Live Demo
 
 https://neo-karma.vercel.app/
 
@@ -93,10 +93,10 @@ https://neo-karma.vercel.app/
 ### **Carbon Calculator**
 
 - Track daily emissions across 4 categories:
-  - 🚗 **Transportation**
-  - 🍽️ **Food**
-  - 🗑️ **Waste**
-  - ⚡ **Energy**
+  - **Transportation**
+  - **Food**
+  - **Waste**
+  - **Energy**
 - Evidence-based emission factors with real-time calculations
 - Monthly snapshot tracking for trend analysis
 
@@ -179,7 +179,7 @@ https://neo-karma.vercel.app/
 
 ---
 
-## ⚙️ Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -189,14 +189,14 @@ https://neo-karma.vercel.app/
 
 ### Local Setup
 
-#### 1️⃣ Clone the Repository
+#### Clone the Repository
 
 ```bash
 git clone <repository-url>
 cd NeoKarma
 ```
 
-#### 2️⃣ Backend Setup
+#### Backend Setup
 
 ```bash
 cd backend
@@ -242,7 +242,7 @@ npm run dev
 
 ---
 
-## 🔐 Environment Variables
+## Environment Variables
 
 See the example files for complete configuration:
 
@@ -270,7 +270,7 @@ See the example files for complete configuration:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 NeoKarma/
@@ -506,21 +506,21 @@ npm run lint   # Run ESLint
 
 ---
 
-## 👥 Team
+## Team
 
 **NeoKarma Team** - Aruna Guragain, Ashim Lamsal, Dipika Maharjan, Sudip Chaudhary
 
 ---
 
-## 🌱 Contributing to Carbon Reduction
+## Contributing to Carbon Reduction
 
 Beyond the platform, we encourage all users to:
 
-- 🚴 Use public transport or carpool
-- 🌱 Adopt sustainable eating habits
-- ♻️ Reduce, reuse, recycle
-- 💡 Use renewable energy
-- 🌳 Plant trees and support reforestation
+- Use public transport or carpool
+- Adopt sustainable eating habits
+- Reduce, reuse, recycle
+- Use renewable energy
+- Plant trees and support reforestation
 
 **Together, we can create a more sustainable future for Nepal and the world.**
 
