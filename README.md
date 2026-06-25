@@ -1,6 +1,6 @@
-# 🌍 NeoKarma - Carbon Footprint Behavior-Change Platform
+# NeoKarma - Carbon Footprint Behavior-Change Platform
 
-**Empowering Grade 8-12 students in Nepal to track, reduce, and offset their carbon footprint through gamified engagement and AI-powered insights.**
+**Empowering students in Nepal to track, reduce, and offset their carbon footprint through gamified engagement and AI-powered insights.**
 
 ![Status](https://img.shields.io/badge/status-MVP-yellow)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -13,9 +13,78 @@
 
 ## Overview
 
-NeoKarma is a **full-stack carbon footprint tracking and behavior-change platform** designed for secondary school students in Nepal. The platform educates students about their environmental impact across four key emission categories (transportation, food, waste, and energy) while gamifying carbon reduction through streaks, scores, and AI-generated mitigation strategies.
+NeoKarma is a **full-stack carbon footprint tracking and behavior-change platform** designed for students of rural schools in Nepal. The platform educates students about their environmental impact across four key emission categories (transportation, food, waste, and energy) while gamifying carbon reduction through streaks, scores, and AI-generated mitigation strategies.
 
-**Key Target:** Students aged 13-18 in Grades 8-12 across Nepali schools
+## Screenshots
+
+### Landing Page
+
+![Landing](./frontend/public/assets/landing.png)
+
+### Live Carbon Preview
+
+![Live Carbon Preview](./frontend/public/assets/landing/live-carbon.png)
+
+### How It Works
+
+![How It Works](./frontend/public/assets/how-it-work.png)
+
+### Register Page
+
+![Register](./frontend/public/assets/register.png)
+
+### Login Page
+
+![Login](./frontend/public/assets/login.png)
+
+### Dashboard
+
+![Dashboard](./frontend/public/assets/dashboard.png)
+
+### Carbon Calculator
+
+![Carbon Calculator](./frontend/public/assets/carbon-calculator.png)
+
+### Carbon Result
+
+![Carbon Result](./frontend/public/assets/carbon-result.png)
+
+### Carbon Mirror
+
+![Carbon Mirror](./frontend/public/assets/carbon-mirror.png)
+
+### Plan Page
+
+![Plan](./frontend/public/assets/plan.png)
+
+### Score Page
+
+![Score](./frontend/public/assets/score.png)
+
+### Admin Dashboard
+
+![Admin Dashboard](./frontend/public/assets/admin-dashboard.png)
+
+### Admin Students
+
+![Admin Students](./frontend/public/assets/admin-students.png)
+
+### Admin Reports
+
+![Admin Reports](./frontend/public/assets/admin-reports.png)
+
+---
+
+## 🚀 Deployment
+
+### Current Status
+
+- **Frontend:** Deployed on [Vercel](https://vercel.com)
+- **Backend:** Deployed on [Render](https://render.com)
+
+### 🌐 Live Demo
+
+https://neo-karma.vercel.app/
 
 ---
 
@@ -24,10 +93,10 @@ NeoKarma is a **full-stack carbon footprint tracking and behavior-change platfor
 ### **Carbon Calculator**
 
 - Track daily emissions across 4 categories:
-  - 🚗 **Transportation** (vehicles, public transit)
-  - 🍽️ **Food** (dietary choices)
-  - 🗑️ **Waste** (consumption & disposal)
-  - ⚡ **Energy** (electricity, fuel usage)
+  - 🚗 **Transportation**
+  - 🍽️ **Food**
+  - 🗑️ **Waste**
+  - ⚡ **Energy**
 - Evidence-based emission factors with real-time calculations
 - Monthly snapshot tracking for trend analysis
 
@@ -107,19 +176,6 @@ NeoKarma is a **full-stack carbon footprint tracking and behavior-change platfor
 | **PWA**         | next-pwa 5.6.0   |
 | **Cookies**     | js-cookie 3.0.7  |
 | **Linting**     | ESLint 9.0       |
-
----
-
-## 🚀 Deployment
-
-### Current Status
-
-- **Frontend:** Deployed on [Vercel](https://vercel.com)
-- **Backend:** Deployed on [Render](https://render.com)
-
-### 🌐 Live Demo
-
-https://neo-karma.vercel.app/
 
 ---
 
@@ -450,52 +506,9 @@ npm run lint   # Run ESLint
 
 ---
 
-## 🐛 Troubleshooting
-
-### Backend Won't Start
-
-- Check MongoDB connection: `MONGO_URI` in `.env`
-- Ensure `JWT_SECRET` is set
-- Verify Node.js version: `node --version` (should be v16+)
-- Check port 5000 is not in use: `netstat -ano | findstr :5000`
-
-### Frontend Build Issues
-
-- Clear `.next` directory: `rm -rf .next`
-- Reinstall dependencies: `rm -rf node_modules && npm install`
-- Check API URL: Ensure `NEXT_PUBLIC_API_URL` points to running backend
-
-### Database Seed Failed
-
-- Ensure MongoDB is running and accessible
-- Check `MONGO_URI` format
-- Verify network access if using MongoDB Atlas
-
-### Email Reminders Not Working
-
-- Ensure `EMAIL_USER` and `EMAIL_PASS` are set
-- Use Gmail app-specific password (not regular password)
-- Check spam folder for test emails
-
----
-
-## Documentation
-
-- **Backend API Docs:** See [backend/README.md](./backend/README.md)
-- **Frontend Docs:** See [frontend/README.md](./frontend/README.md)
-- **Environment Setup:** See [Environment Variables](#-environment-variables) section above
-
----
-
-## 📄 License
-
-MIT License - See LICENSE file for details
-
----
-
 ## 👥 Team
 
-**NeoKarma Team** - All contributors
+**NeoKarma Team** - Aruna Guragain, Ashim Lamsal, Dipika Maharjan, Sudip Chaudhary
 
 ---
 
