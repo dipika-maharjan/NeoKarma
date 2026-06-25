@@ -10,7 +10,7 @@ const faqs = [
   },
   {
     q: 'How is my carbon footprint calculated?',
-    a: 'NeoKarma uses verified emission factors for each activity — transport mode, distance, meal type, energy use, and plastic waste — to compute your daily CO₂ equivalent in kilograms.',
+    a: 'NeoKarma uses verified emission factors for each activity: transport mode, distance, meal type, energy use, and plastic waste to compute your daily CO₂ equivalent in kilograms.',
   },
   {
     q: 'Why should students track emissions?',
