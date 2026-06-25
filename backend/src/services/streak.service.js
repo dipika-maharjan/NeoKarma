@@ -5,13 +5,16 @@
  * Participation Score: cumulative points for consistency (never penalizes high emissions)
  */
 const userRepository = require('../repositories/user.repository');
-const { getTodayStr, getYesterdayStr, isConsecutiveDays } = require('../utils/dateHelpers');
+const User = require('../models/User');
+const { getTodayStr, getYesterdayStr } = require('../utils/dateHelpers');
 const AppError = require('../utils/AppError');
 
 class StreakService {
   /**
-   * Update streak after a new log is created
-   * Called when DailyLog is successfully saved
+   * Update streak after a new log is created.
+   * Called when DailyLog is successfully saved.
+   * Also mirrors streak values into practicalMarks so the admin dashboard
+   * always reflects live data without requiring a manual sync.
    */
   async updateStreakAfterLogCreation(userId) {
     const user = await userRepository.findById(userId);
@@ -52,7 +55,34 @@ class StreakService {
       participationScore: newParticipationScore
     };
 
-    return await userRepository.updateStreak(userId, updatedStreak);
+    const updatedUser = await userRepository.updateStreak(userId, updatedStreak);
+
+    // Mirror streak data into practicalMarks so the admin dashboard always
+    // reflects live values without requiring a manual sync.
+    const isNewLogDay = user.streak.lastLogDate !== today;
+    if (isNewLogDay) {
+      // New log day: increment totalLogDays
+      const newTotalLogDays = (user.practicalMarks?.totalLogDays || 0) + 1;
+      await User.findByIdAndUpdate(userId, {
+        $set: {
+          'practicalMarks.currentStreak': newCurrent,
+          'practicalMarks.longestStreak': newLongest,
+          'practicalMarks.totalLogDays': newTotalLogDays,
+          'practicalMarks.lastSyncedAt': new Date()
+        }
+      });
+    } else {
+      // Resubmission of today's log: keep totals, but refresh streak values
+      await User.findByIdAndUpdate(userId, {
+        $set: {
+          'practicalMarks.currentStreak': newCurrent,
+          'practicalMarks.longestStreak': newLongest,
+          'practicalMarks.lastSyncedAt': new Date()
+        }
+      });
+    }
+
+    return updatedUser;
   }
 
   /**

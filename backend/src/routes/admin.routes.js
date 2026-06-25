@@ -17,5 +17,6 @@ router.get('/reports', adminController.getReports);
 router.get('/reports/emissions', adminController.getEmissionsReport);
 router.get('/reports/streaks', adminController.getStreakReport);
 router.post('/sync-marks', adminController.syncMarks);
+router.post('/sync-streaks', adminController.syncStreaks);
 
 module.exports = router;

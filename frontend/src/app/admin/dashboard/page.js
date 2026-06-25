@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchAdminDashboard } from '@/lib/api/adminApi';
+import { fetchAdminDashboard, syncAdminStreaks } from '@/lib/api/adminApi';
 import {
   Activity,
   AlertTriangle,
@@ -19,7 +19,8 @@ import {
   Bike,
   Leaf,
   PackageX,
-  UtensilsCrossed
+  UtensilsCrossed,
+  RefreshCw
 } from 'lucide-react';
 import {
   BarChart,
@@ -90,6 +91,8 @@ export default function AdminDashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [timeframe, setTimeframe] = useState('30');
   const [activeChart, setActiveChart] = useState('grades'); // 'grades' | 'sources' | 'eco'
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
   const isFirstLoad = useRef(true);
   const timeframeLabel = {
     7: 'Last 7 days',
@@ -98,34 +101,49 @@ export default function AdminDashboardPage() {
     all: 'All time'
   }[timeframe] || 'Last 30 days';
 
+  const fetchDashboard = async () => {
+    try {
+      if (isFirstLoad.current) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
+      setError('');
+      const response = await fetchAdminDashboard(timeframe);
+      const dashboardData = response.data || null;
+      setData(dashboardData);
+    } catch (err) {
+      setError(err?.message || 'Failed to load dashboard data.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      isFirstLoad.current = false;
+    }
+  };
+
+  const handleSyncStreaks = async () => {
+    setSyncing(true);
+    setSyncMessage('');
+    try {
+      const res = await syncAdminStreaks();
+      setSyncMessage(res.data?.message || 'Streaks synced');
+      // Refetch so the table reflects updated values
+      isFirstLoad.current = false;
+      await fetchDashboard();
+    } catch (err) {
+      setSyncMessage('Sync failed. Please try again.');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/login');
       return;
     }
-
-    const fetchDashboard = async () => {
-      try {
-        if (isFirstLoad.current) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
-        setError('');
-
-        const response = await fetchAdminDashboard(timeframe);
-        const dashboardData = response.data || null;
-        setData(dashboardData);
-      } catch (err) {
-        setError(err?.message || 'Failed to load dashboard data.');
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-        isFirstLoad.current = false;
-      }
-    };
-
     fetchDashboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, router, timeframe]);
 
   if (loading) {
@@ -997,8 +1015,27 @@ export default function AdminDashboardPage() {
           </section>
 
           <section className="dashboard-bottom-right flex lg:col-span-6" style={cardStyle}>
+            <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
             <div className="flex min-w-0 flex-1 flex-col">
-              <h3 className="mb-4 text-[15px] font-bold text-[#111]">Student Streaks</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div>
+                  <p style={{ fontSize: 11, color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2 }}>Student streaks</p>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: 0 }}>Streaks</h3>
+                </div>
+                <button
+                  onClick={handleSyncStreaks}
+                  disabled={syncing}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 8, border: '1px solid #e0e0e0', background: '#fff', fontSize: 11, fontWeight: 600, color: syncing ? '#aaa' : '#1a7a4a', cursor: syncing ? 'not-allowed' : 'pointer' }}
+                >
+                  <RefreshCw size={12} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
+                  {syncing ? 'Syncing...' : 'Sync'}
+                </button>
+              </div>
+              {syncMessage && (
+                <p style={{ fontSize: 11, color: '#1a7a4a', marginBottom: 12, background: '#e6f4ed', padding: '4px 10px', borderRadius: 6 }}>
+                  ✓ {syncMessage}
+                </p>
+              )}
               <div className="flex flex-1 flex-col">
                 {streakRows.length === 0 ? (
                   <div className="px-5 py-5 text-center text-sm text-[#888]">

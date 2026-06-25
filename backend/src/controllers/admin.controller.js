@@ -1022,6 +1022,135 @@ class AdminController {
       }
     });
   });
+
+  /**
+   * POST /api/admin/sync-streaks
+   * Rebuilds practicalMarks streak fields for all students from their actual
+   * DailyLog history. Use this to fix stale/wrong streak data.
+   */
+  syncStreaks = asyncHandler(async (req, res) => {
+    const adminId = req.user.schoolId || req.user.userId || req.user._id;
+    const schoolObjectId = mongoose.Types.ObjectId.isValid(adminId)
+      ? new mongoose.Types.ObjectId(adminId)
+      : null;
+    const schoolAdmin = schoolObjectId
+      ? await User.findById(schoolObjectId).select('schoolName')
+      : null;
+    const schoolName = schoolAdmin?.schoolName || req.user.schoolName;
+
+    const studentMatch = {
+      role: 'student',
+      $or: [
+        ...(schoolObjectId ? [{ schoolId: schoolObjectId }] : []),
+        ...(schoolName ? [{ schoolName }] : [])
+      ]
+    };
+
+    const students = await User.find(studentMatch, { _id: 1, name: 1 });
+    const results = [];
+
+    for (const student of students) {
+      // Fetch all logs for this student, sorted oldest to newest
+      const logs = await DailyLog.find({ userId: student._id })
+        .sort({ createdAt: 1 })
+        .select('createdAt');
+
+      if (logs.length === 0) {
+        await User.findByIdAndUpdate(student._id, {
+          $set: {
+            'practicalMarks.currentStreak': 0,
+            'practicalMarks.longestStreak': 0,
+            'practicalMarks.totalLogDays': 0,
+            'practicalMarks.lastSyncedAt': null
+          }
+        });
+        continue;
+      }
+
+      // Deduplicate to one entry per calendar day
+      const uniqueDays = [];
+      const seenDays = new Set();
+      for (const log of logs) {
+        const d = new Date(log.createdAt);
+        const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        if (!seenDays.has(dayKey)) {
+          seenDays.add(dayKey);
+          uniqueDays.push(d);
+        }
+      }
+
+      // Calculate streaks from the deduplicated day list
+      let tempStreak = 1;
+      let longestStreak = 1;
+
+      for (let i = 1; i < uniqueDays.length; i++) {
+        const prev = new Date(
+          uniqueDays[i - 1].getFullYear(),
+          uniqueDays[i - 1].getMonth(),
+          uniqueDays[i - 1].getDate()
+        );
+        const curr = new Date(
+          uniqueDays[i].getFullYear(),
+          uniqueDays[i].getMonth(),
+          uniqueDays[i].getDate()
+        );
+        const diffDays = Math.round((curr - prev) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          tempStreak++;
+          if (tempStreak > longestStreak) longestStreak = tempStreak;
+        } else if (diffDays > 1) {
+          tempStreak = 1;
+        }
+        // diffDays === 0 means same day (already deduped, won't happen here)
+      }
+
+      // Check if streak is still active (last log was today or yesterday)
+      const lastLogDate = uniqueDays[uniqueDays.length - 1];
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const yesterdayStart = new Date(todayStart);
+      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+      const lastDayStart = new Date(
+        lastLogDate.getFullYear(),
+        lastLogDate.getMonth(),
+        lastLogDate.getDate()
+      );
+
+      const isActive =
+        lastDayStart.getTime() === todayStart.getTime() ||
+        lastDayStart.getTime() === yesterdayStart.getTime();
+
+      const currentStreak = isActive ? tempStreak : 0;
+      const totalLogDays = uniqueDays.length;
+
+      await User.findByIdAndUpdate(student._id, {
+        $set: {
+          'practicalMarks.currentStreak': currentStreak,
+          'practicalMarks.longestStreak': longestStreak,
+          'practicalMarks.totalLogDays': totalLogDays,
+          'practicalMarks.lastSyncedAt': logs[logs.length - 1].createdAt,
+          // Also sync the student-facing streak object
+          'streak.current': currentStreak,
+          'streak.longest': longestStreak
+        }
+      });
+
+      results.push({
+        name: student.name,
+        currentStreak,
+        longestStreak,
+        totalLogDays
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Synced ${results.length} students`,
+      results
+    });
+  });
 }
 
 module.exports = new AdminController();
