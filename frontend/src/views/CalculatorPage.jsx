@@ -32,7 +32,7 @@ const CalculatorPage = () => {
   const locale = useLocale();
   const formatNumber = useNumberFormatter();
   const { showNotification } = useNotifications();
-    const { showToast } = useToast();
+  const { showToast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState({ type: '', message: '' });
@@ -54,7 +54,7 @@ const CalculatorPage = () => {
     transportationMode: 'walk',
     transportationDistanceKm: 12,
     foodMealType: 'vegetarian',
-    usedSingleUsePlastic: false,
+    usedSingleUsePlastic: 0,
     wastedFood: false,
     energyUsageHours: 3,
     energyFirewoodKg: 0,
@@ -69,6 +69,9 @@ const CalculatorPage = () => {
       const raw = sessionStorage.getItem(key);
       if (raw) {
         const parsed = JSON.parse(raw);
+        if (typeof parsed.usedSingleUsePlastic === 'boolean') {
+          parsed.usedSingleUsePlastic = parsed.usedSingleUsePlastic ? 1 : 0;
+        }
         setFormData(prev => ({ ...prev, ...parsed }));
       }
     } catch (e) {
@@ -94,7 +97,6 @@ const CalculatorPage = () => {
   ];
 
   const foodOptionsBase = [
-    { value: 'vegan', label: t('vegan'), factorKey: 'food_vegan' },
     { value: 'vegetarian', label: t('vegetarian'), factorKey: 'food_vegetarian' },
     { value: 'mixed', label: t('mixed'), factorKey: 'food_mixed' },
     { value: 'non-vegetarian', label: t('nonVeg'), factorKey: 'food_non-vegetarian' }
@@ -166,8 +168,8 @@ const CalculatorPage = () => {
     if (formData.energyUsageHours < 0) {
       newErrors.energyUsageHours = t('hoursPositive');
     }
-    if (formData.usedSingleUsePlastic === null) {
-      newErrors.usedSingleUsePlastic = t('selectOption');
+    if (formData.usedSingleUsePlastic < 0) {
+      newErrors.usedSingleUsePlastic = t('countPositive');
     }
     if (formData.wastedFood === null) {
       newErrors.wastedFood = t('selectOption');
@@ -178,18 +180,18 @@ const CalculatorPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Prevent rapid resubmission (within 2 seconds of last successful submission)
     const now = Date.now();
     if (now - lastSubmissionTime < 2000) {
       return;
     }
-    
+
     if (!validateForm()) return;
 
     setSubmitting(true);
     try {
-      const wasteCount = (formData.usedSingleUsePlastic ? 1 : 0) + (formData.wastedFood ? 1 : 0);
+      const wasteCount = formData.usedSingleUsePlastic + (formData.wastedFood ? 1 : 0);
 
       const payload = {
         transportationMode: formData.transportationMode,
@@ -203,7 +205,7 @@ const CalculatorPage = () => {
 
       const response = await logDailyCarbon(payload, locale);
       // clear draft on successful submit
-      try { sessionStorage.removeItem('calculatorFormDraft'); } catch (e) {}
+      try { sessionStorage.removeItem('calculatorFormDraft'); } catch (e) { }
 
       if (!response) {
         // offline saved fallback
@@ -218,7 +220,7 @@ const CalculatorPage = () => {
 
       // Trigger notification
       if (isDuplicate) {
-          showToast('You already logged today. Come back tomorrow!', { type: 'info', duration: 3000 });
+        showToast('You already logged today. Come back tomorrow!', { type: 'info', duration: 3000 });
         showNotification({
           id: `log-duplicate-${new Date().toISOString()}`,
           type: 'info',
@@ -228,7 +230,7 @@ const CalculatorPage = () => {
           unread: true
         });
       } else {
-          showToast('Log saved! Great job!', { type: 'success', duration: 3000 });
+        showToast('Log saved! Great job!', { type: 'success', duration: 3000 });
         showNotification({
           id: `log-saved-${new Date().toISOString()}`,
           type: 'success',
@@ -312,11 +314,10 @@ const CalculatorPage = () => {
               key={String(option)}
               type="button"
               onClick={() => onChange(option)}
-              className={`h-8 rounded-lg text-[14px] font-semibold transition-all ${
-                selected
-                  ? 'bg-white text-[#004332] shadow-sm'
-                  : 'text-[#17202A] hover:text-[#004332]'
-              }`}
+              className={`h-8 rounded-lg text-[14px] font-semibold transition-all ${selected
+                ? 'bg-white text-[#004332] shadow-sm'
+                : 'text-[#17202A] hover:text-[#004332]'
+                }`}
             >
               {option ? t('yes') : t('no')}
             </button>
@@ -362,11 +363,10 @@ const CalculatorPage = () => {
         {status.message && (
           <div
             ref={statusRef}
-            className={`mb-5 rounded-lg border px-4 py-3 text-[13px] font-semibold ${
-              status.type === 'success'
-                ? 'border-[#BEE8D3] bg-[#E8F5E9] text-[#0A3D25]'
-                : 'border-[#D1ECF1] bg-[#E9F7FC] text-[#0C5460]'
-            }`}
+            className={`mb-5 rounded-lg border px-4 py-3 text-[13px] font-semibold ${status.type === 'success'
+              ? 'border-[#BEE8D3] bg-[#E8F5E9] text-[#0A3D25]'
+              : 'border-[#D1ECF1] bg-[#E9F7FC] text-[#0C5460]'
+              }`}
           >
             {status.message}
           </div>
@@ -408,11 +408,10 @@ const CalculatorPage = () => {
                       key={option.value}
                       type="button"
                       onClick={() => setField('transportationMode', option.value)}
-                      className={`flex min-h-[75px] min-w-0 flex-col items-center justify-center rounded-[10px] border px-2 text-[12px] font-semibold transition-all ${
-                        selected
-                          ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25]'
-                          : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
-                      }`}
+                      className={`flex min-h-[75px] min-w-0 flex-col items-center justify-center rounded-[10px] border px-2 text-[12px] font-semibold transition-all ${selected
+                        ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25]'
+                        : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
+                        }`}
                     >
                       <span className="mb-1 flex h-6 items-center justify-center text-[#0A3D25]">{option.icon}</span>
                       <span className="break-words text-center">{option.label}</span>
@@ -438,7 +437,7 @@ const CalculatorPage = () => {
                 <h2 className="text-[24px] font-extrabold leading-none">{t('lunchTitle')}</h2>
               </div>
               <p className="mb-[18px] text-[16px] text-[#4A5550]">{t('lunchQuestion')}</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {foodOptions.map(option => {
                   const selected = formData.foodMealType === option.value;
                   return (
@@ -446,13 +445,12 @@ const CalculatorPage = () => {
                       key={option.value}
                       type="button"
                       onClick={() => setField('foodMealType', option.value)}
-                      className={`flex items-center justify-center h-12 rounded-lg border text-center transition-all ${
-                        selected
-                          ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25] font-semibold'
-                          : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
-                      }`}
+                      className={`flex flex-col items-center justify-center h-14 rounded-[10px] border px-2 text-center transition-all ${selected
+                        ? 'border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25] font-bold shadow-sm'
+                        : 'border-[#BFCBC5] bg-white text-[#17202A] hover:border-[#0A3D25]'
+                        }`}
                     >
-                      <span className="text-[15px] font-medium">{option.label}</span>
+                      <span className="text-[16px] font-semibold">{option.label}</span>
                     </button>
                   );
                 })}
@@ -480,12 +478,16 @@ const CalculatorPage = () => {
                 <h2 className="text-[24px] font-extrabold leading-none">{t('wasteTitle')}</h2>
               </div>
               <div className="space-y-[26px]">
-                <YesNo
-                  label={t('plasticQuestion')}
-                  value={formData.usedSingleUsePlastic}
-                  onChange={(value) => setField('usedSingleUsePlastic', value)}
-                  error={errors.usedSingleUsePlastic}
+                <Stepper
+                  label="How many plastics did you use today?"
+                  value={Number(formData.usedSingleUsePlastic) || 0}
+                  field="usedSingleUsePlastic"
+                  max={50}
+                  step={1}
                 />
+                {errors.usedSingleUsePlastic && (
+                  <p className="mt-2 text-sm text-red-600">{errors.usedSingleUsePlastic}</p>
+                )}
                 <YesNo
                   label={t('foodWasteQuestion')}
                   value={formData.wastedFood}
@@ -500,7 +502,7 @@ const CalculatorPage = () => {
                 <Zap size={23} className="text-[#0A3D25]" />
                 <h2 className="text-[24px] font-extrabold leading-none">{t('energyTitle')}</h2>
               </div>
-              
+
               <div className="space-y-6">
                 <div>
                   <p className="mb-[18px] text-[16px] text-[#4A5550]">
