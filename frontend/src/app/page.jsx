@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import LandingNavbar from '@/components/LandingNavbar';
 import Footer from '@/components/Footer';
+import { NumericStepper } from '@/components/ui';
 import { getLocaleCookie } from '@/lib/api/cookie';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -30,7 +31,7 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
   const [transport, setTransport] = useState('walk');
   const [lunch, setLunch] = useState('vegetarian');
-  const [plasticWaste, setPlasticWaste] = useState('no');
+  const [plasticCount, setPlasticCount] = useState(0);
   const [co2, setCo2] = useState(0.0);
 
   // Determine current locale from cookie (client-side) for number formatting
@@ -55,16 +56,14 @@ export default function Home() {
     'non-veg': 1.5,
   };
 
-  const plasticEmissions = {
-    yes: 0.4,
-    no: 0,
-  };
+  const PLASTIC_EMISSION_PER_ITEM = 0.4; // kg CO2 per single-use plastic item
 
   const handleCalculate = () => {
+    const plasticEmission = (Number(plasticCount) || 0) * PLASTIC_EMISSION_PER_ITEM;
     const total =
       (transportEmissions[transport] || 0) +
       (lunchEmissions[lunch] || 0) +
-      (plasticEmissions[plasticWaste] || 0);
+      plasticEmission;
     setCo2(Number(total.toFixed(1)));
   };
 
@@ -236,25 +235,19 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <p className="mb-3 text-[15px] font-bold text-[#17202A]">
-                      {t('plasticWasteQuestion')}
-                    </p>
-                    <div className="grid grid-cols-2 rounded-full border border-[#BFCBC5] bg-[#F1F4F2] p-0.5">
-                      {['yes', 'no'].map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => setPlasticWaste(option)}
-                          className={`h-9 rounded-full text-[13px] font-semibold transition ${
-                            plasticWaste === option
-                              ? 'bg-[#0A3D25] text-white shadow-sm'
-                              : 'text-[#4A5550] hover:text-[#0A3D25]'
-                          }`}
-                        >
-                          {t(option)}
-                        </button>
-                      ))}
-                    </div>
+                      <p className="mb-3 text-[15px] font-bold text-[#17202A]">
+                        How many plastics did you use today?
+                      </p>
+                      <div className="w-full">
+                        <NumericStepper
+                          value={plasticCount}
+                          onChange={(v) => setPlasticCount(v)}
+                          min={0}
+                          max={50}
+                          step={1}
+                          size="md"
+                        />
+                      </div>
                   </div>
                 </div>
 
