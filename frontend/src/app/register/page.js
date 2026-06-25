@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { register } from '@/lib/actions/authActions';
+import { useAuth } from '@/context/AuthContext';
 import { Loader2, Eye, EyeOff, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -34,6 +35,7 @@ const RegisterPage = () => {
   const searchParams = useSearchParams();
   const t = useTranslations('Auth');
   const imgT = useTranslations('Images');
+  const { login: authContextLogin } = useAuth();
 
   const gradeOptions = Array.from({ length: 5 }, (_, i) => ({
     value: String(i + 8),
@@ -96,6 +98,12 @@ const RegisterPage = () => {
     try {
       const { confirmPassword, ...submitData } = formData;
       const result = await register(submitData);
+      
+      // Update AuthContext with newly registered user
+      if (result?.token && result?.user) {
+        await authContextLogin({ email: formData.email, password: formData.password });
+      }
+      
       const nextParam = searchParams.get('next');
       const defaultRoute = getHomeRoute(result.user);
       router.push(nextParam || defaultRoute);

@@ -26,6 +26,7 @@ const LayoutShell = ({ children }) => {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, loading } = useAuth();
+  const [hasStoredToken, setHasStoredToken] = React.useState(false);
 
   const normalizedPathname = pathname.replace(/^\/(en|ne)(?=\/|$)/, '') || '/';
 
@@ -42,6 +43,14 @@ const LayoutShell = ({ children }) => {
   const isProtectedRoute = !isPublicRoute && !isAdminRoute;
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cookieToken = document.cookie.split('; ').find((row) => row.startsWith('token='));
+      const storedToken = cookieToken || window.localStorage.getItem('token');
+      setHasStoredToken(Boolean(storedToken));
+    }
+  }, []);
+
+  useEffect(() => {
     if (isProtectedRoute && !loading && !isAuthenticated) {
       router.replace('/');
     }
@@ -55,9 +64,11 @@ const LayoutShell = ({ children }) => {
     return null;
   }
 
+  const showNavbar = isAuthenticated || isProtectedRoute || hasStoredToken;
+
   return (
     <>
-      {isProtectedRoute ? <Navbar /> : <LandingNavbar />}
+      {showNavbar ? <Navbar /> : <LandingNavbar />}
       <main className="flex-grow">
         {children}
       </main>
