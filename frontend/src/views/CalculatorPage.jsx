@@ -310,8 +310,8 @@ const CalculatorPage = () => {
               type="button"
               onClick={() => onChange(option)}
               className={`h-8 rounded-lg text-[14px] font-semibold transition-all ${selected
-                ? 'bg-white text-[#004332] shadow-sm'
-                : 'text-[#17202A] hover:text-[#004332]'
+                ? 'border border-[#0A3D25] bg-[#C7EEDC] text-[#0A3D25] shadow-sm'
+                : 'border border-transparent text-[#17202A] hover:text-[#004332]'
                 }`}
             >
               {option ? t('yes') : t('no')}
