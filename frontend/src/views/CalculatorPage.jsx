@@ -54,7 +54,7 @@ const CalculatorPage = () => {
     transportationMode: 'walk',
     transportationDistanceKm: 12,
     foodMealType: 'vegetarian',
-    usedSingleUsePlastic: false,
+    plasticCount: 0,
     wastedFood: false,
     energyUsageHours: 3,
     energyFirewoodKg: 0,
@@ -166,9 +166,6 @@ const CalculatorPage = () => {
     if (formData.energyUsageHours < 0) {
       newErrors.energyUsageHours = t('hoursPositive');
     }
-    if (formData.usedSingleUsePlastic === null) {
-      newErrors.usedSingleUsePlastic = t('selectOption');
-    }
     if (formData.wastedFood === null) {
       newErrors.wastedFood = t('selectOption');
     }
@@ -189,13 +186,11 @@ const CalculatorPage = () => {
 
     setSubmitting(true);
     try {
-      const wasteCount = (formData.usedSingleUsePlastic ? 1 : 0) + (formData.wastedFood ? 1 : 0);
-
       const payload = {
         transportationMode: formData.transportationMode,
         transportationDistanceKm: formData.transportationDistanceKm,
         foodMealType: formData.foodMealType,
-        wasteAndPlasticCount: wasteCount,
+        wasteAndPlasticCount: formData.plasticCount,
         energyUsageHours: formData.energyUsageHours,
         energyFirewoodKg: formData.energyFirewoodKg,
         ...(formData.extraProfileAnswer !== null && { extraAnswer: formData.extraProfileAnswer })
@@ -480,12 +475,18 @@ const CalculatorPage = () => {
                 <h2 className="text-[24px] font-extrabold leading-none">{t('wasteTitle')}</h2>
               </div>
               <div className="space-y-[26px]">
-                <YesNo
-                  label={t('plasticQuestion')}
-                  value={formData.usedSingleUsePlastic}
-                  onChange={(value) => setField('usedSingleUsePlastic', value)}
-                  error={errors.usedSingleUsePlastic}
-                />
+                <div>
+                  <p className="mb-[18px] text-[16px] text-[#4A5550]">{t('plasticQuestion')}</p>
+                  <p className="mb-3 text-[13px] text-[#4A5550]">{t('plasticHelper')}</p>
+                  <Stepper
+                    label=""
+                    value={formData.plasticCount}
+                    field="plasticCount"
+                    unit="items"
+                    max={100}
+                    step={1}
+                  />
+                </div>
                 <YesNo
                   label={t('foodWasteQuestion')}
                   value={formData.wastedFood}
