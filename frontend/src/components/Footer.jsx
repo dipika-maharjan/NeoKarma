@@ -18,7 +18,6 @@ const footerColumns = [
     titleKey: 'support',
     links: [
       { labelKey: 'contact', href: '/contact' },
-      { labelKey: 'helpCenter', href: '/support' },
       { labelKey: 'termsOfService', href: '/terms' },
       { label: 'FAQ', href: '/support' },          // plain FAQ link → support/FAQ page
     ],
