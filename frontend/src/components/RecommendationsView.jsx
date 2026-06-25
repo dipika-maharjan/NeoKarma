@@ -17,6 +17,7 @@ import {
   Monitor,
   Plus,
   Recycle,
+  RotateCcw,
   Sprout,
   Trash2,
   Trophy,
@@ -406,7 +407,7 @@ const mapBackendRecToCard = (rec, index) => {
 };
 
 const RecommendationsView = ({ onNavigateToDashboard }) => {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const t = useTranslations('Plan');
   const { showNotification } = useNotifications();
   const { showToast } = useToast();
@@ -485,20 +486,25 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   const loading = isPlanLoading || generating;
   const error = planError?.message;
 
-  // Load planItems from localStorage unique to the logged-in user
+  // Load planItems from localStorage or backend unique to the logged-in user
   useEffect(() => {
     if (!user) return;
-    const storageKey = `neokarma_plan_items_${user._id || user.id || 'default'}`;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        setPlanItems(JSON.parse(stored));
-      } catch (e) {
-        console.error('Error parsing stored plan items:', e);
+    
+    if (user.selectedPlanItems && Array.isArray(user.selectedPlanItems)) {
+      setPlanItems(user.selectedPlanItems);
+    } else {
+      const storageKey = `neokarma_plan_items_${user._id || user.id || 'default'}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          setPlanItems(JSON.parse(stored));
+        } catch (e) {
+          console.error('Error parsing stored plan items:', e);
+          setPlanItems([]);
+        }
+      } else {
         setPlanItems([]);
       }
-    } else {
-      setPlanItems([]);
     }
     setIsLoaded(true);
   }, [user]);
@@ -530,10 +536,17 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
       completed: false,
       icon: rec.visualType === 'bus' ? '🚌' : rec.visualType === 'fork-knife' ? '🍽️' : rec.visualType === 'bin' ? '🗑️' : '💡',
       // CRITICAL: Copy trackingConfig for dynamic progress tracking
-      trackingConfig: rec.trackingConfig || undefined
+      trackingConfig: rec.trackingConfig || undefined,
+      addedAt: new Date().toISOString()
     };
 
-    setPlanItems([newItem, ...planItems]);
+    const newPlanItems = [newItem, ...planItems];
+    setPlanItems(newPlanItems);
+    
+    // Save to backend
+    if (updateProfile) {
+      updateProfile({ selectedPlanItems: newPlanItems }).catch(err => console.error("Failed to sync plan", err));
+    }
     // Notify user and show quick toast
     try {
       showNotification({
@@ -554,20 +567,41 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
   // Toggle completion of a task in the plan
   const toggleTaskCompleted = (id) => {
-    setPlanItems(
-      planItems.map((item) =>
-        item.id === id ? { ...item, completed: !item.completed } : item
-      )
+    const newPlanItems = planItems.map((item) =>
+      item.id === id ? { ...item, completed: !item.completed } : item
     );
+    setPlanItems(newPlanItems);
+    
+    // Save to backend
+    if (updateProfile) {
+      updateProfile({ selectedPlanItems: newPlanItems }).catch(err => console.error("Failed to sync plan", err));
+    }
   };
 
   // Archive an item from the plan
   const archivePlanItem = (id) => {
-    setPlanItems(
-      planItems.map((item) =>
-        item.id === id ? { ...item, archived: true } : item
-      )
+    const newPlanItems = planItems.map((item) =>
+      item.id === id ? { ...item, archived: true } : item
     );
+    setPlanItems(newPlanItems);
+    
+    // Save to backend
+    if (updateProfile) {
+      updateProfile({ selectedPlanItems: newPlanItems }).catch(err => console.error("Failed to sync plan", err));
+    }
+  };
+
+  // Restore an archived item back to the plan
+  const unarchivePlanItem = (id) => {
+    const newPlanItems = planItems.map((item) =>
+      item.id === id ? { ...item, archived: false } : item
+    );
+    setPlanItems(newPlanItems);
+    
+    // Save to backend
+    if (updateProfile) {
+      updateProfile({ selectedPlanItems: newPlanItems }).catch(err => console.error("Failed to sync plan", err));
+    }
   };
 
   // Calculate Plan metrics (excluding archived items)
@@ -576,6 +610,19 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
   // Helper to calculate if an item should be marked as completed based on tracking progress
   const getItemCompletionStatus = (item) => {
     if (!dailyLogs || dailyLogs.length === 0) return item.completed || false;
+
+    // Filter logs that were submitted after the plan item was added
+    const itemAddedAt = item.addedAt ? new Date(item.addedAt) : new Date(0);
+    const addedDate = new Date(itemAddedAt);
+    addedDate.setHours(0, 0, 0, 0);
+
+    const validLogs = dailyLogs.filter(log => {
+      const logDate = new Date(log.date);
+      logDate.setHours(0, 0, 0, 0);
+      return logDate >= addedDate;
+    });
+
+    if (validLogs.length === 0) return item.completed || false;
 
     // Calculate progress using the same logic as the tracking hook
     let percentage = 0;
@@ -586,7 +633,7 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
       const operator = item.trackingConfig.operator;
       const value = item.trackingConfig.value;
 
-      const matchingDays = dailyLogs.filter((log) => {
+      const matchingDays = validLogs.filter((log) => {
         const logValue = getFieldValueForTracking(log, fieldPath);
         if (operator === '==') return logValue === value;
         if (operator === '>=') return logValue >= value;
@@ -604,18 +651,18 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
       const target = monthlyGoals[item.category] || 20;
 
       if (item.category === 'food') {
-        current = dailyLogs.filter(log =>
+        current = validLogs.filter(log =>
           log.food?.mealType === 'vegetarian' || log.food?.mealType === 'vegan'
         ).length;
       } else if (item.category === 'energy') {
-        current = dailyLogs.filter(log => log.energy?.usageHours <= 2).length;
+        current = validLogs.filter(log => log.energy?.usageHours <= 2).length;
       } else if (item.category === 'transport') {
-        current = dailyLogs.filter(log => {
+        current = validLogs.filter(log => {
           const mode = log.transportation?.mode;
           return mode === 'bus' || mode === 'walk' || mode === 'bicycle';
         }).length;
       } else if (item.category === 'waste') {
-        current = dailyLogs.filter(log => log.wasteAndPlastic?.segregated === true).length;
+        current = validLogs.filter(log => log.wasteAndPlastic?.segregated === true).length;
       }
 
       percentage = Math.min((current / target) * 100, 100);
@@ -647,6 +694,9 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
   // Filtered plan list items
   const filteredPlanItems = planItems.filter((item) => {
+    if (activeFilter === 'archived') {
+      return item.archived === true;
+    }
     if (item.archived) return false; // Hide archived items
     if (activeFilter === 'all') return true;
     return item.category === activeFilter;
@@ -899,11 +949,12 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
             {/* Filter buttons block */}
             <div className="flex flex-wrap gap-2.5 mb-8">
               {[
-                { filterKey: 'all', label: t('filterAll') },
-                { filterKey: 'transport', label: t('filterTransport') },
-                { filterKey: 'energy', label: t('filterEnergy') },
-                { filterKey: 'waste', label: t('filterWaste') },
-                { filterKey: 'food', label: t('filterFood') }
+                { filterKey: 'all', label: t('filterAll') || 'All' },
+                { filterKey: 'transport', label: t('filterTransport') || 'Transport' },
+                { filterKey: 'energy', label: t('filterEnergy') || 'Energy' },
+                { filterKey: 'waste', label: t('filterWaste') || 'Waste' },
+                { filterKey: 'food', label: t('filterFood') || 'Food' },
+                { filterKey: 'archived', label: 'Archived' }
               ].map((btn) => {
                 const isActive = activeFilter === btn.filterKey;
                 return (
@@ -937,6 +988,16 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
                 </div>
               ) : (
                 filteredPlanItems.map((item) => {
+                  const itemAddedAt = item.addedAt ? new Date(item.addedAt) : new Date(0);
+                  const addedDate = new Date(itemAddedAt);
+                  addedDate.setHours(0, 0, 0, 0);
+
+                  const validLogs = dailyLogs ? dailyLogs.filter(log => {
+                    const logDate = new Date(log.date);
+                    logDate.setHours(0, 0, 0, 0);
+                    return logDate >= addedDate;
+                  }) : [];
+
                   const isCompleted = getItemCompletionStatus(item);
                   return (
                     <div
@@ -993,14 +1054,25 @@ const RecommendationsView = ({ onNavigateToDashboard }) => {
 
                         {/* Complete toggle & Trash actions */}
                         <div className="flex items-center gap-4">
-                          <ProgressTrackerWrapper item={item} dailyLogs={dailyLogs} />
-                          <button
-                            onClick={() => archivePlanItem(item.id)}
-                            className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-amber-600 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
-                            title={t('archiveAction') || 'Archive Action'}
-                          >
-                            <Archive className="w-4 h-4" />
-                          </button>
+                          {!item.archived && <ProgressTrackerWrapper item={item} dailyLogs={validLogs} />}
+                          {item.archived ? (
+                            <button
+                              onClick={() => unarchivePlanItem(item.id)}
+                              className="px-4 h-8 rounded-xl bg-[#0A3D25] text-white text-[10px] font-bold uppercase tracking-wider hover:bg-[#0D5232] transition-all flex items-center gap-1 shrink-0"
+                              title="Restore Action"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              Restore
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => archivePlanItem(item.id)}
+                              className="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-amber-600 border border-gray-100 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                              title={t('archiveAction') || 'Archive Action'}
+                            >
+                              <Archive className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
 
                       </div>

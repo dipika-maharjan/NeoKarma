@@ -186,18 +186,15 @@ function calculateDynamicProgress(config, dailyLogs, t) {
     if (matches) current++;
   });
 
-  const adaptedTarget = lookbackDays < maxLookback 
-    ? Math.ceil((goal / maxLookback) * lookbackDays) 
-    : goal;
-  
-  const percentage = adaptedTarget > 0 ? Math.min((current / adaptedTarget) * 100, 100) : 0;
+  const target = goal || 1;
+  const percentage = Math.min((current / target) * 100, 100);
   const periodLabel = period === 'week' ? t('days') : t('kgPerMo');
 
   return {
     percentage,
     current,
-    target: adaptedTarget,
-    message: t('trackingMessage', { current, target: adaptedTarget, value, period: periodLabel }),
+    target,
+    message: t('trackingMessage', { current, target, value, period: periodLabel }),
     unit: periodLabel
   };
 }
